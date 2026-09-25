@@ -9,7 +9,7 @@ import {
   freePosition,
 } from "./geometry.js";
 import { routeCost, JOB_RADIUS } from "./navigation.js";
-import { frontier } from "./exploration.js";
+import { frontier, scoutLimit } from "./exploration.js";
 import { densityAt, densityReward, DENSITY } from "./density.js";
 import { constructionSlots, projectAllowed, projectTask, storedSupply } from "./settlement.js";
 import { projectFunded, projectName } from "./development.js";
@@ -287,6 +287,7 @@ export function makePlan(w, policy = "balanced") {
     }
     let chosen, obstruction;
     for (const task of tasks) {
+      if (task === "explore" && assignments.filter(a=>a.task==="explore").length >= scoutLimit(w,policy)) continue;
       if (["construct","refine"].includes(task)) {
         const p = (task==="construct" ? projectFunded(w) : w.inventory.ore-(stock.get("inventory:ore")||0)>0) &&
           constructionSlots(w).find((p) => !slots.has(`construction:${p.slot}`) &&
@@ -444,7 +445,7 @@ export function makePlan(w, policy = "balanced") {
         break;
       }
       if (task === "explore") {
-        const point = frontier(w,c,assignments);
+        const point = frontier(w,c,assignments,policy);
         if (point) { chosen = { id:c.id, task, target:null, slot:c.birthOrdinal, point,
           purpose:"Scout new ground, then return for care" }; break; }
       }

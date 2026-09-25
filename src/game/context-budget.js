@@ -18,6 +18,7 @@ export function packHostedContext(full, budget) {
     density:{target:p.density.target,crowded:p.density.crowded,abovePenalty:p.density.abovePenalty,belowPenalty:p.density.belowPenalty}} : undefined;
   const packed = {
     version: 4,
+    workload: full.workload,
     care: full.care,
     developmentPlan: concisePlan(full.developmentPlan),
     timber: full.timber,
@@ -74,7 +75,7 @@ export function packHostedContext(full, budget) {
   };
   add(
     "candidateEffects",
-    full.candidates.map((c) => ({ id: c.id, effects: c.expected })),
+    full.candidates.map((c) => ({ id: c.id, description:c.description, allocation:c.allocation, effects: c.expected, reward:c.reward })),
   );
   add("promises", full.story?.promises || []);
   add("colonyStory", full.story?.premise);

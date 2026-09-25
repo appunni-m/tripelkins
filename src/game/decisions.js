@@ -2,6 +2,7 @@ import { makePlan, minimum, allowsTask } from "./jobs.js";
 import { activeGoal } from "./goals.js";
 import { withRouteCosts } from "./navigation.js";
 import { densityAt, densityReward, densitySummary } from "./density.js";
+import { CARE_START } from "./work-balance.js";
 export const POLICIES = {
   care: "Recover needs",
   balanced: "Share care and useful work",
@@ -23,6 +24,7 @@ export function judgePlan(w, p) {
       commitment: 0,
       maintenance: 0,
       space: 0,
+      travel: 0,
     },
     issues = [];
   for (const a of p.assignments) {
@@ -40,8 +42,13 @@ export function judgePlan(w, p) {
       issues.push("Urgent care displaced");
     const travel = Math.hypot(c.x - a.point.x, c.y - a.point.y) / 1.65,
       cycle = travel + 4;
-    if (careTasks.includes(a.task))
-      effects.care += (100 - minimum(c)) / Math.max(4, cycle);
+    if (careTasks.includes(a.task)) {
+      const needs = {eat:["fed"],wash:["clean"],play:["amused"],home:["fed","clean"]}[a.task];
+      // Reward the need this action actually treats. A clean resident with low
+      // amusement must not make another bath visit look like urgent recovery.
+      const deficit = needs.reduce((sum,key)=>sum+Math.max(0,CARE_START-c[key]),0)/needs.length;
+      effects.care += deficit / Math.max(4, cycle);
+    }
     if (["haul","gather","quarry","construct"].includes(a.task)) effects.material += 3 / Math.max(4, cycle);
     if (["mine", "work", "refine", "orbit"].includes(a.task))
       effects.production += (a.task === "work" ? 3 : 1) / Math.max(4, cycle);
@@ -49,6 +56,7 @@ export function judgePlan(w, p) {
     if (a.task === "clean") effects.maintenance += 20 / Math.max(5, cycle);
     if (a.keep) effects.commitment++;
     effects.space += densityReward(densityAt(w,a.point).residents) / Math.max(1,p.assignments.length);
+    effects.travel -= travel / (60 * Math.max(1,p.assignments.length));
   }
   return { effects, issues };
 }
@@ -61,6 +69,10 @@ function buildFeasiblePlans(w) {
     const p = makePlan(w, policy),
       review = judgePlan(w, p);
     if (review.issues.length) continue;
+    // Recovery is a meaningful choice only while there is something to recover.
+    // Keeping it offered to a fully healthy colony biases the small classifier
+    // toward endless care/rest despite its zero measured care benefit.
+    if (policy === "care" && review.effects.care === 0 && !w.creatures.some(c=>c.sickness>=50)) continue;
     // A tiny spacing advantage must not advertise production when the actual
     // assignments contain no productive work. Keep specialized labels honest;
     // ordinary care, exploration and balanced plans still cover idle periods.
@@ -87,22 +99,18 @@ function buildFeasiblePlans(w) {
   );
   return (nondominated.length ? nondominated : all).slice(0, 5);
 }
-export function bestPlan(w, plans) {
+export function planReward(w, p) {
   const goal = activeGoal(w)?.kind, crowded = densitySummary(w).crowded;
-  return (
-    [...plans].sort((a, b) => score(b) - score(a))[0] || makePlan(w, "care")
-  );
-  function score(p) {
-    const e = p.effects || judgePlan(w, p).effects;
-    return (
-      e.care * 8 +
-      e.commitment * 0.15 +
-      e.material * (["wood", "bridge"].includes(goal) ? 6 : 2) +
-      e.production * (["ore", "blocks"].includes(goal) ? 6 : 2) +
-      e.discovery * (crowded || goal === "grow" ? 8 : 3) + (e.space || 0)
-      + (e.maintenance || 0) * 2
-    );
-  }
+  const e = p.effects || judgePlan(w,p).effects;
+  const components = {care:e.care*8,commitment:e.commitment*.15,
+    material:e.material*(["wood","bridge"].includes(goal)?6:2),
+    production:e.production*(["ore","blocks"].includes(goal)?6:2),
+    discovery:e.discovery*(crowded || goal==="grow"?8:3),
+    space:e.space||0,maintenance:(e.maintenance||0)*2,travel:e.travel||0};
+  return {total:Object.values(components).reduce((a,b)=>a+b,0),components};
+}
+export function bestPlan(w, plans) {
+  return [...plans].sort((a,b)=>planReward(w,b).total-planReward(w,a).total)[0] || makePlan(w,"care");
 }
 export function selectPlan(w, policy, source, model = "", initial = null) {
   const plans = initial || feasiblePlans(w);

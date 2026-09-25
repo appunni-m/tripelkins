@@ -4,7 +4,14 @@ import { routeCost } from "./navigation.js";
 import { westBank } from "./map.js";
 import { densityAt, densityReward } from "./density.js";
 import { NEED_DECAY } from "./work-balance.js";
-export function scoutLimit(w) { return Math.min(64, Math.max(1, Math.ceil(w.creatures.length / 12))); }
+export function scoutLimit(w, policy = "balanced") {
+  // A real allocation choice: recovery keeps a small watch, expansion sends a
+  // larger expedition. Existing journeys finish even when the policy changes.
+  // A work-pause instruction must not mobilize a larger expedition.
+  if (w.directives.pauseWork && policy === "expand") policy = "balanced";
+  const residentsPerScout = policy === "expand" ? 5 : policy === "care" ? 24 : 12;
+  return Math.min(64, Math.max(1, Math.ceil(w.creatures.length / residentsPerScout)));
+}
 export function discoveryGain(w, p) {
   let gain = isExplored(w, p) ? 0 : 2;
   for (let i = 0; i < 8; i++)
@@ -12,9 +19,9 @@ export function discoveryGain(w, p) {
       y: p.y + Math.sin(i * Math.PI / 4) * 8 })) gain++;
   return gain;
 }
-export function frontier(w, c, assignments) {
+export function frontier(w, c, assignments, policy = "balanced") {
   if (Math.min(c.fed, c.clean, c.amused) < 68 || c.sickness > 20 || c.carry ||
-      assignments.filter(a => a.task === "explore").length >= scoutLimit(w)) return null;
+      assignments.filter(a => a.task === "explore").length >= scoutLimit(w, policy)) return null;
   const camps = w.objects.filter(o => ["orchard", "dwelling"].includes(o.type));
   const anchors = camps.length ? camps.slice().sort((a,b) =>
     Math.hypot(a.x-c.x,a.y-c.y)-Math.hypot(b.x-c.x,b.y-c.y)).slice(0,3) : [c];

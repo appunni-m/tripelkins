@@ -8,6 +8,15 @@ export const MAX_INTELLIGENCE_WORKERS = 3;
 export function decisionPace(settings = {}) {
   return DECISION_SPEEDS.find(p => p.id === settings.decisionSpeed) || DECISION_SPEEDS[1];
 }
+export function decisionEvent(w, kind) {
+  const tasks=kind==="development" ? ["gather","quarry","refine","construct"]
+    : ["eat","wash","play","home","haul","mine","work","explore","clean","gather","quarry","refine","construct"];
+  return `${w.commandRevision}:${w.community.completed}:${w.community.access.length}:${tasks.reduce((n,k)=>n+(w.memory.activity[k]||0),0)}`;
+}
+export function decisionDue(settings, kind, elapsed, changed) {
+  const interval=decisionPace(settings)[kind];
+  return elapsed>=interval || (changed && elapsed>=Math.max(1,interval/3));
+}
 export function intelligenceWorkers(settings = {}) {
   const count = Number(settings.intelligenceWorkers);
   return Number.isFinite(count) ? Math.max(1, Math.min(MAX_INTELLIGENCE_WORKERS, Math.round(count))) : 1;

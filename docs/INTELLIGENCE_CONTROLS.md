@@ -1,11 +1,11 @@
 # Intelligence pace and workers
 
-Options → Intelligence has two stepped sliders. Defaults preserve the previous
-review cadence and one local model copy. They do not enable intelligence or
+Options → Intelligence has two stepped sliders. Defaults use medium speed
+and one local model copy. They do not enable intelligence or
 authorize a model download. Settings are normalized in saved worlds, including
 history, restores and exported files.
 
-| Decision speed | Group-plan review | Development review / cooldown |
+| Decision speed | Periodic group review | Periodic development review |
 | --- | --- | --- |
 | Slow | 30 seconds | 60 seconds |
 | Med (default) | 12 seconds | 30 seconds |
@@ -14,7 +14,12 @@ history, restores and exported files.
 
 Intervals use playing time; Options, pause and hidden tabs stop the game clock.
 Messages receive the next free slot without waiting for a scheduled review.
-Urgent replans can happen sooner. Existing projects, missing consent, unavailable
+Useful work/care completion, changed commands, new access requests and completed
+projects trigger earlier reviews, at most every one-third of the respective
+interval (minimum one second). Rest completions do not trigger calls. Completed
+projects can immediately offer another project instead of adding a second full
+cooldown. See the measured [25-resident audit](INTELLIGENCE_AUDIT.md).
+Existing projects, missing consent, unavailable
 choices, caches and occupied workers can skip automatic inference. The choice
 cache expires at the selected group-plan interval so it cannot mask faster reviews.
 Speed changes neither simulation speed nor the duration of an individual inference.

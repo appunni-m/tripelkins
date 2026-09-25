@@ -35,7 +35,7 @@ export function updateIntelligenceControls(settings, status) {
   workers.setAttribute("aria-valuetext", `${count} concurrent worker${count === 1 ? "" : "s"}`);
   text("decision-speed-value", pace.label);
   text("intelligence-workers-value", `${count} worker${count === 1 ? "" : "s"}`);
-  text("decision-speed-help", `Review group plans every ${pace.schedule}s and building choices every ${pace.development}s while playing. ${local ? "Faster reviews use more CPU/GPU time and battery." : "Faster reviews can use more API credits."} Messages get priority; game speed and individual inference time stay the same.`);
+  text("decision-speed-help", `Review group plans within ${pace.schedule}s and building choices within ${pace.development}s while playing. Finished work can trigger earlier reviews, at most every ${Math.max(1,pace.schedule/3)}s for groups. ${local ? "Faster reviews use more CPU/GPU time and battery." : "Faster reviews can use more API credits."} Messages get priority; game speed and individual inference time stay the same.`);
   text("intelligence-workers-help", `Up to ${count} decision${count === 1 ? "" : "s"} at once. ${count === 1 ? "Planning, building choices and messages share one worker." : "Planning, building choices and messages can overlap."} ${local ? "Extra model copies open only when needed." : "This limits concurrent OpenRouter requests."}`);
   text("intelligence-resource-help", local
     ? `With ${count} loaded ${gpu ? "GPU" : "CPU"} ${count === 1 ? "copy" : "copies"}, model weights alone are about ${((gpu ? .846 : .524) * count).toFixed(2)} GB. Working memory, the browser and voice need more. Cached downloads are shared. More workers may compete for the same hardware; 1 uses the least memory.`

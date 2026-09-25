@@ -254,14 +254,27 @@ export function prepareTimber(w) {
 }
 export function settlementDecisionInput(w, choices) {
   const care=careContext(w), reserve=timberReserve(w);
+  const careFirst=choices.some(c=>CARE_BUILDINGS.includes(c.id) && c.priority>=80);
+  const resourceLabel=c=>({
+    crossing:`Build the bridge with ${c.target} wood; open land and mining`,
+    timber:`Cut trees; store ${c.target} wood for future buildings`,
+    quarry:`Break rocks; store ${c.target} ore for the goal`,
+    refine:`Quarry and refine ${c.target} blocks; unlock workplaces`,
+  }[c.id] || c.description);
   // Keep the effect of each building in its short option label. Optional site
   // descriptions can be omitted by the token budget; internal type names alone
   // do not tell a small classifier which need a building will actually serve.
   const options = Object.fromEntries([...choices.map(c=>[c.key||c.id,
     c.id==="clearance" ? `Clear ${c.obstacle || "obstacle"} to ${c.resume || "resume blocked work"}` : c.density ? `Build ${careServices(c.id).join("/") || BUILDINGS[c.id]?.name || c.id}; ${buildingCost(BUILDINGS[c.id])}; help ${Math.round(c.benefit)}; reward ${Math.round(c.density.reward)}`
-      : `${c.id}: target ${c.target} ${RESOURCE_PROJECTS[c.id]?.material||"wood"}`]),["wait","Postpone building; no new care capacity"]]);
+      : resourceLabel(c)]),["wait",careFirst ? "Postpone building; no new care capacity" : "Postpone building; no progress on construction or resources"]]);
   const shortage=Object.entries(care).map(([k,s])=>`${k}: ${s.low} low, ${s.short} short, ${s.urgent} urgent`).join("; ");
-  const requiredContext = `${w.creatures.length} residents. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind||"grow"}. ${accessBrief(w)} Urgent care first; ${reserve.refill ? "replenish timber before optional expansion" : "gather missing building timber"}. Prefer more help and reward closer to zero.`;
+  const milestone=!w.progress.bridge && choices.some(c=>c.id==="crossing") ? "Bridge unlocks land and mining." : w.stage>=2 && !w.objects.some(o=>o.type==="factory") ? "Blocks unlock workplaces." : "Grow useful workplaces and neighborhoods.";
+  // Keep urgent-care inputs focused. Unrelated unlocks crowd out the immediate
+  // capacity problem in the small model's bounded context.
+  const priority=careFirst
+    ? `Urgent care first; ${reserve.refill ? "replenish timber before optional expansion" : "gather missing building timber"}.`
+    : `${milestone} Urgent care first; otherwise advance goals and unlock work. Gather missing timber.`;
+  const requiredContext = `${w.creatures.length} residents. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind||"grow"}. ${accessBrief(w)} ${priority} Prefer more help and reward closer to zero.`;
   const contextParts = choices.map(c=>c.description);
   return {options,requiredContext,contextParts,context:[requiredContext,...contextParts].join(" "),
     question:"Which project and location best advance the goal?",maxTokens:320};
@@ -315,7 +328,7 @@ export function finishSettlement(w, placeBuilding) {
   if (!isConstruction(p)) {
     if (resourceNeeded(w,p)) return;
     w.community.completed++;
-    w.community.lastProjectAt=w.time; w.community.project=null;
+    w.community.lastProjectAt=w.time-decisionPace(w.settings).development; w.community.project=null;
     w.commandRevision++; w.navRevision++;
     activity(w,"gathered",`${projectName(p)} finished.`,p.source,"Real materials gathered by the crew; ready for the next project.");
     return p.id;
@@ -335,7 +348,7 @@ export function finishSettlement(w, placeBuilding) {
     return;
   }
   w.community.completed++;
-  w.community.lastProjectAt = w.time;
+  w.community.lastProjectAt = w.time-decisionPace(w.settings).development;
   w.community.project = null;
   activity(w,"built",`${BUILDINGS[p.type].name} finished.`,p.source,`${buildingCost(BUILDINGS[p.type])} used. The whole colony can use it now.`);
   postMessage(w,completionLetter(w,p,BUILDINGS[p.type].name));

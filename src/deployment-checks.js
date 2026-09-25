@@ -4,7 +4,7 @@ import {
   decisionOutcome,
   localReference,
 } from "./game/evaluation.js";
-import { buildContext, POLICIES } from "./game/context.js";
+import { buildContext } from "./game/context.js";
 import { VOICE_MODEL, voiceBackend, isVoiceFile } from "./voice/model.js";
 import { GOAL_OPTIONS } from "./game/goals.js";
 import { commandInput, parseConstraints } from "./game/commands.js";
@@ -13,6 +13,7 @@ import { settlementWorld, developmentWorld, carePressureWorld } from "./game/set
 import { settlementChoices, settlementDecisionChoices, settlementDecisionInput, startSettlement } from "./game/settlement.js";
 import { stepWorld } from "./game/simulation.js";
 import { addCreature, addObject } from "./game/state.js";
+import { auditColony } from "./game/colony-audit.js";
 
 const $ = (id) => document.getElementById(id);
 const base = new URL(import.meta.env.BASE_URL, location.href);
@@ -50,6 +51,7 @@ async function check(name, run) {
   } catch (error) {
     record.status = error.name === "NotSupportedError" ? "skip" : "fail";
     record.error = error.message;
+    if (error.result) record.result = error.result;
   } finally {
     activeWorker?.terminate();
     activeWorker = null;
@@ -57,7 +59,7 @@ async function check(name, run) {
     record.elapsedMs = Math.round(performance.now() - started);
     results.push(record);
     row.dataset.status = record.status;
-    detail.textContent = `${record.status.toUpperCase()} · ${record.elapsedMs} ms\n${JSON.stringify(record.result || record.error, null, 2)}`;
+    detail.textContent = `${record.status.toUpperCase()} · ${record.elapsedMs} ms\n${record.result && record.error ? record.error + "\n" : ""}${JSON.stringify(record.result || record.error, null, 2)}`;
     $("download").disabled = false;
   }
 }
@@ -140,7 +142,7 @@ async function laya(backend, bufferCacheMode = "lazyRelease") {
     Object.values(answer.distribution).every(Number.isFinite),
     "Laya returned invalid probabilities.",
   );
-  const behavior = [];
+  const behavior = [], qualityFailures = [];
   for (const spec of DECISION_CASES) {
     showProgress(`Laya ${backend}: behavior ${spec.id}`);
     const world = decisionWorld(spec),
@@ -157,9 +159,8 @@ async function laya(backend, bufferCacheMode = "lazyRelease") {
           context: snapshot.local,
           requiredContext: snapshot.localParts[0],
           contextParts: snapshot.localParts.slice(1),
-          options: Object.fromEntries(
-            snapshot.plans.map((p) => [p.id, POLICIES[p.id]]),
-          ),
+          options: snapshot.options,
+          question: snapshot.question,
         },
         90000,
       );
@@ -168,22 +169,23 @@ async function laya(backend, bufferCacheMode = "lazyRelease") {
     }
     const chosen = decisionOutcome(world, selected),
       baseline = decisionOutcome(world, localReference(world));
-    assert(
+    const qualityCheck = (condition, message) => { if (!condition) qualityFailures.push(message); };
+    qualityCheck(
       chosen.violations === 0 && chosen.deaths === 0,
       `Unsafe choice in ${spec.id}`,
     );
-    assert(
+    qualityCheck(
       chosen.useful >= baseline.useful * 0.8 ||
         (baseline.unmetSeconds > 0 &&
           chosen.unmetSeconds <= baseline.unmetSeconds * 0.8),
       `Useful-work regression in ${spec.id}`,
     );
-    assert(
+    qualityCheck(
       chosen.unmetSeconds <=
         baseline.unmetSeconds + Math.max(5, baseline.unmetSeconds * 0.1),
       `Care regression in ${spec.id}`,
     );
-    assert(
+    qualityCheck(
       chosen.stalls <= baseline.stalls + 1,
       `Route regression in ${spec.id}`,
     );
@@ -312,7 +314,7 @@ async function laya(backend, bufferCacheMode = "lazyRelease") {
     after.some((path) => path.endsWith(".onnx.data")),
     "Model weights were not cached.",
   );
-  return {
+  const report = {
     backend,
     initiallyCachedFiles: before.length,
     cachedFiles: after,
@@ -328,6 +330,10 @@ async function laya(backend, bufferCacheMode = "lazyRelease") {
     inferenceMs: Math.round(answer.timing.inferenceMs),
     ...(soak ? { loadMemory: load.memory, soak } : {}),
   };
+  if (qualityFailures.length) {
+    throw Object.assign(new Error(qualityFailures.join("; ")), {result: {...report, qualityFailures}});
+  }
+  return report;
 }
 async function whisper(backend) {
   const file = $("speech-file").files[0];
@@ -491,6 +497,27 @@ async function resumableDownload() {
       sha256: resumed.sha256, cachedWithoutNetwork: true, workers: 3 };
   } finally { await caches.delete(cacheName); }
 }
+async function colonyAudit() {
+  await requireGpu();
+  activeWorker = new Worker(new URL("./laya/worker.js", import.meta.url), { type:"module" });
+  await callWorker(activeWorker,{kind:"load",backend:"webgpu",allowDownload:false});
+  const infer = input => callWorker(activeWorker,{kind:"infer",backend:"webgpu",...input});
+  const report=await auditColony({
+    chooseSchedule:(_w,s)=>infer({maxTokens:s.maxTokens,context:s.local,question:s.question,
+      requiredContext:s.localParts[0],contextParts:s.localParts.slice(1),
+      options:s.options}),
+    chooseDevelopment:(_w,_choices,input)=>infer(input),
+    onProgress: async sample=>{
+      if(cancelled) throw new Error("Stopped by user.");
+      showProgress(`25 residents · ${sample.tick}/300 simulated seconds · ${sample.completedProjects} projects completed`);
+      await new Promise(resolve=>setTimeout(resolve,0));
+    },
+  });
+  const {reviews,projects,residents,...summary}=report;
+  return {...summary,projectChoices:projects.map(p=>({tick:p.tick,selected:p.selected,started:p.started})),
+    scheduleChoices:reviews.map(r=>({tick:r.tick,selected:r.selected,candidates:r.options.length,source:r.source})),
+    firstOptions:reviews[0]?.options,firstModelTiming:reviews.find(r=>r.timing)?.timing,residents};
+}
 async function run(kind, backend, bufferCacheMode) {
   if (running) return;
   running = true;
@@ -502,6 +529,7 @@ async function run(kind, backend, bufferCacheMode) {
     );
   $("download").disabled = !results.length;
   try {
+    if (kind === "colony") await check("25-resident colony · real cached Laya", colonyAudit);
     if (kind === "all" || kind === "platform") {
       await check("Production assets & audio worklet", assets);
       await check("Browser storage", storage);
@@ -514,7 +542,7 @@ async function run(kind, backend, bufferCacheMode) {
           await check(`${name} ${mode}`, () =>
             (name === "laya" ? laya : whisper)(mode),
           );
-    } else if (kind !== "platform")
+    } else if (kind !== "platform" && kind !== "colony")
       await check(`${kind} ${backend}`, () =>
         (kind === "laya" ? laya : whisper)(backend, bufferCacheMode),
       );
@@ -531,6 +559,7 @@ async function run(kind, backend, bufferCacheMode) {
 $("run-all").onclick = () => run("all");
 $("run-platform").onclick = () => run("platform");
 $("run-download").onclick = () => run("download");
+$("run-colony").onclick = () => run("colony");
 document
   .querySelectorAll("[data-model]")
   .forEach(

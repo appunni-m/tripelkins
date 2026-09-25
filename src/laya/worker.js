@@ -271,6 +271,7 @@ async function infer(
         stateTokens,
         truncated,
         omittedParts,
+        logitsType: outputs.logits.type,
         prepareMs: prep - start,
         encoderMs: session ? null : encodedAt - prep,
         headMs: session ? null : performance.now() - encodedAt,

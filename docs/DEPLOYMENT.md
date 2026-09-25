@@ -24,6 +24,9 @@ Open `https://appunni-m.github.io/tripelkins/verify.html`, also linked from Opti
 - Actual Laya load and inference on FP16 WebGPU and single-thread Q8 WASM.
 - Actual Whisper Base English load and transcription: FP32 encoder with FP16 WebGPU or Q8 WASM decoder.
 - Expected model files present in the game's browser caches.
+- **25-resident audit · cached Laya GPU** measures real choices, workload and
+  movement over five simulated minutes without reading saved colonies. See the
+  [audit and reward breakdown](INTELLIGENCE_AUDIT.md).
 - **Download resume · ~53 MB** interrupts one Laya file, resumes it in a new
   worker and checks its SHA-256 against the model's published hash. See [resumable downloads](MODEL_DOWNLOADS.md).
 

@@ -8,7 +8,7 @@ import { scenario } from "./game/scenarios.js";
 import { toolSignature as toolsKey, htmlIfChanged } from "./ui-budget.js";
 import { createToolTray } from "./tool-tray.js";
 import { mountUiIcons, uiIcon } from "./ui-icons.js";
-import { DECISION_SPEEDS, decisionPace, intelligenceWorkers } from "./intelligence-settings.js";
+import { DECISION_SPEEDS, decisionPace, decisionEvent, decisionDue, intelligenceWorkers } from "./intelligence-settings.js";
 import { intelligenceControls, updateIntelligenceControls } from "./intelligence-options.js";
 import { backgroundBudget } from "./background-budget.js";
 import { JEV_MODEL } from "./providers/jev.js";
@@ -142,6 +142,7 @@ let world,
   lastDraw = -Infinity,
   lastAI = -Infinity,
   lastSettlement = -Infinity,
+  lastAIEvent = null, lastSettlementEvent = null,
   toastTimer,
   dialogType = "",
   optionsTab = "game",
@@ -870,10 +871,13 @@ function renderUi() {
       ? `${g.reason}. ${world.creatures.length} individual creatures. ${g.gpuDuty===null ? "GPU timing unavailable or warming; using frame-time safeguards" : `${(g.gpuDuty*100).toFixed(1)}% estimated rendering duty / 50% target`}. Main-thread work ${(g.cpuDuty*100).toFixed(1)}%. Births ${g.held?"waiting":"allowed as care permits"}.`
       : "Measuring device headroom when play resumes.";
   }
-  if ($("diagnostics"))
+  if ($("diagnostics")) {
     $("diagnostics").textContent = t
       ? `${brainStatus.source} · ${t.roundTripMs ? `${Math.round(t.roundTripMs)} ms round trip` : t.cacheMs !== undefined ? `${t.cacheMs.toFixed(2)} ms cache lookup` : ""} · ${t.tokens || "—"} tokens · ${t.inferenceMs ? `${Math.round(t.inferenceMs)} ms fresh inference` : ""} · ${brainStatus.decisions} fresh decisions, ${brainStatus.cacheHits} cached choices. Local scheduler: ${(world.runtime?.schedulerMs || 0).toFixed(2)} ms (not model inference). ${t.truncated ? "Some lower-priority context was omitted to fit the model." : ""}`
       : `No fresh model decision yet. Local instincts are running. Scheduler: ${(world.runtime?.schedulerMs || 0).toFixed(2)} ms for ${world.creatures.length} creatures.`;
+    const review=brainStatus.scheduleReview;
+    if(review) $("diagnostics").textContent += ` Group calls ${brainStatus.scheduleCalls}; development calls ${brainStatus.developmentCalls}; single-choice reviews ${brainStatus.singleChoiceReviews}. ${review.reason||""} Planning scores: ${review.choices.map(c=>`${c.id} ${c.reward.total.toFixed(2)}`).join("; ")}. These are estimates, not online learning rewards.`;
+  }
 }
 async function runAI(fresh = false) {
   if (!world.creatures.length || (!fresh && !world.settings.autonomy)) {
@@ -1387,7 +1391,7 @@ async function action(name) {
       modal(
         "What the colony remembers.",
         "LIVE AI CONTEXT",
-        `<div class="button-row"><button class="secondary" data-options-tab="advanced">← Advanced options</button></div><p class="muted">${ctx.context.groups.length} groups · ${world.creatures.length} members · feasible complete candidate schedules. Laya receives up to 256 tokens for schedules and 320 for development, with current needs kept ahead of optional details. OpenRouter receives a budgeted projection; the full view below stays in the game.</p><pre class="research">${esc(JSON.stringify({ current: ctx.context, budget: brainStatus.contextBudget, lastHostedRequest: brainStatus.sentContext }, null, 2))}</pre><details><summary>Saved decision history</summary><pre class="research">${esc(JSON.stringify({ goals: world.memory.goals, decisions: world.decisions, projects: world.groups, promises: world.story.promises }, null, 2))}</pre></details>`,
+        `<div class="button-row"><button class="secondary" data-options-tab="advanced">← Advanced options</button></div><p class="muted">${ctx.context.groups.length} groups · ${world.creatures.length} members · feasible complete candidate schedules. Laya receives up to 320 tokens for schedules and development, with current needs kept ahead of optional details. OpenRouter receives a budgeted projection; the full view below stays in the game.</p><pre class="research">${esc(JSON.stringify({ current: ctx.context, budget: brainStatus.contextBudget, lastHostedRequest: brainStatus.sentContext }, null, 2))}</pre><details><summary>Saved decision history</summary><pre class="research">${esc(JSON.stringify({ goals: world.memory.goals, decisions: world.decisions, projects: world.groups, promises: world.story.promises }, null, 2))}</pre></details>`,
         "context",
       );
       break;
@@ -1730,13 +1734,15 @@ function frame(now) {
     save(false);
     lastSave = now;
   }
-  const pace = decisionPace(world.settings);
-  if (!paused && !conversation.listening && world.time - lastSettlement >= pace.development && independent(world) && canDecide("development")) {
+  const developmentEvent=decisionEvent(world,"development"), scheduleEvent=decisionEvent(world,"schedule");
+  if (!paused && !conversation.listening && decisionDue(world.settings,"development",world.time-lastSettlement,developmentEvent!==lastSettlementEvent) && independent(world) && canDecide("development")) {
     lastSettlement = world.time;
+    lastSettlementEvent=developmentEvent;
     runSettlement();
   }
-  if (!paused && !conversation.listening && world.time - lastAI >= pace.schedule && canDecide("schedule")) {
+  if (!paused && !conversation.listening && decisionDue(world.settings,"schedule",world.time-lastAI,scheduleEvent!==lastAIEvent) && canDecide("schedule")) {
     lastAI = world.time;
+    lastAIEvent=scheduleEvent;
     runAI();
   }
   growthBudget.update(world, { now, elapsed, cpuMs: performance.now() - workStarted,

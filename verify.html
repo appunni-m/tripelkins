@@ -96,6 +96,12 @@
       It does not initialize a model. The transfer comes from the same model
       host used by the game; data charges may apply.
     </p>
+    <p>
+      The 25-resident audit runs five simulated minutes in a disposable colony,
+      with independence accepted and births held to keep the comparison at 25.
+      It uses cached Laya GPU weights only, reports actual model choices and
+      each resident's work and movement, and never loads your saved colony.
+    </p>
     <details>
       <summary>Recording for speech checks</summary>
       <p>Record yourself saying “Hello little friends. Please keep everyone happy and healthy.”
@@ -108,6 +114,7 @@
       <button id="run-all">Run all checks</button>
       <button id="run-platform">Site & storage</button>
       <button id="run-download">Download resume · ~53 MB</button>
+      <button id="run-colony">25-resident audit · cached Laya GPU</button>
       <button data-model="laya" data-backend="webgpu">Laya WebGPU</button>
       <button data-model="laya" data-backend="webgpu" data-buffer-cache="bucket">Compare original GPU buffer pool</button>
       <button data-model="laya" data-backend="wasm">Laya WASM</button>

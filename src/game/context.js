@@ -6,7 +6,8 @@ import { isExplored, discoverySummary } from "./discovery.js";
 import { capacity } from "./jobs.js";
 import { projectName, projectStatus, timberReserve } from "./development.js";
 import { bridgeProject } from "./bridge-project.js";
-import { feasiblePlans, POLICIES } from "./decisions.js";
+import { feasiblePlans, POLICIES, planReward } from "./decisions.js";
+import { USEFUL_TASKS } from "./work-balance.js";
 export { POLICIES };
 import { goal } from "./catalog.js";
 import { activeGoal, inspectGoal, goalTitle } from "./goals.js";
@@ -52,6 +53,13 @@ export function buildContext(w, { includePlans = true } = {}) {
       .map((c) => c.id),
   }));
   const plans = includePlans ? feasiblePlans(w) : [];
+  const workload = {tasks:{},states:{},available:0,useful:0};
+  for (const c of w.creatures) {
+    workload.tasks[c.task]=(workload.tasks[c.task]||0)+1;
+    const state=c.job?.state||"none";workload.states[state]=(workload.states[state]||0)+1;
+    if (["idle","rest","social"].includes(c.task) && Math.min(c.fed,c.clean,c.amused)>=68 && c.sickness<50) workload.available++;
+    if (USEFUL_TASKS.has(c.task)) workload.useful++;
+  }
   const counts = {};
   for (const o of w.objects.filter(o=>isExplored(w,o))) counts[o.type] = (counts[o.type] || 0) + 1;
   const observed = nearbyObjects(w, w.ui.x, w.ui.y, 24)
@@ -65,6 +73,7 @@ export function buildContext(w, { includePlans = true } = {}) {
     observedCounts[o.type] = (observedCounts[o.type] || 0) + 1;
   const context = {
     version: 4,
+    workload,
     developmentPlan: developmentPlan(w),
     timber: timberReserve(w),
     blockedWork: accessContext(w),
@@ -165,7 +174,9 @@ export function buildContext(w, { includePlans = true } = {}) {
     candidates: plans.map((p) => ({
       id: p.id,
       description: POLICIES[p.id],
+      allocation: p.assignments.reduce((counts,a)=>{counts[a.task]=(counts[a.task]||0)+1;return counts;},{}),
       expected: p.effects,
+      reward: planReward(w,p),
       groups: groups.map((g) => ({
         id: g.id,
         jobs: p.assignments.filter((a) => g.members.includes(a.id)),
@@ -178,19 +189,11 @@ export function buildContext(w, { includePlans = true } = {}) {
       : 0,
   );
   const localParts = [
-    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || "care and growth"}. Care first; rotate rested workers. ${accessBrief(w)}`,
+    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || "healthy growth"}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
+    ...plans.map(p=>`${p.id} planning score ${planReward(w,p).total.toFixed(2)}; density cost ${p.effects.space.toFixed(2)}, travel cost ${p.effects.travel.toFixed(2)}. Higher is better; estimates, not learned rewards.`),
     `Care capacity: ${careSummary(care)}.`,
     `Expansion: ${context.developmentPlan.expanding ? "scout new neighborhoods" : "balance space and care"}. Density target ${context.developmentPlan.density.target} per 100 ground units; crowding penalty 4, isolation penalty 0.6. Child goals: ${context.developmentPlan.children.filter(s=>s.status!=="satisfied").map(s=>s.kind).join(",")}.`,
     `Independent development ${w.community.consent}; ${w.community.project ? `${projectName(w.community.project)}: ${projectStatus(w)}` : "no current project"}. Scouted ${w.community.explored} areas.`,
-    `Feasible options: ${plans
-      .map(
-        (p) =>
-          `${p.id}: ${Object.entries(p.effects || {})
-            .filter(([, n]) => n > 0)
-            .map(([k, n]) => `${k} ${n.toFixed(1)}`)
-            .join(",")}`,
-      )
-      .join("; ")}.`,
     `Lowest food/clean/play ${minimum.join("/")} (0 urgent,100 full). Population ${w.population}.`,
     objective
       ? `Goal ${objective.kind} ${objectiveState.value}/${objective.target}. Next ${objectiveState.policy}. ${objectiveState.blocker}`
@@ -216,6 +219,7 @@ export function buildContext(w, { includePlans = true } = {}) {
     w.stage,
     w.commandRevision,
     w.community.consent, w.community.project,
+    workload, w.memory.activity,
     w.community.access.map(r=>[r.id,r.status,r.blocker,r.crew]),
     care, w.discovery.revision, context.timber, Math.floor(w.inventory.blocks),
     plans.map(p=>[p.id,p.assignments.reduce((a,j)=>{a[j.task]=(a[j.task]||0)+1;return a;},{})]),
@@ -246,7 +250,12 @@ export function buildContext(w, { includePlans = true } = {}) {
   ]);
   return {
     context,
-    maxTokens: 256,
+    maxTokens: 320,
+    question:"Which crew allocation makes useful progress without unnecessary care or leaving healthy residents idle?",
+    options: Object.fromEntries(plans.map(p=>{
+      const count=task=>p.assignments.filter(a=>task(a.task)).length;
+      return [p.id,`Send ${count(t=>t==="explore")} scouts; ${count(t=>["idle","rest","social"].includes(t))} rest; ${count(t=>USEFUL_TASKS.has(t)&&t!=="explore")} work; ${count(t=>["eat","wash","play","home"].includes(t))} recover.`];
+    })),
     local: localParts.join(" "),
     localParts,
     plans,
