@@ -1,3 +1,4 @@
+import { workProjects } from "./work-projects.js";
 import { naturalObjects, WORLD_EDGE } from "./map.js";
 import { copyOccupancy, NAV_CELL } from "./navigation-grid.js";
 import {
@@ -135,9 +136,9 @@ function portal(w, c, target) {
     const crossing = t > 0.04 && t < 0.96 && distance < g.width / 2;
     const point =
       crossing || Math.hypot(c.x - bank.x, c.y - bank.y) < 0.55 ? exit : bank;
-    const cost =
-      Math.hypot(c.x - bank.x, c.y - bank.y) +
-      Math.hypot(target.x - exit.x, target.y - exit.y);
+    const cost = (crossing ? Math.hypot(c.x-exit.x,c.y-exit.y)
+      : Math.hypot(c.x-bank.x,c.y-bank.y)+Math.hypot(exit.x-bank.x,exit.y-bank.y)) +
+      Math.hypot(target.x-exit.x,target.y-exit.y);
     if (!best || cost < best.cost) best = { ...point, cost };
   }
   return best;
@@ -156,7 +157,7 @@ function fieldFor(w, target, from = target) {
     oy = (ty + sy - WIDTH / 2) * CELL;
   const objects = [
     ...w.objects,
-    ...(w.community?.project ? [{...w.community.project,id:`construction:${w.community.project.id}`}] : []),
+    ...workProjects(w).map(p=>({...p,id:`construction:${p.id}`})),
     ...naturalObjects(
       w,
       ox - 4,
@@ -298,5 +299,7 @@ function calculateRouteCost(w, c, p) {
     y = Math.round((c.y - oy) / CELL);
   const n =
     x >= 0 && y >= 0 && x < WIDTH && y < WIDTH ? costs[y * WIDTH + x] : -1;
-  return n >= 0 ? n * CELL : Math.hypot(c.x - p.x, c.y - p.y);
+  // The destination's local field may exclude the bridge entirely. Its
+  // straight-line fallback used to time out valid, much longer river journeys.
+  return Math.max(n >= 0 ? n * CELL : Math.hypot(c.x-p.x,c.y-p.y),portal(w,c,p)?.cost || 0);
 }

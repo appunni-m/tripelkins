@@ -1,4 +1,5 @@
 import { BUILDINGS, unlocked } from "./catalog.js";
+import { workProjects } from "./work-projects.js";
 
 export const CARE_BUILDINGS = ["orchard", "bath", "roundabout"];
 export const INDEPENDENT_BUILDINGS = [...CARE_BUILDINGS, "mine", "factory", "dwelling", "theatre"];
@@ -20,20 +21,40 @@ export function colonyMilestone(w) {
   };
   return null;
 }
+export function industryMilestone(w) {
+  if(w.memory.goals.some(g=>g.status==="active") || w.stage!==2 || w.progress.peakBlocks<300 || w.progress.energy>=1500000) return null;
+  return {id:"story-industry",kind:"energy",project:"industry",target:1500000,
+    value:w.progress.energy,remaining:1500000-w.progress.energy,title:"A new kind of world",
+    step:"Build stocked mines and stone workshops in local neighborhoods; carry ore and produce energy. Keep care available."};
+}
 export const projectName = (p) => (BUILDINGS[p?.type] || RESOURCE_PROJECTS[p?.type])?.name || "Colony work";
 export const isConstruction = (p) => INDEPENDENT_BUILDINGS.includes(p?.type);
-export const projectFunded = (w, p = w.community.project) => p &&
-  w.inventory.wood >= (BUILDINGS[p.type]?.wood || 0) &&
-  w.inventory.blocks >= (BUILDINGS[p.type]?.cost || 0);
+export function projectRequirements(w,p) {
+  const result={wood:BUILDINGS[p?.type]?.wood||0,blocks:BUILDINGS[p?.type]?.cost||0};
+  for(const earlier of workProjects(w)) {
+    if(earlier.id===p?.id) break;
+    result.wood+=BUILDINGS[earlier.type]?.wood||0;
+    result.blocks+=BUILDINGS[earlier.type]?.cost||0;
+  }
+  return result;
+}
+export const projectFunded = (w, p = w.community.project) => {
+  if(!p) return false;
+  const needed=projectRequirements(w,p);
+  return w.inventory.wood>=needed.wood && w.inventory.blocks>=needed.blocks;
+};
+export const uncommittedBlocks = w => Math.max(0,w.inventory.blocks-
+  workProjects(w).reduce((n,p)=>n+(BUILDINGS[p.type]?.cost||0),0));
 
 // Refill in batches, leaving room for the next building. This is a planning
 // target, not a spending lock: care/building crews may always use stored wood.
-// A single development crew works at a time, so huge colonies need no huge pile.
+// Account for concurrent building crews, while bounding the spare reserve.
 export function timberReserve(w) {
   const largest = Math.max(12,...INDEPENDENT_BUILDINGS
     .filter(type=>unlocked(w,BUILDINGS[type]))
     .map(type=>BUILDINGS[type].wood || 0));
-  const target = Math.max(24,largest*2,Math.min(144,Math.ceil(w.creatures.length/8)*6));
+  const committed=workProjects(w).reduce((n,p)=>n+(BUILDINGS[p.type]?.wood||0),0);
+  const target = Math.max(24,largest*2,Math.min(144,Math.ceil(w.creatures.length/8)*6))+committed;
   const minimum = Math.max(12,largest,Math.ceil(target/2));
   const stock = Math.floor(w.inventory.wood);
   const goal = w.memory.goals.find(g=>g.status==="active");
@@ -51,8 +72,8 @@ export function projectStatus(w, p = w.community.project) {
   if (p.type === "crossing") return "Cutting timber and carrying wood to the river.";
   const material = RESOURCE_PROJECTS[p.type]?.material;
   if (material) return `${Math.floor(w.inventory[material])}/${p.target} ${material} · ${p.type === "refine" ? "gather stone, then work the ore into blocks" : "gather nearby resources"}`;
-  const spec = BUILDINGS[p.type];
-  if (w.inventory.wood < (spec.wood || 0)) return `Gathering wood: ${w.inventory.wood}/${spec.wood}`;
-  if (w.inventory.blocks < (spec.cost || 0)) return `Waiting for blocks: ${w.inventory.blocks}/${spec.cost}`;
+  const needed=projectRequirements(w,p);
+  if (w.inventory.wood < needed.wood) return `Gathering wood: ${w.inventory.wood}/${needed.wood}, including earlier crews`;
+  if (w.inventory.blocks < needed.blocks) return `Waiting for blocks: ${w.inventory.blocks}/${needed.blocks}, including earlier crews`;
   return "The crew is building; care comes first.";
 }

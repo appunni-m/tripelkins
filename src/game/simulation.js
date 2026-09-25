@@ -1,3 +1,4 @@
+import { workerProject } from "./work-projects.js";
 import { orbitalReady } from "./orbit-rules.js";
 import { acceptsProject, projectState, supplyProject } from "./projects.js";
 import { NEED_DECAY, USEFUL_TASKS } from "./work-balance.js";
@@ -138,7 +139,7 @@ function travel(w, c, dt) {
     w.time - path.at > 3
   ) {
     const point = waypoint(w, c, job.point);
-    path = point ? { signature, point, at: w.time } : null;
+    path = point ? { signature, point, at: w.time, bestDistance:distance(c,point) } : null;
     if (path) paths.set(c, path);
     else paths.delete(c);
   }
@@ -162,6 +163,14 @@ function travel(w, c, dt) {
   if (moved > 0.01) {
     job.lastProgress = w.time;
     c.heading = Math.atan2(dy, dx);
+    // Long bridge approaches may move away from the final destination for
+    // more than 30 seconds. Count forward progress along the current leg;
+    // the overall journey deadline still catches endless detours/oscillation.
+    const remaining=distance(c,p);
+    if (remaining < path.bestDistance-.15) {
+      path.bestDistance=remaining;
+      job.progressAt=w.time;
+    }
   }
   if (
     w.time - job.lastProgress > 8 ||
@@ -238,7 +247,7 @@ export function stepWorld(w, dt) {
       continue;
     const o = w.objects.find((o) => o.id === c.target);
     if (["gather", "quarry", "refine", "construct"].includes(c.task) && clearanceTask(w,c)?.task!==c.task && (!projectAllowed(w,c) ||
-        (["construct","refine"].includes(c.task) && c.job.project !== w.community.project?.id))) {
+        (["construct","refine"].includes(c.task) && c.job.project !== workerProject(w,c)?.id))) {
       c.task = "idle"; c.target = null; c.job = null; continue;
     }
     if (c.target && !o) {
@@ -383,7 +392,7 @@ export function stepWorld(w, dt) {
       w.inventory.ore--;w.inventory.blocks+=10;w.progress.energy+=10;
       finish(w,c);
     } else if (c.task === "construct") {
-      const project = w.community.project;
+      const project = workerProject(w,c);
       if (independent(w) && projectFunded(w,project))
         project.progress = Math.min(project.required,project.progress+dt);
     } else if (c.task === "explore" && c.work >= 3) {
@@ -457,10 +466,10 @@ export function stepWorld(w, dt) {
       }
     }
   separateBodies(w);
-  const builtProject = finishSettlement(w,placeBuilding);
-  if (builtProject)
+  const builtProjects = finishSettlement(w,placeBuilding);
+  if (builtProjects.length)
     for (const c of w.creatures)
-      if (c.task === "construct" && c.job?.project === builtProject) finish(w,c);
+      if (c.task === "construct" && builtProjects.includes(c.job?.project)) finish(w,c);
   stepCohorts(w, dt);
   for (const o of w.objects) {
     if (o.type === "orchard") {

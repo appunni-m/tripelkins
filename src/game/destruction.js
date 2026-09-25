@@ -1,4 +1,5 @@
 import { BUILDINGS } from "./catalog.js";
+import { workProjects, removeWorkProject } from "./work-projects.js";
 import { nearbyObjects, isGround, westBank, clearNatural } from "./map.js";
 import { addObject, materializeObject, remember } from "./state.js";
 import { die } from "./resources.js";
@@ -41,9 +42,8 @@ export function meteorImpact(w, x, y) {
   for (const c of w.creatures) if (targets.some((o) => o.id === c.target)) {
     c.task = "idle"; c.target = null; c.job = null; c.work = 0;
   }
-  const project = w.community.project;
-  if (project && Math.hypot(project.x-x,project.y-y) <= METEOR_RADIUS) {
-    w.community.project = null;
+  for (const project of workProjects(w)) if (Math.hypot(project.x-x,project.y-y) <= METEOR_RADIUS) {
+    removeWorkProject(w,project.id);
     w.community.lastProjectAt = w.time;
     activity(w,"construction","The meteor destroyed our unfinished building.","You");
   }

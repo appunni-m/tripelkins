@@ -1,3 +1,4 @@
+import { workerProject, workProjects } from "./work-projects.js";
 import { isExplored } from "./discovery.js";
 import { CARE_START, USEFUL_TASKS, workOrder, workRole, recordWork } from "./work-balance.js";
 import { clearanceTask, requestAccess, accessPoint } from "./access.js";
@@ -11,7 +12,7 @@ import {
 import { routeCost, JOB_RADIUS } from "./navigation.js";
 import { frontier, scoutLimit } from "./exploration.js";
 import { densityAt, densityReward, DENSITY } from "./density.js";
-import { constructionSlots, projectAllowed, projectTask, storedSupply } from "./settlement.js";
+import { constructionSlots, projectTasks, projectTask, refiningShortage, storedSupply } from "./settlement.js";
 import { projectFunded, projectName } from "./development.js";
 export const TASKS = [
   "idle",
@@ -78,7 +79,7 @@ function isCrowded(w, c) {
 export function allowsTask(w, task, c) {
   if (["gather", "quarry", "refine", "construct"].includes(task) &&
       clearanceTask(w,c)?.task !== task &&
-      (!projectAllowed(w, c) || projectTask(w,c)!==task)) return false;
+      !projectTasks(w,c).includes(task)) return false;
   const scope = w.directives?.members;
   if (scope?.length && !scope.includes(c.id)) return true;
   if (
@@ -92,7 +93,10 @@ export function allowsTask(w, task, c) {
 function workTargets(w, c, task) {
   return w.objects.filter((o) => {
     if (!isExplored(w,o)) return false;
-    if (Math.hypot(c.x - o.x, c.y - o.y) > JOB_RADIUS) return false;
+    // The radius bounds discovery of NEW work. A river detour can carry a
+    // committed worker farther from its destination before it gets closer.
+    const committed = c.target===o.id && c.job && !["completed","blocked","cancelled"].includes(c.job.state);
+    if (!committed && Math.hypot(c.x - o.x, c.y - o.y) > JOB_RADIUS) return false;
     const scope = w.directives?.members;
     if (
       w.directives?.region &&
@@ -107,7 +111,7 @@ function workTargets(w, c, task) {
     if (clearance && ["gather","quarry"].includes(task)) return task===clearance.task && o.id===clearance.target;
     if (task === "gather") return projectTask(w,c)==="gather" &&
       (o.type === "tree" || (o.type === "log" && o.stock > 0));
-    if (task === "quarry") return projectTask(w,c)==="quarry" &&
+    if (task === "quarry") return projectTasks(w,c).includes("quarry") &&
       (o.type === "rock" || (o.type === "ore" && o.stock > 0));
     if (task === "wash") return o.type === "bath";
     if (task === "play")
@@ -192,7 +196,7 @@ function desired(w, c, policy) {
       ...care,
       ...(maintain ? ["clean"] : []),
       ...(clearanceTask(w,c) ? [clearanceTask(w,c).task] : []),
-      ...(projectTask(w,c) ? [projectTask(w,c)] : []),
+      ...projectTasks(w,c),
       ...work,
       // A bounded scouting crew can include any healthy resident with no work.
       ...(minimum(c) >= 76 && !c.carry && isCrowded(w,c) ? ["explore"] : []),
@@ -204,9 +208,14 @@ function desired(w, c, policy) {
   ].filter((t) => allowsTask(w, t, c));
 }
 function reserve(w, slots, stock, a) {
-  if (["construct","refine"].includes(a.task)) slots.add(`construction:${a.slot}`);
+  if (["construct","refine"].includes(a.task)) slots.add(`construction:${a.project}:${a.slot}`);
   if (a.task === "refine") stock.set("inventory:ore",(stock.get("inventory:ore")||0)+1);
   const c = w.creatures.find(c=>c.id===a.id), target=w.objects.find(o=>o.id===a.target);
+  if(a.task==="quarry" && target?.type==="rock") {
+    stock.set("pending:ore",(stock.get("pending:ore")||0)+3);
+    const key=`pending:ore:${workerProject(w,c)?.id}`;
+    stock.set(key,(stock.get(key)||0)+3);
+  }
   const supply = a.task==="haul" && !c.carry && target && storedSupply(w,c,target);
   if (supply) stock.set(`inventory:${supply}`,(stock.get(`inventory:${supply}`)||0)+3);
   if (a.target) {
@@ -224,12 +233,14 @@ export function makePlan(w, policy = "balanced") {
     assignments = [], access = [],
     slotCache = new Map();
   const floor = w.directives?.careFloor || 35;
+  const refiningCrews=Math.max(1,workProjects(w).filter(p=>p.type==="refine").length);
   const priority = c => minimum(c) < floor || c.sickness >= 50 ? 0 :
     c.job && !["completed", "blocked", "cancelled"].includes(c.job.state) &&
       !["idle", "rest", "social"].includes(c.task) ? 1 : 2;
   const members = [...w.creatures].sort((a,b) => priority(a)-priority(b) ||
     (priority(a)===0 ? minimum(a)-minimum(b) : 0) || workOrder(a,b));
   for (const c of members) {
+    const project=workerProject(w,c);
     const tasks = desired(w, c, policy),
       old = c.job,
       target = w.objects.find((o) => o.id === c.target);
@@ -240,8 +251,8 @@ export function makePlan(w, policy = "balanced") {
       !["idle","rest","social"].includes(c.task) &&
       (!c.carry || ["haul", "eat", "wash", "home", "play"].includes(c.task)) &&
       old &&
-      (!["construct","refine"].includes(c.task) || (old.project === w.community.project?.id &&
-        (c.task==="construct" ? projectFunded(w) : w.inventory.ore-(stock.get("inventory:ore")||0)>0) && !slots.has(`construction:${old.slot}`))) &&
+      (!["construct","refine"].includes(c.task) || (old.project === workerProject(w,c)?.id &&
+        (c.task==="construct" ? projectFunded(w,project) : w.inventory.ore-(stock.get("inventory:ore")||0)>0) && !slots.has(`construction:${old.project}:${old.slot}`))) &&
       !["blocked", "cancelled", "completed"].includes(old.state) &&
       allowsTask(w, c.task, c) &&
       (servingCare ||
@@ -287,16 +298,19 @@ export function makePlan(w, policy = "balanced") {
     }
     let chosen, obstruction;
     for (const task of tasks) {
+      if(task==="quarry" && project?.type==="refine" && !clearanceTask(w,c) &&
+        (refiningShortage(w,project)<=(stock.get("pending:ore")||0) ||
+         (stock.get(`pending:ore:${project.id}`)||0)>=Math.ceil(refiningShortage(w,project)/refiningCrews))) continue;
       if (task === "explore" && assignments.filter(a=>a.task==="explore").length >= scoutLimit(w,policy)) continue;
       if (["construct","refine"].includes(task)) {
-        const p = (task==="construct" ? projectFunded(w) : w.inventory.ore-(stock.get("inventory:ore")||0)>0) &&
-          constructionSlots(w).find((p) => !slots.has(`construction:${p.slot}`) &&
+        const p = (task==="construct" ? projectFunded(w,project) : w.inventory.ore-(stock.get("inventory:ore")||0)>0) &&
+          constructionSlots(w,project).find((p) => !slots.has(`construction:${project.id}:${p.slot}`) &&
             !assignments.some((a) => Math.hypot(a.point.x-p.x,a.point.y-p.y)<0.6) && Number.isFinite(routeCost(w,c,p)));
-        if (p) { chosen = { id:c.id, task, target:null, slot:p.slot, point:p, project:w.community.project.id,
-          purpose:`Work on our ${projectName(w.community.project).toLowerCase()}` }; break; }
-        if (!p && (task==="construct" ? projectFunded(w) : w.inventory.ore>0) &&
-            !constructionSlots(w).some(s=>Number.isFinite(routeCost(w,c,s)))) obstruction ||= {unit:c.id,task,project:w.community.project?.id,
-          point:constructionSlots(w)[0] || (w.community.project && accessPoint(w.community.project,c))};
+        if (p) { chosen = { id:c.id, task, target:null, slot:p.slot, point:p, project:project.id,
+          purpose:`Work on our ${projectName(project).toLowerCase()}` }; break; }
+        if (!p && (task==="construct" ? projectFunded(w,project) : w.inventory.ore>0) &&
+            !constructionSlots(w,project).some(s=>Number.isFinite(routeCost(w,c,s)))) obstruction ||= {unit:c.id,task,project:workerProject(w,c)?.id,
+          point:constructionSlots(w,project)[0] || (project && accessPoint(project,c))};
         continue;
       }
       if (["rest", "social"].includes(task)) {
@@ -524,7 +538,7 @@ export function applyPlan(w, plan) {
     )
       return false;
     if (!allowsTask(w, a.task, c)) return false;
-    if (["construct","refine"].includes(a.task) && (a.project !== w.community.project?.id || slots.has(`construction:${a.slot}`))) return false;
+    if (["construct","refine"].includes(a.task) && (a.project !== workerProject(w,c)?.id || slots.has(`construction:${a.project}:${a.slot}`))) return false;
     if (a.task === "refine" && w.inventory.ore-(stock.get("inventory:ore")||0)<=0) return false;
     if (a.target && !workTargets(w, c, a.task).some((o) => o.id === a.target))
       return false;

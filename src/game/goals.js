@@ -3,6 +3,7 @@
 import { JOB_RADIUS } from "./navigation.js";
 import { westBank } from "./map.js";
 import { developmentPlan } from "./development-plan.js";
+import { workProjects } from "./work-projects.js";
 export const GOAL_OPTIONS = {
   none: "Conversation or unsupported request",
   care: "Keep the colony healthy",
@@ -253,14 +254,14 @@ export function inspectGoal(w, g) {
   const independent = w.community.consent === "accepted" && w.settings.autonomy !== false && w.runtime?.intelligenceAvailable;
   if (independent && members.length && ["care","grow"].includes(g.kind)) {
     if (missingCare) step="Choose needed care facilities, gather timber and build near the residents who need them.";
-    blocker=w.community.project?.blocked || "";
+    blocker=workProjects(w).find(p=>p.blocked)?.blocked || "";
     paths.grow=["Provide care for the next generation", "Scout new ground and build spaced care outposts",
       "Keep everyone comfortable and welcome new lives steadily"];
   }
   if (independent && members.length && ["wood","ore","bridge","blocks"].includes(g.kind)) {
     step = {wood:"Cut trees and collect timber for the requested reserve.",ore:"Quarry rocks and collect ore; reserve it from processing.",
       bridge:"Gather timber and carry stored wood to the crossing.",blocks:"Gather stone and work ore into blocks; keep existing factories supplied."}[g.kind];
-    blocker = w.community.project?.blocked || "";
+    blocker = workProjects(w).find(p=>p.blocked)?.blocked || "";
     paths.wood = ["Choose a reachable stand of trees", "Cut timber and gather loose logs", `Store ${g.target} wood`];
     paths.ore = ["Choose reachable stone", "Quarry rocks and collect ore", `Reserve ${g.target} ore`];
     paths.blocks = ["Gather stone and ore", "Work ore into blocks by hand or at a supplied factory", `Store ${g.target} stone blocks`];

@@ -20,9 +20,9 @@ export const saveHealth = {
 function openDatabase() {
   if (connection) return connection;
   connection = new Promise((resolve, reject) => {
-    // Version 10 fences older tabs that truncate colonies above 192 named lives.
+    // Version 11 fences older tabs that discard concurrent local work crews.
     // Existing stores and records remain intact during the upgrade.
-    const request = indexedDB.open(DB_NAME, 10);
+    const request = indexedDB.open(DB_NAME, 11);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains("worlds"))

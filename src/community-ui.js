@@ -1,3 +1,4 @@
+import { workProjects } from "./game/work-projects.js";
 import { brainStatus } from "./brain.js";
 import { collectStoryMessages, storyEntry, answerStory } from "./game/story.js";
 import { nextNotice, setIndependence } from "./game/community.js";
@@ -36,7 +37,7 @@ export function createCommunityUI({ getWorld, ready, modal, closeModal, save, op
     const w = getWorld();
     if (w.population <= 20 && w.community.consent === "unasked") return;
     modal("Standing on our own", "COLONY INDEPENDENCE · GAME PAUSED",
-      `<p>${esc(independenceText())}</p><p class="muted">${w.community.consent === "accepted" ? "Independent building is allowed. You can take over again whenever you like." : "This choice can be changed in Options."} They use real materials, choose one development project at a time, and respect your work restrictions. Destructive powers and story choices remain yours.</p><div class="button-row">${consentButtons()}</div>`, "independence");
+      `<p>${esc(independenceText())}</p><p class="muted">${w.community.consent === "accepted" ? "Independent building is allowed. You can take over again whenever you like." : "This choice can be changed in Options."} They use real materials, organize local work crews, and respect your work restrictions. Destructive powers and story choices remain yours.</p><div class="button-row">${consentButtons()}</div>`, "independence");
   }
   function update(status, notify = false) {
     const w = getWorld();
@@ -58,7 +59,7 @@ export function createCommunityUI({ getWorld, ready, modal, closeModal, save, op
     $("thought-status").textContent = status.kind === "thinking" ? "Thinking…" : status.kind === "on" ? "Intelligence on" : status.title;
     $("thought-log").dataset.state = status.kind;
     if ($("thought-log").open) {
-      const project = w.community.project;
+      const projects=workProjects(w);
       const jobs = w.creatures.reduce((counts,c)=>{ counts[c.task]=(counts[c.task]||0)+1;return counts; },{});
       const names = { idle:"waiting for a turn",eat:"eating",wash:"washing",play:"playing",home:"resting at home",explore:"scouting",gather:"cutting and gathering timber",quarry:"quarrying stone",refine:"working ore into blocks",construct:"building",haul:"carrying materials",mine:"mining",work:"making blocks",clean:"cleaning",social:"socialising",rest:"resting",orbit:"leaving for orbit" };
       const now = Object.entries(jobs).map(([key,count])=>`${count} ${names[key] || key}`).join(" · ");
@@ -66,7 +67,7 @@ export function createCommunityUI({ getWorld, ready, modal, closeModal, save, op
       const thinking=review ? `${brainStatus.scheduleCalls} group requests · ${brainStatus.developmentCalls} building requests this session. ${review.reason || `Last group choice: ${review.selected || "thinking"} from ${review.candidates} feasible schedules.`}` : "";
       const initiative=!ready() ? "" : w.community.consent!=="accepted" ? '<p class="thought-explainer">Independent gathering and building await your permission in the inbox.</p>' : "";
       const entries = w.community.activity.slice(-12).reverse().map((a)=>`<li><small>${stamp(a.tick)} · ${esc(a.source)}</small><p>${esc(a.text)}</p>${a.detail ? `<span>${esc(a.detail)}</span>`:""}</li>`).join("");
-      htmlIfChanged($("thought-content"),`<p class="thought-current">${esc(now || "The clearing is quiet.")}</p><small>${w.metrics.completed} tasks completed in this world · ${w.community.explored} areas scouted</small>${project ? `<p class="thought-project">${esc(projectName(project))} · ${projectPercent(w,project)}%<br>${esc(!ready() ? "Waiting for intelligence to reconnect." : !w.settings.autonomy ? "Colony initiative is paused in Options." : project.blocked || projectStatus(w,project))}</p>`:""}${initiative}<p class="thought-explainer">${status.kind === "off" || status.kind === "unavailable" ? 'Instincts are keeping them alive. <button data-community-enable>Enable intelligence</button> to let them choose plans.' : !w.settings.autonomy ? "Colony initiative is paused in Options. You can still talk to them." : brainStatus.activeRequests ? "Considering a decision right now…" : "They think when there is a useful choice. Movement and care continue between decisions."}</p>${thinking ? `<p class="thought-explainer">${esc(thinking)}</p>`:""}<ol>${entries || '<li>No decisions recorded yet.</li>'}</ol>`);
+      htmlIfChanged($("thought-content"),`<p class="thought-current">${esc(now || "The clearing is quiet.")}</p><small>${w.metrics.completed} tasks completed in this world · ${w.community.explored} areas scouted</small>${projects.map(project=>`<p class="thought-project">${esc(projectName(project))} · ${projectPercent(w,project)}% · ${project.crew.length} workers at ${Math.round(project.x)}, ${Math.round(project.y)}<br>${esc(!ready() ? "Waiting for intelligence to reconnect." : !w.settings.autonomy ? "Colony initiative is paused in Options." : project.blocked || projectStatus(w,project))}</p>`).join("")}${initiative}<p class="thought-explainer">${status.kind === "off" || status.kind === "unavailable" ? 'Instincts are keeping them alive. <button data-community-enable>Enable intelligence</button> to let them choose plans.' : !w.settings.autonomy ? "Colony initiative is paused in Options. You can still talk to them." : brainStatus.activeRequests ? "Considering a decision right now…" : "They think when there is a useful choice. Movement and care continue between decisions."}</p>${thinking ? `<p class="thought-explainer">${esc(thinking)}</p>`:""}<ol>${entries || '<li>No decisions recorded yet.</li>'}</ol>`);
     }
     if (notify && !$("modal").open) {
       const message = nextNotice(w);

@@ -1,4 +1,5 @@
 import { decisionPace } from "../intelligence-settings.js";
+import { workProjects, workerProject, addWorkProject, removeWorkProject, projectLimit, MAX_PROJECT_CREW } from "./work-projects.js";
 import { completionLetter } from "./colony-letters.js";
 import { clearanceChoices, startClearance, requestAccess, accessPoint, accessBrief } from "./access.js";
 import { workOrder, working } from "./work-balance.js";
@@ -13,7 +14,7 @@ import { routeCost } from "./navigation.js";
 import { materializeObject, remember } from "./state.js";
 import { activity, postMessage } from "./community.js";
 import { CARE_BUILDINGS, INDEPENDENT_BUILDINGS, RESOURCE_PROJECTS, DEVELOPMENT_TYPES,
-  projectName, isConstruction, projectFunded, timberReserve, colonyMilestone } from "./development.js";
+  projectName, isConstruction, projectFunded, projectRequirements, timberReserve, colonyMilestone, industryMilestone, uncommittedBlocks } from "./development.js";
 export { CARE_BUILDINGS } from "./development.js";
 const activeGoal = (w) => w.memory.goals.find((g) => g.status === "active");
 function scoped(w, c) {
@@ -30,18 +31,37 @@ function resourceNeeded(w, p) {
 }
 export function projectTask(w, c) {
   if (!projectAllowed(w,c)) return null;
-  const p = w.community.project;
+  const p = workerProject(w,c);
   if (p.type === "crossing") return w.inventory.wood > 0 ? "haul" : "gather";
   if (p.type === "timber") return resourceNeeded(w,p) ? "gather" : null;
   if (p.type === "quarry") return resourceNeeded(w,p) ? "quarry" : null;
   if (p.type === "refine") return resourceNeeded(w,p) ? (w.inventory.ore > 0 ? "refine" : "quarry") : null;
-  return w.inventory.wood < (BUILDINGS[p.type].wood || 0) ? "gather" : projectFunded(w,p) ? "construct" : null;
+  return w.inventory.wood < projectRequirements(w,p).wood ? "gather" : projectFunded(w,p) ? "construct" : null;
+}
+export function refiningShortage(w,p) {
+  const loose=w.objects.reduce((n,o)=>n+(o.type==="ore"?o.stock:0),0);
+  const carried=w.creatures.reduce((n,c)=>n+(c.cargoKind==="ore"?c.carry:0),0);
+  return Math.max(0,Math.ceil((p.target-w.inventory.blocks)/10)-w.inventory.ore-loose-carried);
+}
+export function projectTasks(w,c) {
+  const task=projectTask(w,c), p=workerProject(w,c);
+  if(!task) return [];
+  if(p.type!=="refine") return [task];
+  // Keep the supply chain flowing: the few people holding ore reservations
+  // refine it while others quarry or collect loose ore. One ore in storage
+  // must not turn every quarry worker into a waiting refiner.
+  // Industrial schedules do not otherwise include hauling. Loose input is
+  // already counted toward the goal, so the crew must collect it even when
+  // no further quarrying is needed.
+  return [...(w.inventory.ore>0?["refine"]:[]),
+    ...(w.objects.some(o=>o.type==="ore" && o.stock>0)?["haul"]:[]),
+    ...(refiningShortage(w,p)>0?["quarry"]:[])];
 }
 export function storedSupply(w,c,o) {
   if (!independent(w) || !scoped(w,c) || !allowedRegion(w,o.type==="bridge" ? bridgeGeometry(o).a : o)) return null;
   if (o.type === "factory" && (o.inputOre||0)<60 && w.inventory.ore>0 && activeGoal(w)?.kind!=="ore") return "ore";
   if (o.type === "bridge" && !bridgeGeometry(o).complete && w.inventory.wood>0 &&
-      w.community.project?.type==="crossing" && projectAllowed(w,c)) return "wood";
+      workerProject(w,c)?.type==="crossing" && projectAllowed(w,c)) return "wood";
   return null;
 }
 export function independent(w) {
@@ -49,7 +69,7 @@ export function independent(w) {
     w.runtime?.intelligenceAvailable === true && w.stage < 3;
 }
 export function projectAllowed(w, c) {
-  const goal = activeGoal(w), p = w.community.project;
+  const goal = activeGoal(w), p = workerProject(w,c);
   const required = {wood:"timber",bridge:"crossing",ore:"quarry"}[goal?.kind];
   return independent(w) && p?.crew.includes(c.id) && scoped(w,c) &&
     (!required || p.type === required || CARE_BUILDINGS.includes(p.type)) &&
@@ -57,13 +77,19 @@ export function projectAllowed(w, c) {
 }
 export function constructionSlots(w, project = w.community.project) {
   if (!project) return [];
-  return [[-2.3, -2.3], [2.3, -2.3], [2.3, 2.3], [-2.3, 2.3]]
+  const corners=[[-2.3,-2.3],[2.3,-2.3],[2.3,2.3],[-2.3,2.3]];
+  // Hand processing has no shared machine: each crew member gets a distinct
+  // local work position. Actual building entrances still have four slots.
+  const points=isConstruction(project) ? corners : Array.from({length:Math.max(4,project.crew?.length||4)},(_,i)=>{
+    const scale=1+Math.floor(i/4)*.6;return corners[i%4].map(v=>v*scale);
+  });
+  return points
     .map(([x,y], slot) => ({ x: project.x+x, y: project.y+y, slot }))
     .filter((p) => clearPosition(w,p));
 }
 function findSites(w, type, expanding = false) {
   if (type === "mine") {
-    for (const c of w.creatures.filter((c)=>scoped(w,c))) {
+    for (const c of w.creatures.filter(c=>scoped(w,c) && !c.carry && c.sickness<50 && !working(c) && !workerProject(w,c))) {
       for (const node of nearbyObjects(w,c.x,c.y,28).filter((o)=>o.type==="node" && o.stock>0)) {
         if (allowedRegion(w,node) && siteValid(w,type,node) &&
             constructionSlots(w,node).some((p)=>Number.isFinite(routeCost(w,c,p))))
@@ -73,7 +99,7 @@ function findSites(w, type, expanding = false) {
     return [];
   }
   const services = w.objects.filter((o) => o.type === type || (type !== "roundabout" && o.type === "dwelling"));
-  const members = w.creatures.filter((c) => !c.carry && c.sickness < 50 &&
+  const members = w.creatures.filter((c) => !c.carry && c.sickness < 50 && !working(c) && !workerProject(w,c) &&
     (!w.directives.members.length || w.directives.members.includes(c.id)));
   if (!members.length) return [];
   // Put new facilities near the least-served residents, spaced out from old ones.
@@ -92,7 +118,7 @@ function findSites(w, type, expanding = false) {
       if (Math.hypot(builder.x-p.x,builder.y-p.y)<48) anchors.push({...p,builder});
     }
   }
-  const buildings=w.objects.filter(o=>SETTLEMENT_TYPES.has(o.type));
+  const buildings=[...w.objects.filter(o=>SETTLEMENT_TYPES.has(o.type)),...workProjects(w).filter(isConstruction)];
   const food=w.objects.filter(o=>["orchard","dwelling"].includes(o.type));
   const candidates=[];
   for (const c of anchors) {
@@ -127,24 +153,39 @@ function findSites(w, type, expanding = false) {
   return sites;
 }
 export function settlementChoices(w) {
-  if (!independent(w) || w.community.project || !w.creatures.length ||
+  if (!independent(w) || workProjects(w).length>=projectLimit(w) || !w.creatures.length ||
       w.objects.length >= LIMITS.objects - 4 || w.directives.pauseWork ||
-      w.time-w.community.lastProjectAt < decisionPace(w.settings).development) return [];
-  const choices = [], goal = activeGoal(w), milestone=colonyMilestone(w), care = careContext(w), plan=developmentPlan(w);
-  const workers = w.creatures.filter((c)=>scoped(w,c) && c.sickness<50);
+      w.time-w.community.lastProjectAt < Math.max(1,decisionPace(w.settings).development/3)) return [];
+  const choices = [], goal = activeGoal(w), milestone=colonyMilestone(w), industry=industryMilestone(w), care = careContext(w), plan=developmentPlan(w);
+  const workers = w.creatures.filter((c)=>scoped(w,c) && c.sickness<50 && !workerProject(w,c));
   const camp = workers.find((c)=>allowedRegion(w,c));
   if (!camp) return [];
-  const resource = (id,target,description,priority=goal?100:id==="crossing"?60:id==="refine"?50:20) => choices.push({id,x:camp.x,y:camp.y,target,
-    priority,description});
+  const resource = (id,target,description,priority=goal?100:id==="crossing"?60:id==="refine"?50:20) => {
+    const active=workProjects(w).filter(p=>p.type===id);
+    if (id==="crossing" && active.length) return;
+    // One model decision can mobilize several local groups for the SAME shared
+    // resource goal. Sites are explicit in the offer and revalidated on return.
+    const demand=Math.ceil(Math.max(0,target-w.inventory[RESOURCE_PROJECTS[id].material])/(id==="refine"?10:id==="timber"?6:3));
+    const assigned=active.reduce((n,p)=>n+p.crew.length,0);
+    const camps=[], limit=id==="crossing" ? 1 : Math.min(8,Math.ceil(w.creatures.length/40),
+      Math.ceil(Math.max(0,demand-assigned)/12));
+    for (const c of workers.slice().sort(workOrder)) {
+      if(camps.length>=limit) break;
+      if(!c.carry && !working(c) && allowedRegion(w,c) &&
+          [...active,...camps].every(p=>Math.hypot(p.x-c.x,p.y-c.y)>=18)) camps.push({x:c.x,y:c.y});
+    }
+    if(camps.length) choices.push({id,...camps[0],camps,target,priority,description:`${description} ${camps.length} local crews share this target.`});
+  };
   if (goal?.kind === "wood") resource("timber",goal.target,`Cut trees and gather logs until we store ${goal.target} wood, as requested.`);
   else if (goal?.kind === "ore") resource("quarry",goal.target,`Break rocks and collect ore until we store ${goal.target} ore, as requested. Keep the ore.`);
   else if (goal?.kind === "bridge" && !w.progress.bridge) resource("crossing",24,"Cut timber and carry stored wood to finish the river bridge.");
   const resourceGoal=!!milestone || ["wood","ore","bridge","blocks"].includes(goal?.kind);
   for (const type of INDEPENDENT_BUILDINGS) {
     const spec = BUILDINGS[type];
-    if (!unlocked(w,spec) || (spec.cost && w.inventory.blocks < spec.cost) ||
+    if (!unlocked(w,spec) || (spec.cost && uncommittedBlocks(w) < spec.cost) ||
         (type === "factory" && w.directives.avoidPollution) || (resourceGoal && !CARE_BUILDINGS.includes(type))) continue;
-    const existing = w.objects.filter((o) => o.type === type && (type!=="mine" || o.stock>0)).length;
+    const existing = w.objects.filter((o) => o.type === type && (type!=="mine" || o.stock>0)).length+
+      workProjects(w).filter(p=>p.type===type).length;
     if (!CARE_BUILDINGS.includes(type)) {
       const needed = {mine:Math.ceil(w.creatures.length/32),factory:Math.ceil(w.creatures.length/48),
         dwelling:Math.ceil(w.creatures.length/24),theatre:Math.ceil(w.creatures.length/64)}[type];
@@ -160,15 +201,20 @@ export function settlementChoices(w) {
     const kind = Object.keys(CARE_TYPES).find(k=>CARE_TYPES[k]===type), status = care[kind];
     const strained = status && status.low>w.creatures.length/4;
     const priority = status ? (!existing && status.unserved ? 100 : strained ? 80 : status.short ? 70 : status.growthShort ? 60 : type==="orchard" && plan.expanding ? 56 : 30) +
-      Math.min(15,status.urgent + status.short/w.creatures.length*10) : ["mine","factory"].includes(type) ? 55 : 40;
+      Math.min(15,status.urgent + status.short/w.creatures.length*10) : ["mine","factory"].includes(type) ? industry?85:55 : 40;
     const sites = findSites(w,type,plan.expanding), point=sites[0];
     if (point) choices.push({id:type,...point,sites,cost:buildingMaterials(spec),
       priority,description:`Build ${spec.name}: ${existing} now${status ? `; ${status.low} low, ${status.short} residents lack nearby capacity, ${status.unserved} out of reach` : ""}; costs ${buildingCost(spec)}. Gather missing timber before construction. ${spec.help}`});
   }
   if (!resourceGoal && !w.progress.bridge && w.objects.some(o=>o.type==="bridge")) resource("crossing",24,"Gather timber and carry wood to finish the bridge, opening the other bank.");
   const hasFactory = w.objects.some(o=>o.type==="factory");
+  if(industry && hasFactory && !w.objects.some(o=>o.type==="mine" && o.stock>0) && w.inventory.ore<12)
+    resource("quarry",Math.max(12,Math.ceil(w.creatures.length/8)),"Supply our stone workshops with real ore while we establish stocked mines.",80);
   if ((!resourceGoal && w.stage>=2 && !hasFactory && w.inventory.blocks<300) || goal?.kind==="blocks" || milestone?.project==="refine")
     resource("refine",goal?.kind==="blocks" ? goal.target : 300,"Break rocks, collect ore and work it into blocks by hand. Reach the factory unlock without help from the sky.",goal||milestone?100:50);
+  else if(industry && uncommittedBlocks(w)<150 &&
+      w.objects.filter(o=>o.type==="factory").length+workProjects(w).filter(p=>p.type==="factory").length<Math.ceil(w.creatures.length/48))
+    resource("refine",w.inventory.blocks-uncommittedBlocks(w)+300,"Make a building reserve of 300 uncommitted blocks so idle neighborhoods can establish more workplaces.",75);
   const reserve = timberReserve(w);
   // Crossing/first-block crews already gather their own inputs. A spare pile
   // must not postpone the milestones that unlock the rest of the economy.
@@ -177,72 +223,91 @@ export function settlementChoices(w) {
   return choices.sort((a,b)=>b.priority-a.priority).slice(0,8);
 }
 export function startSettlement(w, choice, source) {
+  const started=startProject(w,choice,source);
+  if(started && RESOURCE_PROJECTS[choice.id] && choice.id!=="crossing")
+    for(const camp of (choice.camps||[]).slice(1,8)) startProject(w,{...choice,...camp,camps:undefined},source);
+  return started;
+}
+function startProject(w, choice, source) {
   if (choice.id === "clearance") return startClearance(w,choice,source);
-  if (!independent(w) || w.community.project || !DEVELOPMENT_TYPES.includes(choice.id) ||
+  if (!independent(w) || workProjects(w).length>=projectLimit(w) || !DEVELOPMENT_TYPES.includes(choice.id) ||
       w.directives.pauseWork || w.objects.length >= LIMITS.objects-4 ||
-      (!w.progress.bridge && !westBank(w,choice)) ||
+      !allowedRegion(w,choice) ||
       (w.directives.region && (choice.x>42)!==(w.directives.region.x>42)) ||
       (INDEPENDENT_BUILDINGS.includes(choice.id) && (!unlocked(w,BUILDINGS[choice.id]) ||
-        w.inventory.blocks < (BUILDINGS[choice.id].cost||0) || !siteValid(w,choice.id,choice))) ||
+        uncommittedBlocks(w) < (BUILDINGS[choice.id].cost||0) || !siteValid(w,choice.id,choice))) ||
       (choice.id === "factory" && w.directives.avoidPollution)) return false;
   const goal = activeGoal(w), required = {wood:"timber",bridge:"crossing",ore:"quarry"}[goal?.kind];
   if ((required && required!==choice.id && !CARE_BUILDINGS.includes(choice.id)) ||
       (goal?.kind==="blocks" && choice.id!=="refine" && !CARE_BUILDINGS.includes(choice.id))) return false;
   const slots = constructionSlots(w,choice);
-  const crew = w.creatures.filter((c) => !c.carry && c.sickness < 50 && !working(c) &&
+  if (workProjects(w).some(p=>p.type===choice.id &&
+      (choice.id==="crossing" || Math.hypot(p.x-choice.x,p.y-choice.y)<18))) return false;
+  const localCount=w.creatures.filter(c=>Math.hypot(c.x-choice.x,c.y-choice.y)<=24).length;
+  const crewSize=isConstruction({type:choice.id}) || choice.id==="crossing" ? 4 : Math.min(MAX_PROJECT_CREW,Math.max(4,Math.ceil(localCount/3)));
+  const crew = w.creatures.filter((c) => !c.carry && c.sickness < 50 && !working(c) && !workerProject(w,c) &&
+      Math.hypot(c.x-choice.x,c.y-choice.y)<=32 &&
       !w.community.access.some(r=>r.status==="clearing" && r.crew.includes(c.id)) &&
       (!w.directives.members.length || w.directives.members.includes(c.id)) &&
       slots.some((p) => Number.isFinite(routeCost(w,c,p))))
     .sort((a,b) => (Math.min(a.fed,a.clean,a.amused)<60)-(Math.min(b.fed,b.clean,b.amused)<60) ||
       workOrder(a,b) || Math.hypot(a.x-choice.x,a.y-choice.y)-Math.hypot(b.x-choice.x,b.y-choice.y))
-    .slice(0,4).map((c) => c.id);
+    .slice(0,crewSize).map((c) => c.id);
   if (!crew.length) return false;
-  w.community.project = { id: w.community.nextProject++, type: choice.id, x: choice.x, y: choice.y,
+  const project = { id: w.community.nextProject++, type: choice.id, x: choice.x, y: choice.y,
     crew, target:Math.max(1,Math.min(1e6,Math.floor(choice.target || 24))), progress: 0, required: 32, started: w.time, source, blocked: "",
-    parentGoal:goal?.id||colonyMilestone(w)?.id||"colony", subgoal:choice.subgoal||choice.id,
+    parentGoal:goal?.id||colonyMilestone(w)?.id||industryMilestone(w)?.id||"colony", subgoal:choice.subgoal||choice.id,
     siteReason:choice.density ? `At ${choice.x}, ${choice.y}; ${choice.density.residents.toFixed(1)} residents / 100 ground units; density reward ${choice.density.reward.toFixed(1)}; ${Math.round(choice.travel)} units from builder.` : "" };
+  addWorkProject(w,project);
   w.community.lastProjectAt = w.time;
   prepareTimber(w);
   w.commandRevision++;
   w.navRevision++;
   w.revision++;
-  activity(w,"construction",`We chose ${projectName(w.community.project).toLowerCase()} at ${Math.round(choice.x)}, ${Math.round(choice.y)}.`,source,`${crew.length} workers. ${w.community.project.siteReason} Goal: ${goal?.kind||colonyMilestone(w)?.title||"healthy growth"}. ${choice.description || "Gather real materials and respect our needs."}`);
-  remember(w,"self-build",`The colony chose ${projectName(w.community.project).toLowerCase()} with ${source}.`);
+  activity(w,"construction",`We chose ${projectName(project).toLowerCase()} at ${Math.round(choice.x)}, ${Math.round(choice.y)}.`,source,`${crew.length} local workers; ${workProjects(w).length} crews active. ${project.siteReason} Goal: ${goal?.kind||colonyMilestone(w)?.title||industryMilestone(w)?.title||"healthy growth"}. ${choice.description || "Gather real materials and respect our needs."}`);
+  remember(w,"self-build",`The colony chose ${projectName(project).toLowerCase()} with ${source}.`);
   return true;
 }
 function siteValid(w,type,p) {
+  if (workProjects(w).some(o=>Math.hypot(o.x-p.x,o.y-p.y)<(o.type===type?18:6))) return false;
   const node = type==="mine" ? nearbyObjects(w,p.x,p.y,2).find(o=>o.type==="node" && o.stock>0 && Math.hypot(o.x-p.x,o.y-p.y)<.1) : null;
   return (type!=="mine" || node) && canPlace(w,type,p,node?.id) &&
     (type==="mine" || !w.objects.some(o=>SETTLEMENT_TYPES.has(o.type) && Math.hypot(o.x-p.x,o.y-p.y)<6));
 }
 export function prepareTimber(w) {
-  const p = w.community.project;
+  for (const p of workProjects(w)) prepareProject(w,p);
+}
+function prepareProject(w,p) {
   if (!p || !independent(w)) return;
   const goal = activeGoal(w), required = {wood:"timber",ore:"quarry",bridge:"crossing",blocks:"refine"}[goal?.kind];
   if (required && p.type !== required && !CARE_BUILDINGS.includes(p.type)) {
-    w.community.project=null; w.community.lastProjectAt=w.time-decisionPace(w.settings).development;
+    removeWorkProject(w,p.id); w.community.lastProjectAt=w.time-decisionPace(w.settings).development;
     w.commandRevision++; w.navRevision++;
     activity(w,"project","We will work toward your new goal.","Your words","Gathered resources remain in storage.");
     return;
   }
   if (!p.crew.some((id)=>w.creatures.some((c)=>c.id===id)) || w.time-p.started>240) {
-    w.community.project = null;
+    removeWorkProject(w,p.id);
     w.community.lastProjectAt=w.time; w.commandRevision++; w.navRevision++;
     activity(w,"blocked","Our crew needs a new plan.","Instincts","Materials already gathered remain in storage. We will reconsider after caring for everyone.");
     return;
   }
-  const crew = w.creatures.filter(c=>projectAllowed(w,c));
+  const crew = w.creatures.filter(c=>p.crew.includes(c.id) && projectAllowed(w,c));
   if (!crew.length || !resourceNeeded(w,p)) return;
-  if (!["gather","quarry"].includes(projectTask(w,crew[0]))) return;
+  if (!projectTasks(w,crew[0]).some(t=>["gather","quarry"].includes(t))) return;
   const types = ["quarry","refine"].includes(p.type) ? ["rock","ore"] : ["tree","log"];
   const accessible = (o) => allowedRegion(w,o) && serviceSlots(w,o).some(s=>crew.some(c=>Number.isFinite(routeCost(w,c,s))));
   const saved = w.objects.filter(o=>types.includes(o.type) && Math.hypot(o.x-p.x,o.y-p.y)<28 && accessible(o));
-  if (saved.length>=3 || (p.type==="refine" && w.inventory.ore>0)) return;
+  const short=p.type==="refine" ? refiningShortage(w,p)
+    : p.type==="quarry" ? p.target-w.inventory.ore
+    : (p.type==="timber"?p.target:p.type==="crossing"?24:projectRequirements(w,p).wood)-w.inventory.wood;
+  const sources=Math.min(12,p.crew.length,Math.max(1,Math.ceil(short/(types[0]==="rock"?3:6))));
+  if (saved.length>=sources) return;
   const natural = nearbyObjects(w,p.x,p.y,28).filter(o=>types.includes(o.type) && o.id.startsWith("g:"))
     .sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y));
   let count=saved.length;
   for(const o of natural.slice(0,24)) {
-    if(count>=3 || w.objects.length>=LIMITS.objects-4) break;
+    if(count>=sources || w.objects.length>=LIMITS.objects-4) break;
     if(accessible(o) && materializeObject(w,o)) count++;
   }
   if (!count) {
@@ -253,7 +318,7 @@ export function prepareTimber(w) {
   }
 }
 export function settlementDecisionInput(w, choices) {
-  const care=careContext(w), reserve=timberReserve(w), storyGoal=colonyMilestone(w);
+  const care=careContext(w), reserve=timberReserve(w), storyGoal=colonyMilestone(w), industry=industryMilestone(w);
   const careFirst=choices.some(c=>CARE_BUILDINGS.includes(c.id) && c.priority>=80);
   const resourceLabel=c=>({
     crossing:`Build the bridge with ${c.target} wood; open land and mining`,
@@ -266,7 +331,7 @@ export function settlementDecisionInput(w, choices) {
   // do not tell a small classifier which need a building will actually serve.
   const options = Object.fromEntries([...choices.map(c=>[c.key||c.id,
     c.id==="clearance" ? `Clear ${c.obstacle || "obstacle"} to ${c.resume || "resume blocked work"}` : c.density ? `Build ${careServices(c.id).join("/") || BUILDINGS[c.id]?.name || c.id}; ${buildingCost(BUILDINGS[c.id])}; help ${Math.round(c.benefit)}; reward ${Math.round(c.density.reward)}`
-      : resourceLabel(c)]),["wait",careFirst ? "Postpone building; no new care capacity" : "Postpone building; no progress on construction or resources"]]);
+      : `${resourceLabel(c)}; ${c.camps?.length||1} local crews`]),["wait",careFirst ? "Postpone building; no new care capacity" : "Postpone building; no progress on construction or resources"]]);
   const shortage=Object.entries(care).map(([k,s])=>`${k}: ${s.low} low, ${s.short} short, ${s.urgent} urgent`).join("; ");
   const milestone=!w.progress.bridge && choices.some(c=>c.id==="crossing") ? "Bridge unlocks land and mining." : w.stage>=2 && !w.objects.some(o=>o.type==="factory") ? "Blocks unlock workplaces." : "Grow useful workplaces and neighborhoods.";
   // Keep urgent-care inputs focused. Unrelated unlocks crowd out the immediate
@@ -274,7 +339,7 @@ export function settlementDecisionInput(w, choices) {
   const priority=careFirst
     ? `Urgent care first; ${reserve.refill ? "replenish timber before optional expansion" : "gather missing building timber"}.`
     : `${milestone} Urgent care first; otherwise advance goals and unlock work. Gather missing timber.`;
-  const requiredContext = `${w.creatures.length} residents. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind || (storyGoal ? `first ${storyGoal.target} blocks` : "grow")}. ${accessBrief(w)} ${priority} Prefer more help and reward closer to zero.`;
+  const requiredContext = `${w.creatures.length} residents; ${workProjects(w).length}/${projectLimit(w)} crews active. Assign free local groups. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind || (storyGoal ? `first ${storyGoal.target} blocks` : industry ? "build mines and stone workshops; produce energy" : "grow")}. ${accessBrief(w)} ${priority} Prefer more help and reward closer to zero.`;
   const contextParts = choices.map(c=>c.description);
   return {options,requiredContext,contextParts,context:[requiredContext,...contextParts].join(" "),
     question:"Which project and location best advance the goal?",maxTokens:320};
@@ -282,7 +347,7 @@ export function settlementDecisionInput(w, choices) {
 export function settlementContext(w,choices) {
   return {care:careContext(w), plan:developmentPlan(w), timber:timberReserve(w),
     densityRule:{target:DENSITY.target,above:DENSITY.above,below:DENSITY.below,units:"residents per 100 ground units; asymmetric squared penalty"},
-    choices:choices.map(({key,id,x,y,target,cost,priority,description,density,benefit,travel,subgoal,request,blocker})=>({key,id,at:[x,y],target,cost,priority,description,density,benefit,travel,subgoal,request,blocker}))};
+    choices:choices.map(({key,id,x,y,camps,target,cost,priority,description,density,benefit,travel,subgoal,request,blocker})=>({key,id,at:[x,y],camps:camps?.map(p=>[Math.round(p.x),Math.round(p.y)]),target,cost,priority,description,density,benefit,travel,subgoal,request,blocker}))};
 }
 // An unserved essential need or widespread low needs temporarily rules out
 // unrelated expansion. The model can choose among useful care buildings (homes
@@ -320,20 +385,26 @@ export function currentSettlementChoice(w,choice) {
     if (density.reward < (current.density?.reward ?? 0)-12) return null;
     return {...choice,density};
   }
-  return {...current,key:choice.key};
+  if (!allowedRegion(w,choice) || workProjects(w).some(p=>p.type===choice.id &&
+      (choice.id==="crossing" || Math.hypot(p.x-choice.x,p.y-choice.y)<18))) return null;
+  return {...choice,target:current.target,camps:choice.camps?.filter(p=>allowedRegion(w,p) &&
+    !workProjects(w).some(active=>active.type===choice.id && Math.hypot(active.x-p.x,active.y-p.y)<18))};
 }
 export function finishSettlement(w, placeBuilding) {
-  const p = w.community.project;
+  return workProjects(w).map(p=>finishProject(w,p,placeBuilding)).filter(Boolean);
+}
+function finishProject(w,p,placeBuilding) {
   if (!p || !independent(w)) return;
   if (!isConstruction(p)) {
     if (resourceNeeded(w,p)) return;
     w.community.completed++;
-    w.community.lastProjectAt=w.time-decisionPace(w.settings).development; w.community.project=null;
+    w.community.lastProjectAt=w.time-decisionPace(w.settings).development; removeWorkProject(w,p.id);
     w.commandRevision++; w.navRevision++;
     activity(w,"gathered",`${projectName(p)} finished.`,p.source,"Real materials gathered by the crew; ready for the next project.");
     return p.id;
   }
   if (p.progress < p.required) return;
+  if (!projectFunded(w,p)) return;
   const error = placeBuilding(w,p.type,p.x,p.y);
   if (error) {
     if (p.blocked !== error) activity(w,"blocked",`${BUILDINGS[p.type].name} is waiting.`,"Instincts",error);
@@ -341,7 +412,7 @@ export function finishSettlement(w, placeBuilding) {
     const node = p.type === "mine" ? nearbyObjects(w,p.x,p.y,2).find(o=>o.type==="node") : null;
     if (!canPlace(w,p.type,p,node?.id,{ignoreCreatures:true})) {
       // A player edit supersedes this site. No wood has been charged.
-      w.community.project = null; w.community.lastProjectAt = w.time;
+      removeWorkProject(w,p.id); w.community.lastProjectAt = w.time;
       w.commandRevision++;
       w.navRevision++;
     }
@@ -349,7 +420,7 @@ export function finishSettlement(w, placeBuilding) {
   }
   w.community.completed++;
   w.community.lastProjectAt = w.time-decisionPace(w.settings).development;
-  w.community.project = null;
+  removeWorkProject(w,p.id);
   activity(w,"built",`${BUILDINGS[p.type].name} finished.`,p.source,`${buildingCost(BUILDINGS[p.type])} used. The whole colony can use it now.`);
   postMessage(w,completionLetter(w,p,BUILDINGS[p.type].name));
   return p.id;

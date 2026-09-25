@@ -1,10 +1,11 @@
 import { careContext, careSummary } from "./care-context.js";
+import { workProjects, projectLimit } from "./work-projects.js";
 import { developmentPlan } from "./development-plan.js";
 import { accessContext, accessBrief } from "./access.js";
 import { COLONY_PREMISE } from "./prologue.js";
 import { isExplored, discoverySummary } from "./discovery.js";
 import { capacity } from "./jobs.js";
-import { projectName, projectStatus, timberReserve, colonyMilestone } from "./development.js";
+import { projectName, projectStatus, timberReserve, colonyMilestone, industryMilestone } from "./development.js";
 import { bridgeProject } from "./bridge-project.js";
 import { feasiblePlans, POLICIES, planReward } from "./decisions.js";
 import { USEFUL_TASKS } from "./work-balance.js";
@@ -54,6 +55,8 @@ export function buildContext(w, { includePlans = true } = {}) {
   }));
   const plans = includePlans ? feasiblePlans(w) : [];
   const workload = {tasks:{},states:{},available:0,useful:0};
+  workload.projectWorkers=workProjects(w).reduce((n,p)=>n+p.crew.length,0);
+  workload.crews=workProjects(w).length;
   for (const c of w.creatures) {
     workload.tasks[c.task]=(workload.tasks[c.task]||0)+1;
     const state=c.job?.state||"none";workload.states[state]=(workload.states[state]||0)+1;
@@ -74,7 +77,7 @@ export function buildContext(w, { includePlans = true } = {}) {
   const context = {
     version: 4,
     workload,
-    currentMilestone: colonyMilestone(w),
+    currentMilestone: colonyMilestone(w)||industryMilestone(w),
     developmentPlan: developmentPlan(w),
     timber: timberReserve(w),
     blockedWork: accessContext(w),
@@ -84,7 +87,9 @@ export function buildContext(w, { includePlans = true } = {}) {
     care,
     commandRevision: w.commandRevision,
     permissions: { ...w.directives },
-    independence: { consent:w.community.consent, project:w.community.project, completed:w.community.completed, scouted:w.community.explored },
+    independence: { consent:w.community.consent, project:w.community.project,
+      crews:workProjects(w).map(p=>({id:p.id,type:p.type,at:[Math.round(p.x),Math.round(p.y)],members:p.crew.length,target:p.target,blocked:p.blocked})),
+      crewCapacity:projectLimit(w),completed:w.community.completed, scouted:w.community.explored },
     projects: w.groups.map((g) => ({
       id: g.id,
       role: g.role,
@@ -190,11 +195,11 @@ export function buildContext(w, { includePlans = true } = {}) {
       : 0,
   );
   const localParts = [
-    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || (context.currentMilestone ? `first ${context.currentMilestone.target} blocks` : "healthy growth")}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
+    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || (context.currentMilestone?.kind==="blocks" ? `first ${context.currentMilestone.target} blocks` : context.currentMilestone ? "mine ore and produce energy" : "healthy growth")}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
     ...plans.map(p=>`${p.id} planning score ${planReward(w,p).total.toFixed(2)}; density cost ${p.effects.space.toFixed(2)}, travel cost ${p.effects.travel.toFixed(2)}. Higher is better; estimates, not learned rewards.`),
     `Care capacity: ${careSummary(care)}.`,
     `Expansion: ${context.developmentPlan.expanding ? "scout new neighborhoods" : "balance space and care"}. Density target ${context.developmentPlan.density.target} per 100 ground units; crowding penalty 4, isolation penalty 0.6. Child goals: ${context.developmentPlan.children.filter(s=>s.status!=="satisfied").map(s=>s.kind).join(",")}.`,
-    `Independent development ${w.community.consent}; ${w.community.project ? `${projectName(w.community.project)}: ${projectStatus(w)}` : "no current project"}. Scouted ${w.community.explored} areas.`,
+    `Independent development ${w.community.consent}; ${workload.crews} local crews, ${workload.projectWorkers} assigned workers. ${workProjects(w).slice(0,3).map(p=>`${projectName(p)}: ${projectStatus(w,p)}`).join("; ")}. Scouted ${w.community.explored} areas.`,
     `Lowest food/clean/play ${minimum.join("/")} (0 urgent,100 full). Population ${w.population}.`,
     objective
       ? `Goal ${objective.kind} ${objectiveState.value}/${objective.target}. Next ${objectiveState.policy}. ${objectiveState.blocker}`
@@ -219,7 +224,7 @@ export function buildContext(w, { includePlans = true } = {}) {
   const key = JSON.stringify([
     w.stage,
     w.commandRevision,
-    w.community.consent, w.community.project,
+    w.community.consent, workProjects(w),
     workload, w.memory.activity,
     w.community.access.map(r=>[r.id,r.status,r.blocker,r.crew]),
     care, w.discovery.revision, context.timber, Math.floor(w.inventory.blocks),

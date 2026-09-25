@@ -1,4 +1,5 @@
 import { refreshDistrict, syncPopulation } from "./population.js";
+import { addWorkProject, MAX_WORK_PROJECTS, MAX_PROJECT_CREW } from "./work-projects.js";
 import { LIMITS } from "./catalog.js";
 import { initialStory, initialEvidence, STORY_IDS, STORY_LIMIT, storyEntry } from "./story.js";
 import {
@@ -321,17 +322,24 @@ export function migrateExtensions(w, raw) {
       children:list(plan.children,7).map(s=>({id:text(s.id,80),kind:text(s.kind,24),title:text(s.title,120),
         remaining:n(s.remaining),status:["urgent","needed","satisfied","working","blocked"].includes(s.status)?s.status:"needed"}))};
   }
-  const project = community.project;
-  if (w.community.consent === "accepted" && project && DEVELOPMENT_TYPES.includes(project.type)) {
-    w.community.project = {
+  w.community.projects=[];
+  const claimed=new Set(), projectIds=new Set();
+  for (const project of [community.project,...list(community.projects,MAX_WORK_PROJECTS-1)].filter(Boolean)) {
+    if (w.community.consent !== "accepted" || !DEVELOPMENT_TYPES.includes(project.type)) continue;
+    const id=Math.max(1,Math.floor(n(project.id)));
+    if (projectIds.has(id)) continue;
+    const crew=[...new Set(list(project.crew,MAX_PROJECT_CREW))].filter(id=>currentIds.has(id)&&!claimed.has(id));
+    if (!crew.length) continue;
+    crew.forEach(id=>claimed.add(id));projectIds.add(id);
+    addWorkProject(w,{
       id:Math.max(1,Math.floor(n(project.id))), type:project.type, ...point(project),
-      crew:list(project.crew,4).filter((id)=>currentIds.has(id)),
+      crew,
       target:Math.floor(n(project.target ?? 24,1,1e6)),
       progress:n(project.progress,0,32), required:32, started:n(project.started,0,w.time),
       source:text(project.source,80), blocked:text(project.blocked,200),
       parentGoal:text(project.parentGoal,80),subgoal:text(project.subgoal,40),siteReason:text(project.siteReason,240),
-    };
-    w.community.nextProject = Math.max(w.community.nextProject,w.community.project.id+1);
+    });
+    w.community.nextProject = Math.max(w.community.nextProject,id+1);
   }
   syncPopulation(w);
   refreshDistrict(w);

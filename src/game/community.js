@@ -3,7 +3,7 @@ import { reveal } from "./discovery.js";
 export const INBOX_LIMIT = 64;
 export function initialCommunity() {
   return {
-    consent: "unasked", project: null, nextProject: 1, lastProjectAt: -60,
+    consent: "unasked", project: null, projects: [], nextProject: 1, lastProjectAt: -60,
     completed: 0, inbox: [], nextMessage: 1, lastNoticeAt: -60,
     visited: [], explored: 0, activity: [], plan: null, workTurn: 0, access: [], nextAccess: 1,
   };
@@ -39,7 +39,7 @@ export function setIndependence(w, accepted) {
   if (accepted && w.population <= 20 && w.community.consent === "unasked") return false;
   w.community.consent = accepted ? "accepted" : "declined";
   // Material is paid only on completion, so cancelling has nothing to refund.
-  if (!accepted) w.community.project = null;
+  if (!accepted) { w.community.project = null; w.community.projects = []; }
   w.navRevision++;
   for (const m of w.community.inbox) if (m.action === "independence") { m.action = null; m.read = true; m.notified = true; }
   w.commandRevision++;

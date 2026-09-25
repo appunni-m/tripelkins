@@ -1,5 +1,6 @@
 # Colony independence, exploration and conversation
 
+Current concurrent-crew behavior, persistence and routing changes are documented in [Local crews and routing review](LOCAL_CREWS_AND_ROUTING_REVIEW.md). The single-project limits below describe the earlier implementation.
 Engineering notes; historical measurements below predate the current artwork and growth tuning.
 
 25 September 2026. Follow-up to the experience implementation, addressing crowding, invisible intelligence, tap-to-talk, intrusive messages and independent care building.

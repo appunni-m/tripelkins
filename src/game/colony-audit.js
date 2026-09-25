@@ -8,6 +8,8 @@ import { settlementDecisionChoices, settlementDecisionInput, startSettlement } f
 import { discoverySummary } from "./discovery.js";
 import { USEFUL_TASKS } from "./work-balance.js";
 import { decisionEvent, decisionDue } from "../intelligence-settings.js";
+import { workProjects } from "./work-projects.js";
+import { projectPercent } from "./development.js";
 
 export function auditWorld() {
   const w = settlementWorld("none");
@@ -30,8 +32,12 @@ export function auditSample(w) {
     exploredArea: discoverySummary(w).area, stalls: w.metrics.stalls,
     minimumNeeds: Object.fromEntries(["fed","clean","amused"].map(k=>[k,rounded(Math.min(...w.creatures.map(c=>c[k])))])),
     project: w.community.project ? {type:w.community.project.type,crew:w.community.project.crew.length,
-      progress:rounded(w.community.project.progress),blocked:w.community.project.blocked} : null,
+      progress:projectPercent(w,w.community.project),blocked:w.community.project.blocked} : null,
+    crews:workProjects(w).map(p=>({id:p.id,type:p.type,at:[Math.round(p.x),Math.round(p.y)],
+      workers:p.crew.length,progress:projectPercent(w,p),blocked:p.blocked})),
     completedProjects:w.community.completed, inventory:{...w.inventory},
+    peakBlocks:w.progress.peakBlocks,energy:w.progress.energy,
+    facilities:Object.fromEntries(["mine","factory","orchard","bath","roundabout"].map(type=>[type,w.objects.filter(o=>o.type===type).length])),
   };
 }
 // Callbacks return real provider responses in the browser. The CLI deliberately
@@ -68,8 +74,9 @@ export async function auditColony({ seconds=300, world=auditWorld(), chooseSched
         result={policy:bestPlan(w,snapshot.plans).id,source:"Diagnostic rule reference"};
       }
       const decision=selectPlan(w,result.policy,result.source,"",snapshot.plans);
-      if(applyPlan(w,decision.plan)) w.memory.lastPlan={policy:decision.policy,source:decision.source,tick:Math.floor(w.time),goalId:null};
-      reviews.push({tick:Math.round(w.time),selected:decision.policy,source:result.source,timing:result.timing,distribution:result.distribution,
+      const applied=applyPlan(w,decision.plan);
+      if(applied) w.memory.lastPlan={policy:decision.policy,source:decision.source,tick:Math.floor(w.time),goalId:null};
+      reviews.push({tick:Math.round(w.time),selected:decision.policy,applied,source:result.source,timing:result.timing,distribution:result.distribution,
         options:snapshot.plans.map(p=>({id:p.id,tasks:taskCounts(p.assignments),effects:p.effects}))});
     }
     stepWorld(w,.1);

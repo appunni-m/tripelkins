@@ -1,4 +1,5 @@
 import { fogMesh, updateFog } from "./fog.js";
+import { workProjects } from "./game/work-projects.js";
 import { RenderGpuTimer } from "./growth-budget.js";
 import { MeteorEffects } from "./meteor-effects.js";
 import { isExplored } from "./game/discovery.js";
@@ -406,8 +407,7 @@ export class WorldView {
       if (o.id === w.ui.selected) selected = o;
     }
     this.meteors.render(time,p=>this.local(p),this.life?.reducedMotion.matches);
-    const building = w.community.project;
-    if (isConstruction(building) && visible(building)) {
+    for (const building of workProjects(w)) if (isConstruction(building) && visible(building)) {
       const key = `construction:${building.type}`;
       if (!this.materials.has(key)) {
         const material = this.material(building.type).clone();
@@ -415,7 +415,7 @@ export class WorldView {
         material.opacity = 0.45;
         this.materials.set(key,material);
       }
-      this.draw("colony-construction",this.materials.get(key),building,
+      this.draw(`colony-construction:${building.id}`,this.materials.get(key),building,
         ASSETS[building.type].size,present,
         10000+Math.round((building.x-this.origin.x+building.y-this.origin.y)*100),[0.5,0.09]);
     }

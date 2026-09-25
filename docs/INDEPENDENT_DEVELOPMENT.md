@@ -1,5 +1,6 @@
 # Independent gathering and development
 
+Current concurrent-crew behavior, persistence and routing changes are documented in [Local crews and routing review](LOCAL_CREWS_AND_ROUTING_REVIEW.md). The single-project limits below describe the earlier implementation.
 Engineering notes; historical measurements below predate the current artwork and growth tuning.
 
 25 September 2026. The first independence implementation only gathered timber for a pending banana tree, bath or roundabout. Breaking rocks, making the first blocks and placing workplaces still depended on caretaker tools. This follow-up closes those gaps.

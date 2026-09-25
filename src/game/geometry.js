@@ -1,3 +1,4 @@
+import { workProjects } from "./work-projects.js";
 import {
   isGround,
   isWater,
@@ -113,8 +114,7 @@ export function nearbyObstacles(w, x, y, r = 5) {
       cells: new Map(),
       bridges: w.objects.filter((o) => o.type === "bridge"),
     };
-    const project = w.community?.project;
-    const obstacles = project ? [...w.objects, { ...project, id:`construction:${project.id}` }] : w.objects;
+    const obstacles = [...w.objects,...workProjects(w).map(p=>({...p,id:`construction:${p.id}`}))];
     for (const o of obstacles.filter(footprint)) {
       const f = footprint(o);
       for (

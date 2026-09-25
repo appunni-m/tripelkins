@@ -1,3 +1,4 @@
+import { workerProject, projectById } from "./work-projects.js";
 import { BODY_RADIUS, footprint, hitsFootprint, nearbyObstacles, walkableSurface, serviceSlots } from "./geometry.js";
 import { routeCost, JOB_RADIUS } from "./navigation.js";
 import { isExplored } from "./discovery.js";
@@ -27,8 +28,8 @@ export function requestAccess(w,{target=null,point,unit,task,project=null,reason
   if (!c) return;
   // Gathering/hauling assignments do not always carry a construction job ID.
   // Preserve their parent project when its own crew encounters an obstruction.
-  if (!project && ["gather","quarry","construct","refine","haul"].includes(task) && w.community.project?.crew.includes(unit))
-    project=w.community.project.id;
+  if (!project && ["gather","quarry","construct","refine","haul"].includes(task) && workerProject(w,{id:unit}))
+    project=workerProject(w,{id:unit}).id;
   const destination=target && objectAt(w,target);
   // Another entrance may be reserved by a worker. That is a capacity queue,
   // not terrain to clear; check every entrance without the reservation filter.
@@ -126,7 +127,7 @@ export function reviewAccess(w) {
   const r=[...w.community.access].sort((a,b)=>a.checked-b.checked)[0];
   r.checked=w.time;
   const target=r.target && objectAt(w,r.target);
-  if ((r.target&&!target) || (r.project&&w.community.project?.id!==r.project) ||
+  if ((r.target&&!target) || (r.project&&!projectById(w,r.project)) ||
       w.time-r.lastSeen>180 || !inRegion(w,r.point)) { removeRequest(w,r,false);return; }
   const requester=w.creatures.find(c=>c.id===r.unit);
   const workers=w.creatures.filter(c=>capable(w,c) && Math.hypot(c.x-r.point.x,c.y-r.point.y)<=JOB_RADIUS &&
@@ -168,7 +169,7 @@ export function startClearance(w,choice,source) {
     o=r && objectAt(w,r.blocker);
   if(!o || !["tree","rock"].includes(o.type) || !inRegion(w,o))return false;
   const c=w.creatures.filter(c=>capable(w,c) && !working(c) &&
-      (!w.community.project?.crew.includes(c.id) || r.project===w.community.project?.id))
+      (!workerProject(w,c) || r.project===workerProject(w,c)?.id))
     .filter(c=>!w.community.access.some(a=>a!==r && a.status==="clearing" && a.crew.includes(c.id)))
     .sort(workOrder).find(c=>serviceSlots(w,o,c).some(p=>Number.isFinite(routeCost(w,c,p))));
   if(!c)return false;
@@ -190,7 +191,7 @@ const accessPriority = r => ["eat","wash","play","home"].includes(r.task) ? 110 
 export function accessPurpose(w,r) {
   const task=({gather:"gather timber",quarry:"collect ore",mine:"mine ore",work:"make blocks",haul:"deliver materials",
     eat:"get food",wash:"wash",play:"play",home:"rest",construct:"build",explore:"explore"})[r.task] || TASK_NAMES[r.task]?.toLowerCase() || "continue work";
-  const p=w.community.project?.id===r.project ? w.community.project : null;
+  const p=projectById(w,r.project);
   return p ? `${task} for ${BUILDINGS[p.type]?.name || ({timber:"the wood reserve",quarry:"the ore reserve",refine:"the block reserve",crossing:"the river bridge"})[p.type] || "our project"}` : task;
 }
 export function accessBrief(w) {
@@ -198,7 +199,7 @@ export function accessBrief(w) {
   const r=requests.find(r=>r.status==="ready") || requests[0];
   if(!r)return "";
   const o=r.blocker && objectAt(w,r.blocker);
-  return `Blocked ${r.task}${r.project && w.community.project?.id===r.project ? ` for ${w.community.project.type}` : ""}: ${r.status}. ${o ? `${r.status==="clearing" ? "Crew clearing" : "Clear"} ${o.type}; then resume ${r.task}.` : "Needs a safe route or rested crew; do not repeat the blocked journey."}`;
+  return `Blocked ${r.task}${r.project && projectById(w,r.project) ? ` for ${projectById(w,r.project).type}` : ""}: ${r.status}. ${o ? `${r.status==="clearing" ? "Crew clearing" : "Clear"} ${o.type}; then resume ${r.task}.` : "Needs a safe route or rested crew; do not repeat the blocked journey."}`;
 }
 export const accessContext = w => [...w.community.access].sort((a,b)=>accessPriority(b)-accessPriority(a) || a.created-b.created).slice(0,ACCESS_LIMIT).map(r=>{
   const o=r.blocker && objectAt(w,r.blocker);

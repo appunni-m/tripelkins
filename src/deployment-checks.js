@@ -14,6 +14,7 @@ import { settlementChoices, settlementDecisionChoices, settlementDecisionInput, 
 import { stepWorld } from "./game/simulation.js";
 import { addCreature, addObject } from "./game/state.js";
 import { auditColony } from "./game/colony-audit.js";
+import { groundFixture } from "./game/scale-fixture.js";
 
 const $ = (id) => document.getElementById(id);
 const base = new URL(import.meta.env.BASE_URL, location.href);
@@ -502,18 +503,20 @@ async function resumableDownload() {
       sha256: resumed.sha256, cachedWithoutNetwork: true, workers: 3 };
   } finally { await caches.delete(cacheName); }
 }
-async function colonyAudit(stone = false) {
+async function colonyAudit(stone = false, spread = false) {
   await requireGpu();
   activeWorker = new Worker(new URL("./laya/worker.js", import.meta.url), { type:"module" });
   await callWorker(activeWorker,{kind:"load",backend:"webgpu",allowDownload:false});
   const infer = input => callWorker(activeWorker,{kind:"infer",backend:"webgpu",...input});
   let world;
-  if (stone) {
+  if (spread) world=groundFixture(300);
+  else if (stone) {
     world=developmentWorld();
     const c=addCreature(world,25,25);c.fed=c.clean=c.amused=85;
     world.runtime.growth={held:true};
   }
-  const report=await auditColony({
+  const seconds=spread?360:300, count=spread?300:25;
+  const report=await auditColony({seconds,
     ...(world ? {world} : {}),
     chooseSchedule:(_w,s)=>infer({maxTokens:s.maxTokens,context:s.local,question:s.question,
       requiredContext:s.localParts[0],contextParts:s.localParts.slice(1),
@@ -521,17 +524,18 @@ async function colonyAudit(stone = false) {
     chooseDevelopment:(_w,_choices,input)=>infer(input),
     onProgress: async sample=>{
       if(cancelled) throw new Error("Stopped by user.");
-      showProgress(`25 residents · ${sample.tick}/300 simulated seconds · ${sample.completedProjects} projects completed`);
+      showProgress(`${count} residents · ${sample.tick}/${seconds} simulated seconds · ${sample.crews.length} crews · ${sample.completedProjects} projects completed`);
       await new Promise(resolve=>setTimeout(resolve,0));
     },
   });
-  if (stone) {
+  if (stone || spread) {
     assert(world.progress.peakBlocks>=300,"The real Laya colony did not reach its stone milestone.");
     assert(world.memory.activity.quarry>0 && world.memory.activity.refine>0,"The milestone did not involve physical quarrying and refining.");
   }
+  if(spread) assert(world.memory.activity.work>0,"The large colony did not continue into real workshop production.");
   const {reviews,projects,residents,...summary}=report;
   return {...summary,projectChoices:projects.map(p=>({tick:p.tick,selected:p.selected,started:p.started})),
-    scheduleChoices:reviews.map(r=>({tick:r.tick,selected:r.selected,candidates:r.options.length,source:r.source})),
+    scheduleChoices:reviews.map(r=>({tick:r.tick,selected:r.selected,applied:r.applied,candidates:r.options.length,source:r.source})),
     firstOptions:reviews[0]?.options,firstModelTiming:reviews.find(r=>r.timing)?.timing,residents};
 }
 async function cachedVoice() {
@@ -563,7 +567,7 @@ async function run(kind, backend, bufferCacheMode) {
     );
   $("download").disabled = !results.length;
   try {
-    if (kind === "colony" || kind === "stone") await check(`${kind==="stone"?"Stone milestone":"25-resident colony"} · real cached Laya`,()=>colonyAudit(kind==="stone"));
+    if (["colony","stone","spread"].includes(kind)) await check(`${kind==="spread"?"300 spread residents":kind==="stone"?"Stone milestone":"25-resident colony"} · real cached Laya`,()=>colonyAudit(kind==="stone",kind==="spread"));
     if (kind === "voice-cached") await check("Whisper cached restart and inference",cachedVoice);
     if (kind === "all" || kind === "platform") {
       await check("Production assets & audio worklet", assets);
@@ -577,7 +581,7 @@ async function run(kind, backend, bufferCacheMode) {
           await check(`${name} ${mode}`, () =>
             (name === "laya" ? laya : whisper)(mode),
           );
-    } else if (!["platform","colony","stone","voice-cached"].includes(kind))
+    } else if (!["platform","colony","stone","spread","voice-cached"].includes(kind))
       await check(`${kind} ${backend}`, () =>
         (kind === "laya" ? laya : whisper)(backend, bufferCacheMode),
       );
@@ -596,6 +600,7 @@ $("run-platform").onclick = () => run("platform");
 $("run-download").onclick = () => run("download");
 $("run-colony").onclick = () => run("colony");
 $("run-stone").onclick = () => run("stone");
+$("run-spread").onclick = () => run("spread");
 $("run-voice-cached").onclick = () => run("voice-cached");
 document
   .querySelectorAll("[data-model]")
