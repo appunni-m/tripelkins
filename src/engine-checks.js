@@ -13,14 +13,17 @@ $('run').onclick=async()=>{
     let engine,view,life;const report={population};
     try{
       const input=groundFixture(population);input.ui.muted=true;
-      engine=new EngineClient();const w=await engine.initialize({world:input,preview:true});
+      const updateGaps=[];let measuring=false,lastUpdate=0,lastTick=-Infinity;
+      engine=new EngineClient({onState:state=>{
+        if(measuring && state.time>lastTick){const now=performance.now();if(lastUpdate)updateGaps.push(now-lastUpdate);lastUpdate=now;lastTick=state.time;}
+      }});const w=await engine.initialize({world:input,preview:true});
       assert((await engine.query('identity')).protocol===1,'Worker protocol version');
       life=new ColonyLife();view=new WorldView($('world'),()=>w,()=>{},()=>{},life);
       const before=w.metrics.completed, initial=w.time;
       engine.updatePresentation({paused:false,ui:w.ui,settings:w.settings,intelligenceAvailable:true,growth:{held:true}});
       const renderTimes=[],frameTimes=[],gaps=[],longTasks=[],contextTimes=[];
       let observer;try{observer=new PerformanceObserver(list=>longTasks.push(...list.getEntries().map(e=>({start:e.startTime,duration:e.duration}))));observer.observe({type:'longtask'});}catch{}
-      let last=performance.now(),lastDraw=last,contextAt=last,contextBusy=false,contextError=null;const started=last;
+      let last=performance.now(),lastDraw=last,contextAt=last,contextBusy=false,contextError=null;const started=last;measuring=true;
       while(w.time-initial<12){
         await frame();const now=performance.now();gaps.push(now-last);last=now;
         assert(now-started<90000,'Worker could not advance twelve seconds before the deadline');
@@ -32,7 +35,7 @@ $('run').onclick=async()=>{
           engine.query('planning.buildContext',{includePlans:true}).then(c=>{contextTimes.push(performance.now()-now);report.contextBytes=bytes(c.context);}).catch(e=>{contextError=e;}).finally(()=>{contextBusy=false;});
         }
       }
-      const measuredUntil=performance.now();const navigation=await engine.query('navigation.memory');
+      measuring=false;const measuredUntil=performance.now();const navigation=await engine.query('navigation.memory');
       w.ui.paused=true;engine.updatePresentation({paused:true,ui:w.ui,settings:w.settings});
       await engine.command('presentation',{ui:w.ui});
       const pausedAt=(await engine.query('snapshot')).time;await delay(350);
@@ -53,6 +56,8 @@ $('run').onclick=async()=>{
         bodies:saved.creatures.length,completed:saved.metrics.completed-before,saveBytes:bytes(saved),
         meanRenderCpuMs:renderTimes.reduce((a,b)=>a+b,0)/renderTimes.length,p95FrameCpuMs:percentile(frameTimes,.95),
         p95FrameGapMs:percentile(gaps,.95),maxFrameGapMs:Math.max(...gaps),longTasks:measuredLongTasks.length,maxLongTaskMs:Math.max(0,...measuredLongTasks),
+        p95SimulationUpdateGapMs:percentile(updateGaps,.95),maxSimulationUpdateGapMs:Math.max(0,...updateGaps),
+        simulationUpdatesOver150ms:updateGaps.filter(ms=>ms>150).length,
         contextRoundTripMs:contextTimes,workerMeanStepMs:w.runtime?.workerMs,navigation});
       assert(report.completed>0,'Residents completed no useful work');
       assert(report.bodies===population,'Wrong actual resident count');

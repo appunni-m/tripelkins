@@ -381,6 +381,8 @@ impl Engine {
         input: &Value,
     ) -> Result<Option<Value>, String> {
         let out = match operation {
+            "planning.backgroundSchedule" => self.background_schedule(),
+            "planning.commitSchedule" => json!(self.commit_schedule(&input["schedule"])),
             "planning.makePlan" | "jobs.makePlan" => {
                 self.make_plan(input["policy"].as_str().unwrap_or("balanced"))
             }

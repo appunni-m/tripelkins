@@ -21,6 +21,7 @@ mod planning;
 mod population;
 mod resources;
 mod save;
+mod scheduling;
 mod settlement;
 mod simulation;
 mod spatial;

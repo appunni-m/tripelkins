@@ -500,6 +500,11 @@ impl Engine {
         false
     }
     pub(crate) fn step_world(&mut self, dt: f64) {
+        self.step_world_with_planning(dt, false);
+    }
+    // Browser scheduling runs on a snapshot in another WASM worker. Native
+    // replays retain the synchronous entry point and identical rule ordering.
+    fn step_world_with_planning(&mut self, dt: f64, background_planning: bool) {
         if flag(&self.world["ui"], "paused")
             || !flag(&self.world["progress"], "hatched")
             || num(&self.world, "stage") >= 3.
@@ -523,9 +528,11 @@ impl Engine {
                     None,
                 );
             }
-            let policy = self.goal_policy();
-            let plan = self.make_plan(&policy);
-            self.apply_plan(&plan);
+            if !background_planning {
+                let policy = self.goal_policy();
+                let plan = self.make_plan(&policy);
+                self.apply_plan(&plan);
+            }
             self.world["runtime"]["lastSchedule"] = json!(time);
             self.reveal_colony();
             self.sync_groups();
@@ -533,7 +540,9 @@ impl Engine {
             self.offer_independence();
             self.prepare_timber();
             self.review_access();
-            self.update_development_plan();
+            if !background_planning {
+                self.update_development_plan();
+            }
         }
         let mut deaths = Vec::new();
         let mut births = Vec::new();
@@ -2137,6 +2146,17 @@ impl Engine {
             "simulation.stepWorld" => {
                 self.step_world(num(input, "dt"));
                 Value::Null
+            }
+            "simulation.stepLive" => {
+                self.step_world_with_planning(num(input, "dt"), true);
+                if flag(&self.world["progress"], "hatched")
+                    && !flag(&self.world["ui"], "paused")
+                    && num(&self.world, "stage") < 3.
+                {
+                    self.world["time"].clone()
+                } else {
+                    Value::Null
+                }
             }
             "simulation.interact" => {
                 let revision = num(&self.world, "commandRevision");

@@ -23,7 +23,7 @@ function workerHarness(file='worker.js'){
         if(input.settings)this.world.settings=input.settings;
         return 'null';
       }
-      if(operation==='simulation.stepWorld'){this.world.time+=input.dt;return 'null';}
+      if(operation==='simulation.stepWorld'||operation==='simulation.stepLive'){this.world.time+=input.dt;return 'null';}
       if(operation==='throws')throw new Error('Query failed');
       if(operation==='planning.commitDecision'||operation==='settlement.commitDecision'){this.world.committed=true;return 'true';}
       return JSON.stringify({time:this.world.time,operation,input});
@@ -41,7 +41,10 @@ function workerHarness(file='worker.js'){
   const source=readFileSync(new URL('../src/engine/'+file,import.meta.url),'utf8')
     .replace(/^import .*;\n/gm,'').replaceAll('import.meta.url',JSON.stringify(new URL('../src/engine/'+file,import.meta.url).href));
   const context={Engine:FakeEngine,init:async()=>{},wasmUrl:'mock.wasm',storage,self,Worker:FakePlanner,URL,Date,JSON,Promise,Map,Set,Number,Error,performance:{now:()=>now},crypto:{getRandomValues(array){array.fill(18492);return array;},randomUUID:()=> 'fixed-id'},setInterval(callback){intervals.push(callback);},setTimeout(callback,ms){timers.set(++timerId,{callback,ms});return timerId;},clearTimeout(id){timers.delete(id);}};
-  vm.runInNewContext(source,context,{filename:file});
+  const schedulerSource=readFileSync(new URL('../src/engine/background-schedule.js',import.meta.url),'utf8')
+    .replace('export class BackgroundSchedule','class BackgroundSchedule')
+    .replaceAll('import.meta.url',JSON.stringify(new URL('../src/engine/background-schedule.js',import.meta.url).href));
+  vm.runInNewContext(schedulerSource+'\n'+source,context,{filename:file});
   async function deliver(data){self.onmessage({data:{protocol:1,generation:0,...data}});await flush();}
   async function initialize(options={}){await deliver({kind:'initialize',id:1,preview:true,world:world(),...options});}
   return {messages,planners,engines,timers,intervals,deliver,initialize,storage,setNow(value){now=value;}};

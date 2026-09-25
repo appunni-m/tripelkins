@@ -1,10 +1,22 @@
 import init, { Engine } from '../../engine/pkg/tripelkins_engine.js';
 import wasmUrl from '../../engine/pkg/tripelkins_engine_bg.wasm?url';
 import * as storage from '../persistence.js';
+import { BackgroundSchedule } from './background-schedule.js';
 
 let engine, generation=0, awaitingGeneration=null, paused=true, initialized=false, preview=false,
   framePending=false, tickQueued=false, lastSaveAt=0, lastViewAt=-Infinity, views=null, tail=Promise.resolve();
 const initializedWasm=init({module_or_path:wasmUrl});
+const scheduler = new BackgroundSchedule({
+  enqueue:operation=>{tail=tail.then(operation).catch(error=>scheduler.fail(error));},
+  snapshot:()=>engine.snapshot(),
+  commit:(schedule,sourceGeneration)=>{
+    if(paused || sourceGeneration!==generation || awaitingGeneration!==null)return false;
+    return call('planning.commitSchedule',{schedule});
+  },
+  // A failed helper falls back to the existing synchronous rule path. Movement
+  // and saving remain available even if a browser cannot start another worker.
+  failed:error=>console.warn('Using synchronous colony scheduling:',error.message),
+});
 // Only pure planning queries may leave the authoritative command queue.
 // selectPlan records a decision, so it deliberately stays on this worker.
 const planningQueries=new Set(['planning.buildContext','planning.context','planning.makePlan','planning.feasiblePlans',
@@ -58,7 +70,10 @@ function publish(){if(framePending || !initialized)return;framePending=true;send
 function syncPresentation(data){
   if(data.ui || data.settings)call('presentation',{ui:data.ui,settings:data.settings,
     intelligenceAvailable:data.intelligenceAvailable,growth:data.growth});
-  if(typeof data.paused==='boolean')paused=data.paused;
+  if(typeof data.paused==='boolean'){
+    if(data.paused && !paused)scheduler.invalidate();
+    paused=data.paused;
+  }
 }
 function configureStorage(){
   storage.configurePersistence({
@@ -105,6 +120,9 @@ async function operate(message){
     const before=state().ui;
     result=paused && ['planning.commitDecision','settlement.commitDecision'].includes(message.operation)
       ? false : call(message.operation,message.input);
+    // An AI schedule takes precedence over an automatic proposal already in
+    // flight. The next proposal uses the newly chosen policy and commitments.
+    if(result!==false && ['planning.commitDecision','planning.reschedule','planning.applyPlan','jobs.applyPlan'].includes(message.operation))scheduler.invalidate();
     const after=state().ui;uiPatch={};
     for(const key of new Set([...Object.keys(before),...Object.keys(after)]))if(JSON.stringify(before[key])!==JSON.stringify(after[key]))uiPatch[key]=after[key]??null;
   }else if(message.kind==='storage'){
@@ -123,6 +141,7 @@ async function operate(message){
         result=preview?call('state.migrateWorld',{raw:args.next}):await storage.replaceWorld(state(),args.next,args.source,args.origin);
         result.ui.paused=true;result.ui.welcome=true;
         stopPlanner('A different saved world was opened.');
+        scheduler.reset();
         engine.free();engine=new Engine(JSON.stringify(result));clock();awaitingGeneration=generation+1;break;
       }
       default:throw new Error('Unknown storage operation.');
@@ -141,9 +160,11 @@ setInterval(()=>{
   tickQueued=true;
   tail=tail.then(async()=>{
     if(paused)return;
-    const start=performance.now();clock();call('simulation.stepWorld',{dt:0.1});
+    const start=performance.now();clock();
+    const time=call(scheduler.disabled?'simulation.stepWorld':'simulation.stepLive',{dt:0.1});
     call('diagnostics.workerTick',{milliseconds:performance.now()-start});
     publish();
+    if(!scheduler.disabled && typeof time==='number')scheduler.request(time,generation);
     if(!preview && performance.now()-lastSaveAt>=5000){
       lastSaveAt=performance.now();
       try{await storage.saveWorld(state());}

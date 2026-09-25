@@ -5,6 +5,8 @@ workers. Measurements on this page are for a single worker.
 
 For the ongoing CPU/memory/population optimization and newer measurements, see
 [Resource optimization](RESOURCE_OPTIMIZATION.md).
+For colony-wide pauses during scheduling, see the
+[movement stall review](MOVEMENT_STALL_REVIEW.md).
 
 Observed in the Codex in-app browser on the user's Mac, using the app's **Request fresh AI decision** control. The colony had 24 creatures. No decision-cache hits were used in these measurements. Input was 127 tokens. These samples are indicative, not a cross-device guarantee or a task-quality evaluation.
 

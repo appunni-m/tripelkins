@@ -9,13 +9,26 @@ server. [Documentation index](README.md) · [Contributor guide](../CONTRIBUTING.
 The main thread sends commands to the simulation worker. That worker advances
 needs, movement, jobs, resources, growth and story on a fixed 100 ms simulation
 step. It sends bounded snapshots back for rendering. A separate Rust/WASM worker
-calculates read-only plans from snapshots so candidate searches do not block the
-simulation loop.
+calculates model choices and context from snapshots. A dedicated snapshot
+scheduler calculates the automatic two-second crew plan and development summary;
+it has at most one request in flight. These searches no longer occupy a movement
+tick or wait behind model-context requests. All three workers execute Rust/WASM.
+
+The live scheduler rechecks map and command revisions, population, resources,
+targets and service reservations before committing a proposal. Proposals older
+than three playing seconds are rejected. Completed jobs retain their outcomes
+and cargo, and a newer AI schedule supersedes an automatic proposal. Pausing and
+restoring invalidate outstanding work. A helper failure falls back to synchronous
+scheduling. The synchronous entry point remains available for deterministic
+replays; live proposals can arrive between ticks, so their assignment timing is
+not a bit-for-bit replay of that entry point.
 
 ```mermaid
 flowchart TD
     UI[Input, options and Three.js rendering] -->|Commands| SIM[Rust/WASM simulation worker]
     SIM -->|Presentation snapshots| UI
+    SIM -->|One snapshot at a time| SCHEDULE[Rust/WASM automatic scheduler]
+    SCHEDULE -->|Proposal, validated on arrival| SIM
     SIM <-->|Validated saves and history| DB[(IndexedDB)]
     UI -->|Snapshot queries| PLAN[Rust/WASM planning worker]
     PLAN -->|Feasible choices and bounded context| BRAIN[Browser intelligence coordinator]
