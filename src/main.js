@@ -24,6 +24,7 @@ import "./style.css";
 import { WorldView } from "./world.js";
 import { ColonyLife } from "./colony-life.js";
 import { orbitSummary, orbitDetails } from "./orbit-ui.js";
+import { buildingDetails } from "./building-inspector.js";
 import { awakenCreatureVoice, stopCreatureVoice } from "./creature-voice.js";
 import { naturalObject } from "./game/map.js";
 import {
@@ -838,7 +839,7 @@ function renderUi() {
       `<button class="close" data-action="deselect" aria-label="Close creature details">${uiIcon("close")}</button><h3 class="creature-name">${esc(c.name)}</h3><div class="identity-actions"><button data-action="rename" aria-label="Rename ${esc(c.name)}">${uiIcon("edit")} Rename</button><button data-action="favorite" aria-label="${c.favorite ? "Unpin" : "Pin"} this creature" aria-pressed="${!!c.favorite}">${uiIcon("star")} ${c.favorite ? "Pinned" : "Pin"}</button></div><p>${TASK_NAMES[c.task] || "Exploring"}${c.carry ? ` · ${c.carry} ${esc(c.cargoKind)}` : ""}</p><small>${esc(c.job?.state === "queued" ? "Waiting for a clear space" : c.job?.purpose || "")}</small>${["fed", "clean", "amused"].map((n) => `<div class="need"><span>${n === "fed" ? "FED" : n === "clean" ? "CLEAN" : "AMUSED"}</span><div class="meter" role="meter" aria-label="${n}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(c[n])}"><i style="width:${Math.round(c[n])}%;${c[n] < 30 ? "background:#be765c" : ""}"></i></div><span>${Math.round(c[n])}</span></div>`).join("")}<small>${Math.min(c.fed, c.clean, c.amused) > 65 ? "Feeling good. Growing a little more…" : "Every little need matters."}</small>`);
   } else if (o) {
     htmlIfChanged($("inspector"),
-      `<button class="close" data-action="deselect" aria-label="Close object details">${uiIcon("close")}</button><h3>${esc(displayName(o.type))}${o.level > 1 ? " II" : ""}</h3><p>${esc(BUILDINGS[o.type]?.help || (o.type === "bridge" ? `Delivered: ${Math.floor(o.stock)}/${bridgeGeometry(o).required} · ${bridgeGeometry(o).delivered.wood} wood, ${bridgeGeometry(o).delivered.bones} bones` : o.type === "monolith" ? "Tap the survey beacon with the hand." : "Part of our little world."))}</p>${o.type === "bridge" ? bridgeDetails(o) : ""}${o.type === "cannon" ? orbitDetails(world,orbit) : ""}${["factory", "mine", "dwelling"].includes(o.type) && o.level < 2 ? '<button class="upgrade" data-action="upgrade">Upgrade structure</button>' : ""}`);
+      `<button class="close" data-action="deselect" aria-label="Close object details">${uiIcon("close")}</button><h3>${esc(displayName(o.type))}${o.level > 1 ? " II" : ""}</h3><p>${esc(BUILDINGS[o.type]?.help || (o.type === "bridge" ? `Delivered: ${Math.floor(o.stock)}/${bridgeGeometry(o).required} · ${bridgeGeometry(o).delivered.wood} wood, ${bridgeGeometry(o).delivered.bones} bones` : o.type === "monolith" ? "Tap the survey beacon with the hand." : "Part of our little world."))}</p>${o.type === "bridge" ? bridgeDetails(o) : ""}${o.type === "cannon" ? orbitDetails(world,orbit) : ""}${buildingDetails(o,engine.views?.building)}`);
   }
   if ($("brain-status"))
     $("brain-status").textContent =
@@ -987,7 +988,10 @@ view = new WorldView(
     if (world.ui.tool === "inspect") life.touch(world, entity, sceneTime);
     if (result.choice) choiceDialog(result.choice, result.entity);
     else {
-      if (result.message) speak(result.message);
+      if (result.message) {
+        if (result.placed === false) toast(result.message);
+        else speak(result.message);
+      }
       if (result.sound) {
         sound(result.sound);
         await engine.command("planning.reschedule",{policy:world.memory.lastPlan?.policy || "balanced"});

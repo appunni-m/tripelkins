@@ -426,7 +426,7 @@ impl Engine {
                 for goal in list(&self.world["memory"], "goals").to_vec() {
                     states.insert(text(&goal, "id").into(), self.inspect_goal(&goal));
                 }
-                json!({"goalStates":states,"health":crate::state::colony_health(&self.world)})
+                json!({"goalStates":states,"health":crate::state::colony_health(&self.world),"building":self.selected_building()})
             }
             "jobs.allowsTask" => json!(self.allows_task(text(input, "task"), &input["creature"])),
             "jobs.workTargets" => json!(self.work_targets(&input["creature"], text(input, "task"))),

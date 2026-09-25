@@ -233,6 +233,8 @@ button img {
   left: 28px;
   width: 232px;
   padding: 15px;
+  max-height: calc(100dvh - 340px);
+  overflow-y: auto;
 }
 .inspector .close {
   float: right;
@@ -314,6 +316,13 @@ button img {
   padding: 8px;
   background: #d8cdab;
 }
+.building-facts { margin: 10px 0; font-size: 11px; }
+.building-facts > div { display: flex; justify-content: space-between; gap: 8px; margin: 6px 0; }
+.building-facts dt { color: #655e4c; }
+.building-facts dd { margin: 0; text-align: right; font-weight: 800; }
+.inspector .building-status { color: #4e6049; font-weight: 700; }
+.inspector .building-upgrade-reason { margin: 10px 0 0; color: #66583e; }
+.inspector button.upgrade:disabled { opacity: .55; cursor: not-allowed; }
 .speech {
   position: absolute;
   left: 50%;

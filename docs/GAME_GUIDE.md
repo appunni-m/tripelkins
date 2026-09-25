@@ -21,7 +21,19 @@ Options → Intelligence provides local Laya or Jev through OpenRouter. The opti
 
 Explore through the fog, complete the bridge and grow a working settlement. Resource collection, transport, construction and production happen through physical jobs. The colony's movement and completed actions drive its animations and sounds.
 
+### Mines and stone workshops
+
+Place a mine on a stone deposit: its outline snaps to the deposit and turns green when the surrounding ground has enough room. A mine cannot be placed on ordinary grass. Leave clear space around buildings so workers can reach their entrances.
+
+Use Hand to select a mine or stone workshop. Its panel shows remaining or delivered ore, assigned workers, arrivals and any reported access problem. Mining extracts ore; carriers deliver it to workshops, which turn each ore into eight blocks. Stored colony ore and ore delivered to a workshop are shown separately. Work follows the colony's priorities and your requests, so selecting a building does not directly order a crew to it. Open Activity to see what they are doing.
+
+The panel also explains upgrade requirements and costs. The upgrade button becomes available when both are met; level II buildings show that they are fully upgraded.
+
+### Orbital home
+
 The sky launcher sends volunteers to a shared orbital home. Select it, or use the IN ORBIT indicator, to see the destination, population and recent arrivals. These journeys move living Tripelkins; they are not deaths. Orbital residents never multiply automatically. Twelve real journeys establish the orbital home. Existing saved residents are preserved. The destination view uses the existing saved orbital census.
+
+### Saved worlds
 
 Progress is saved on this browser. Options → Saved worlds provides export, import, recovery and earlier moments. A restored world opens paused. Export a backup before moving devices, browsers or browser-storage namespaces; downloaded model caches do not travel with a world file.
 

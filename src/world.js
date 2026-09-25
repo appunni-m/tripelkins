@@ -9,6 +9,7 @@ import { clamp } from "./game/state.js";
 import { bindWorldInput, cameraViewport, cameraPoint, panCamera, zoomCamera } from "./camera-controls.js";
 import { isConstruction } from "./game/development.js";
 import { METEOR_RADIUS } from "./game/destruction.js";
+import { buildingPreview } from "./building-preview.js";
 import {
   CHUNK_SIZE,
   naturalObjects,
@@ -467,7 +468,11 @@ export class WorldView {
         : 0;
     this.ghost.visible = !!this.ghostPoint && isExplored(w,this.dragPoint || this.ghostPoint) && !!(type || area);
     if (this.ghost.visible) {
-      const p = this.dragPoint || this.ghostPoint,
+      const rawPoint = this.dragPoint || this.ghostPoint,
+        placement = !area && w.ui.tool.startsWith("build:")
+          ? buildingPreview(w, type, rawPoint)
+          : null,
+        p = placement?.point || rawPoint,
         f = ASSETS[type]?.footprint || [0.6, 0.6],
         outline = area
           ? Array.from({ length: 32 }, (_, i) => [
@@ -494,7 +499,7 @@ export class WorldView {
           ? w.ui.tool === "mop"
             ? "#a9d7eb"
             : "#e69a74"
-          : canPlace(w, type, p, this.dragging?.id)
+          : (placement ? placement.valid : canPlace(w, type, p, this.dragging?.id))
             ? "#d6ef9c"
             : "#d36d54",
       );

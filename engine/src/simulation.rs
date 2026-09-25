@@ -22,6 +22,14 @@ struct TravelPath {
     at: f64,
     best_distance: f64,
 }
+pub(crate) fn upgrade_threshold(kind: &str) -> f64 {
+    match kind {
+        "factory" => 5000.,
+        "mine" => 120000.,
+        "dwelling" => 200000.,
+        _ => 0.,
+    }
+}
 fn minimum(c: &Value) -> f64 {
     num(c, "fed").min(num(c, "clean")).min(num(c, "amused"))
 }
@@ -1822,12 +1830,7 @@ impl Engine {
         else {
             return "This structure cannot be upgraded.".into();
         };
-        let threshold = match text(&o, "type") {
-            "factory" => 5000.,
-            "mine" => 120000.,
-            "dwelling" => 200000.,
-            _ => 0.,
-        };
+        let threshold = upgrade_threshold(text(&o, "type"));
         if threshold == 0. || num(&o, "level") >= 2. {
             return "This structure cannot be upgraded.".into();
         }
@@ -2097,12 +2100,20 @@ impl Engine {
                 self.step_world(num(input, "dt"));
                 Value::Null
             }
-            "simulation.interact" => self.interact(
-                text(input, "tool"),
-                num(input, "x"),
-                num(input, "y"),
-                entity,
-            ),
+            "simulation.interact" => {
+                let revision = num(&self.world, "commandRevision");
+                let mut result = self.interact(
+                    text(input, "tool"), num(input, "x"), num(input, "y"), entity,
+                );
+                // The live command tells presentation whether construction really
+                // happened; failed placement must not play the success sound.
+                if text(input, "tool").starts_with("build:") {
+                    let placed = num(&self.world, "commandRevision") > revision;
+                    result["placed"] = json!(placed);
+                    if !placed { result.as_object_mut().unwrap().remove("sound"); }
+                }
+                result
+            },
             "simulation.choose" => {
                 json!(self.choose(text(input, "kind"), text(input, "answer"), entity))
             }

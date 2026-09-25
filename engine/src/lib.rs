@@ -12,6 +12,7 @@ mod exploration;
 mod geometry;
 mod goals;
 mod identity;
+mod inspection;
 mod jobs;
 mod memory;
 mod navigation;
