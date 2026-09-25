@@ -1,4 +1,5 @@
 import { naturalObjects, WORLD_EDGE } from "./map.js";
+import { copyOccupancy, NAV_CELL } from "./navigation-grid.js";
 import {
   nearbyObstacles,
   BODY_RADIUS,
@@ -10,7 +11,7 @@ import {
   clearPosition,
 } from "./geometry.js";
 export const JOB_RADIUS = 64;
-const CELL = 0.75,
+const CELL = NAV_CELL,
   WIDTH = 112,
   MAX_FIELDS = 192;
 const worlds = new WeakMap();
@@ -32,7 +33,7 @@ function navigation(w) {
   let nav = worlds.get(w);
   if (nav?.signature === signature) return nav;
   nav = {
-    signature, fields: new Map(),
+    signature, fields: new Map(), tiles: new Map(),
     grid: new Uint8Array(WIDTH * WIDTH),
     queue: new Uint16Array(WIDTH * WIDTH),
   };
@@ -44,7 +45,7 @@ export function navigationMemory(w) {
   if (!nav) return { fields: 0, bytes: 0, limit: MAX_FIELDS };
   return {
     fields: nav.fields.size,
-    bytes: nav.grid.byteLength + nav.queue.byteLength +
+    bytes: nav.grid.byteLength + nav.queue.byteLength + nav.tiles.size * 1024 +
       [...nav.fields.values()].reduce((sum, field) => sum + field.costs.byteLength, 0),
     limit: MAX_FIELDS,
   };
@@ -164,45 +165,19 @@ function fieldFor(w, target, from = target) {
       oy + WIDTH * CELL + 4,
     ),
   ].filter(footprint);
-  const spatial = new Map();
-  for (const o of objects) {
-    const f = footprint(o);
-    for (
-      let x = Math.floor(o.x - f[0] - BODY_RADIUS);
-      x <= Math.ceil(o.x + f[0] + BODY_RADIUS);
-      x++
-    )
-      for (
-        let y = Math.floor(o.y - f[1] - BODY_RADIUS);
-        y <= Math.ceil(o.y + f[1] + BODY_RADIUS);
-        y++
-      ) {
-        const k = `${x}:${y}`;
-        if (!spatial.has(k)) spatial.set(k, []);
-        spatial.get(k).push(o);
-      }
-  }
   const count = WIDTH * WIDTH,
     grid = nav.grid,
     costs = new Int16Array(count).fill(-1);
-  for (let y = 0; y < WIDTH; y++)
-    for (let x = 0; x < WIDTH; x++) {
-      const px = ox + x * CELL,
-        py = oy + y * CELL;
-      grid[y * WIDTH + x] =
-        !walkableSurface(w, px, py) ||
-        (spatial.get(`${Math.floor(px)}:${Math.floor(py)}`) || []).some((o) =>
-          hitsFootprint(px, py, BODY_RADIUS + 0.03, o),
-        );
-    }
+  copyOccupancy(w,nav.tiles,grid,WIDTH,tx+sx-WIDTH/2,ty+sy-WIDTH/2);
   let start = -1,
     best = Infinity;
+  const targetObjects = nearbyObstacles(w,target.x,target.y,CELL*3);
   for (let y = WIDTH / 2 - sy - 2; y <= WIDTH / 2 - sy + 2; y++)
     for (let x = WIDTH / 2 - sx - 2; x <= WIDTH / 2 - sx + 2; x++) {
       const i = y * WIDTH + x,
         p = { x: ox + x * CELL, y: oy + y * CELL },
         d = Math.hypot(p.x - target.x, p.y - target.y);
-      if (!grid[i] && d < best && lineClear(w, p, target, objects)) {
+      if (!grid[i] && d < best && lineClear(w, p, target, targetObjects)) {
         best = d;
         start = i;
       }
@@ -270,6 +245,10 @@ export function waypoint(w, c, destination) {
   if (cx < 1 || cy < 1 || cx >= WIDTH - 1 || cy >= WIDTH - 1) return null;
   let best = null,
     score = Infinity;
+  // Every connector stays within 3 grid cells plus rounding of this body.
+  // A destination's full 84-unit obstacle list made these short checks costly
+  // for every resident in a spread-out colony.
+  const connectorObjects = nearbyObstacles(w,c.x,c.y,CELL*3.5+BODY_RADIUS);
   // Steering can enter a legal gap narrower than a grid cell. Reconnect from
   // continuous space to a farther cell only when the near ring has no route.
   // Every connector is swept through the same obstacle/surface checks.
@@ -282,7 +261,7 @@ export function waypoint(w, c, destination) {
     if (x < 0 || y < 0 || x >= WIDTH || y >= WIDTH) continue;
     if (costs[i] < 0) continue;
     const p = { x: ox + x * CELL, y: oy + y * CELL };
-    if (!lineClear(w, c, p, objects)) continue;
+    if (!lineClear(w, c, p, connectorObjects)) continue;
     if (Math.hypot(p.x - c.x, p.y - c.y) < 0.12) continue;
     const value = costs[i] + Math.hypot(p.x - c.x, p.y - c.y) * 0.15;
     if (value < score) {

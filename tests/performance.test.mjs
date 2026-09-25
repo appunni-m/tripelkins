@@ -5,11 +5,43 @@ import { makePlan, applyPlan, stepWorld } from "../src/game/simulation.js";
 import { clearPosition, walkableSurface, hitsFootprint, BODY_RADIUS } from "../src/game/geometry.js";
 import { lineClear, routeCost, waypoint, withRouteCosts, navigationMemory } from "../src/game/navigation.js";
 import { toolSignature, htmlIfChanged } from "../src/ui-budget.js";
-import { scaleFixture } from "../src/game/scale-fixture.js";
+import { scaleFixture, groundFixture } from "../src/game/scale-fixture.js";
+import { copyOccupancy, NAV_CELL } from "../src/game/navigation-grid.js";
+import { naturalObjects } from "../src/game/map.js";
 import { buildContext } from "../src/game/context.js";
 import { backgroundBudget } from "../src/background-budget.js";
 import { meterGpuBuffers } from "../src/laya/gpu-meter.js";
 import { stepCohorts, syncPopulation, MAX_POPULATION } from "../src/game/population.js";
+
+test("shared navigation tiles preserve every sampled grid cell and stay bounded",()=>{
+  const w=createWorld();
+  addObject(w,"mountain",-10,-8);
+  w.community.project={id:1,type:"factory",x:-14,y:5};w.navRevision++;
+  const tiles=new Map(), width=112;
+  for(const [left,top] of [[-90,-87],[-56,-56],[-11,2],[40,-33],[90,72]]) {
+    const grid=new Uint8Array(width*width), ox=left*NAV_CELL,oy=top*NAV_CELL;
+    copyOccupancy(w,tiles,grid,width,left,top);
+    const objects=[...w.objects,w.community.project,...naturalObjects(w,ox-4,oy-4,ox+width*NAV_CELL+4,oy+width*NAV_CELL+4)];
+    for(let y=0;y<width;y++)for(let x=0;x<width;x++) {
+      const px=ox+x*NAV_CELL,py=oy+y*NAV_CELL;
+      const blocked=!walkableSurface(w,px,py)||objects.some(o=>hitsFootprint(px,py,BODY_RADIUS+.03,o));
+      assert.equal(grid[y*width+x],Number(blocked),`${px},${py}`);
+    }
+  }
+  for(let i=0;i<140;i++) copyOccupancy(w,tiles,new Uint8Array(1),1,i*32,300);
+  assert.ok(tiles.size<=128);
+});
+
+test("spread workload measures 300 real residents with legal starts and useful work",()=>{
+  const w=groundFixture(300), before=w.metrics.completed;
+  assert.equal(w.creatures.length,300);assert.equal(w.orbital.population,0);
+  assert.ok(w.creatures.every(c=>clearPosition(w,c)));
+  assert.ok(Math.max(...w.creatures.map(c=>c.x))-Math.min(...w.creatures.map(c=>c.x))>80);
+  assert.ok(Math.max(...w.creatures.map(c=>c.y))-Math.min(...w.creatures.map(c=>c.y))>60);
+  for(let i=0;i<120;i++)stepWorld(w,.1);
+  assert.equal(w.creatures.length,300);assert.ok(w.metrics.completed>before);
+  assert.ok(navigationMemory(w).bytes<5e6);
+});
 
 test("legal narrow gaps reconnect to navigation without crossing tree footprints", () => {
   const w=createWorld({empty:true});

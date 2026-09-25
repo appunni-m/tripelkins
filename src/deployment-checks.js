@@ -335,15 +335,20 @@ async function laya(backend, bufferCacheMode = "lazyRelease") {
   }
   return report;
 }
-async function whisper(backend) {
-  const file = $("speech-file").files[0];
-  if (!file) throw new DOMException("Choose your own speech recording before running this check. No model was downloaded.", "NotSupportedError");
+async function speechSamples(file) {
   assert(file.size <= 4 * 1024 * 1024, "Choose an audio file smaller than 4 MB.");
   const audioContext = new OfflineAudioContext(1, 16000 * 15, 16000);
   const decoded = await audioContext.decodeAudioData(await file.arrayBuffer());
   const audio = decoded.getChannelData(0);
-  assert(audio.length > 0 && audio.length <= 240000 && decoded.sampleRate === 16000,
-    "Speech recording must fit the real 15-second recording limit.");
+  assert(audio.length >= 4800 && audio.length <= 240000 && decoded.sampleRate === 16000,
+    "Speech recording must be between 0.3 and 15 seconds.");
+  assert(Math.sqrt(audio.reduce((n,s)=>n+s*s,0)/audio.length)>=.002,"The chosen recording is too quiet for the game's capture threshold.");
+  return audio;
+}
+async function whisper(backend) {
+  const file = $("speech-file").files[0];
+  if (!file) throw new DOMException("Choose your own speech recording before running this check. No model was downloaded.", "NotSupportedError");
+  const audio = await speechSamples(file);
   if (backend === "webgpu") await requireGpu(false);
   const cache = VOICE_MODEL.cache;
   const before = await cachedFiles(cache);
@@ -497,12 +502,19 @@ async function resumableDownload() {
       sha256: resumed.sha256, cachedWithoutNetwork: true, workers: 3 };
   } finally { await caches.delete(cacheName); }
 }
-async function colonyAudit() {
+async function colonyAudit(stone = false) {
   await requireGpu();
   activeWorker = new Worker(new URL("./laya/worker.js", import.meta.url), { type:"module" });
   await callWorker(activeWorker,{kind:"load",backend:"webgpu",allowDownload:false});
   const infer = input => callWorker(activeWorker,{kind:"infer",backend:"webgpu",...input});
+  let world;
+  if (stone) {
+    world=developmentWorld();
+    const c=addCreature(world,25,25);c.fed=c.clean=c.amused=85;
+    world.runtime.growth={held:true};
+  }
   const report=await auditColony({
+    ...(world ? {world} : {}),
     chooseSchedule:(_w,s)=>infer({maxTokens:s.maxTokens,context:s.local,question:s.question,
       requiredContext:s.localParts[0],contextParts:s.localParts.slice(1),
       options:s.options}),
@@ -513,10 +525,32 @@ async function colonyAudit() {
       await new Promise(resolve=>setTimeout(resolve,0));
     },
   });
+  if (stone) {
+    assert(world.progress.peakBlocks>=300,"The real Laya colony did not reach its stone milestone.");
+    assert(world.memory.activity.quarry>0 && world.memory.activity.refine>0,"The milestone did not involve physical quarrying and refining.");
+  }
   const {reviews,projects,residents,...summary}=report;
   return {...summary,projectChoices:projects.map(p=>({tick:p.tick,selected:p.selected,started:p.started})),
     scheduleChoices:reviews.map(r=>({tick:r.tick,selected:r.selected,candidates:r.options.length,source:r.source})),
     firstOptions:reviews[0]?.options,firstModelTiming:reviews.find(r=>r.timing)?.timing,residents};
+}
+async function cachedVoice() {
+  await requireGpu(false);
+  const file=$("speech-file").files[0];
+  let audio=new Float32Array(16000);
+  if (file) audio=await speechSamples(file);
+  const passes=[];
+  for (let wake=0;wake<2;wake++) {
+    activeWorker=new Worker(new URL("./voice/worker.js",import.meta.url),{type:"module"});
+    await callWorker(activeWorker,{kind:"load",backend:"webgpu",allowDownload:false});
+    const result=await callWorker(activeWorker,{kind:"transcribe",audio},120000);
+    assert(typeof result.text==="string","Speech inference returned no transcript field.");
+    if (file) assert(/little friends/i.test(result.text)&&/happy.*healthy/i.test(result.text),`Unexpected transcript: ${result.text}`);
+    passes.push(result);
+    activeWorker.terminate();activeWorker=null;
+  }
+  return {backend:"webgpu",downloadAllowed:false,freshWorkers:2,
+    check:file?"Chosen phrase transcribed on both wakes":"Silence exercises processor and inference; speech accuracy not tested",passes};
 }
 async function run(kind, backend, bufferCacheMode) {
   if (running) return;
@@ -529,7 +563,8 @@ async function run(kind, backend, bufferCacheMode) {
     );
   $("download").disabled = !results.length;
   try {
-    if (kind === "colony") await check("25-resident colony · real cached Laya", colonyAudit);
+    if (kind === "colony" || kind === "stone") await check(`${kind==="stone"?"Stone milestone":"25-resident colony"} · real cached Laya`,()=>colonyAudit(kind==="stone"));
+    if (kind === "voice-cached") await check("Whisper cached restart and inference",cachedVoice);
     if (kind === "all" || kind === "platform") {
       await check("Production assets & audio worklet", assets);
       await check("Browser storage", storage);
@@ -542,7 +577,7 @@ async function run(kind, backend, bufferCacheMode) {
           await check(`${name} ${mode}`, () =>
             (name === "laya" ? laya : whisper)(mode),
           );
-    } else if (kind !== "platform" && kind !== "colony")
+    } else if (!["platform","colony","stone","voice-cached"].includes(kind))
       await check(`${kind} ${backend}`, () =>
         (kind === "laya" ? laya : whisper)(backend, bufferCacheMode),
       );
@@ -560,6 +595,8 @@ $("run-all").onclick = () => run("all");
 $("run-platform").onclick = () => run("platform");
 $("run-download").onclick = () => run("download");
 $("run-colony").onclick = () => run("colony");
+$("run-stone").onclick = () => run("stone");
+$("run-voice-cached").onclick = () => run("voice-cached");
 document
   .querySelectorAll("[data-model]")
   .forEach(

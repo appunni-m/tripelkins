@@ -19,6 +19,7 @@ export function packHostedContext(full, budget) {
   const packed = {
     version: 4,
     workload: full.workload,
+    currentMilestone: full.currentMilestone,
     care: full.care,
     developmentPlan: concisePlan(full.developmentPlan),
     timber: full.timber,

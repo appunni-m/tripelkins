@@ -51,6 +51,21 @@ async function interrupted(env) {
   assert.equal(await env.cache.match(url), undefined, "partial bytes must never be exposed as a complete model");
 }
 
+test("metadata range probes neither publish partial model files nor resume an existing journal", async () => {
+  const env=environment();await interrupted(env);
+  const before=[...env.entries.keys()];let calls=0;
+  const download=createModelDownloader({...env.options,fetcher:async (_,init)=>{
+    calls++;assert.equal(new Headers(init.headers).get("range"),"bytes=0-0");
+    return new Response(data.slice(0,1),{status:206,headers:{"Content-Range":`bytes 0-0/${data.length}`}});
+  }});
+  const requestInit={headers:{Range:"bytes=0-0"}};
+  assert.equal((await download(url,{cacheName:"test",requestInit})).status,404);
+  assert.equal(calls,0);
+  const probe=await download(url,{cacheName:"test",allowDownload:true,requestInit});
+  assert.equal(probe.status,206);assert.deepEqual(await output(probe),data.slice(0,1));
+  assert.deepEqual([...env.entries.keys()],before);assert.equal(await env.cache.match(url),undefined);
+});
+
 test("a new downloader resumes persisted checkpoints after an interruption and reuses the completed file", async () => {
   const env = environment(); await interrupted(env);
   let calls = 0;

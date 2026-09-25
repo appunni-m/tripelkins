@@ -36,8 +36,8 @@ export function auditSample(w) {
 }
 // Callbacks return real provider responses in the browser. The CLI deliberately
 // uses a labelled rule reference; those selections are never called model calls.
-export async function auditColony({ seconds=300, chooseSchedule, chooseDevelopment, onProgress=()=>{} } = {}) {
-  const w=auditWorld(), occupancy={}, positions=new Map(w.creatures.map(c=>[c.id,{x:c.x,y:c.y,distance:0}]));
+export async function auditColony({ seconds=300, world=auditWorld(), chooseSchedule, chooseDevelopment, onProgress=()=>{} } = {}) {
+  const w=world, occupancy={}, positions=new Map(w.creatures.map(c=>[c.id,{x:c.x,y:c.y,distance:0}]));
   const reviews=[], projects=[], samples=[auditSample(w)];
   let modelCalls=0, singleChoice=0;
   let scheduleAt=-Infinity, developmentAt=-Infinity, lastScheduleEvent, lastDevelopmentEvent;
@@ -80,7 +80,7 @@ export async function auditColony({ seconds=300, chooseSchedule, chooseDevelopme
     if(tick%300===299) { samples.push(auditSample(w)); await onProgress(samples.at(-1)); }
   }
   const total=Object.values(occupancy).reduce((a,b)=>a+b,0);
-  return { seconds, fixedPopulation:25, modelCalls, scheduleReviews:reviews.length, singleChoiceReviews:singleChoice,
+  return { seconds, fixedPopulation:positions.size, modelCalls, scheduleReviews:reviews.length, singleChoiceReviews:singleChoice,
     occupancyPercent:Object.fromEntries(Object.entries(occupancy).map(([k,v])=>[k,rounded(v/total*100)])),
     usefulPercent:rounded(Object.entries(occupancy).reduce((n,[k,v])=>n+(USEFUL_TASKS.has(k)?v:0),0)/total*100),
     usefulWorkers:w.creatures.filter(c=>c.workCycles>0).length,

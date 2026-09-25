@@ -1,4 +1,6 @@
-import { env, pipeline } from "@huggingface/transformers";
+import { env, AutoTokenizer, AutoProcessor, WhisperForConditionalGeneration,
+  AutomaticSpeechRecognitionPipeline } from "@huggingface/transformers";
+import { createTranscriber } from "./transcriber.js";
 import { VOICE_MODEL, voiceBackend } from "./model.js";
 import { runtimeRoot } from "../runtime-paths.js";
 import { fetchModelFile } from "../model-download.js";
@@ -12,6 +14,7 @@ env.experimental_useCrossOriginStorage = false;
 // model files during a background wake or an inference retry.
 let allowDownload = false;
 let cacheMiss = false;
+let missingFiles = new Set();
 let downloadId;
 env.fetch = async (url, options) => {
   const response = await fetchModelFile(url, {
@@ -24,7 +27,10 @@ env.fetch = async (url, options) => {
         : data.phase === "saving" ? `Saving ${data.file}…` : undefined),
     }),
   });
-  if (!allowDownload && response.status === 404) cacheMiss = true;
+  if (!allowDownload && response.status === 404) {
+    cacheMiss = true;
+    missingFiles.add(new URL(url).pathname.split("/resolve/")[1] || new URL(url).pathname);
+  }
   return response;
 };
 const wasm = env.backends.onnx.wasm;
@@ -50,13 +56,14 @@ self.onmessage = ({ data }) => {
         const config = voiceBackend(backend);
         allowDownload = data.allowDownload === true;
         cacheMiss = false;
+        missingFiles.clear();
         downloadId = id;
         if (transcriber && loadedBackend !== backend) {
           await transcriber.dispose();
           transcriber = null;
         }
-        transcriber ||= await pipeline(
-          "automatic-speech-recognition",
+        transcriber ||= await createTranscriber(
+          { env, AutoTokenizer, AutoProcessor, WhisperForConditionalGeneration, AutomaticSpeechRecognitionPipeline },
           VOICE_MODEL.id,
           {
             revision: VOICE_MODEL.revision,
@@ -108,7 +115,7 @@ self.onmessage = ({ data }) => {
         type: "error",
         error:
           kind === "load" && !allowDownload && cacheMiss
-            ? `Voice files are missing for ${VOICE_MODEL.name}. Review the new download in Options. Missing files were not downloaded.`
+            ? `Voice files are missing for ${VOICE_MODEL.name}. Review the new download in Options. Missing files were not downloaded. ${[...missingFiles].slice(0,4).join(", ")}. ${error.message || ""}`
             : error.message || "Voice recognition failed.",
       });
     } finally {

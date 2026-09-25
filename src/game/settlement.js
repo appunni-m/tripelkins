@@ -13,7 +13,7 @@ import { routeCost } from "./navigation.js";
 import { materializeObject, remember } from "./state.js";
 import { activity, postMessage } from "./community.js";
 import { CARE_BUILDINGS, INDEPENDENT_BUILDINGS, RESOURCE_PROJECTS, DEVELOPMENT_TYPES,
-  projectName, isConstruction, projectFunded, timberReserve } from "./development.js";
+  projectName, isConstruction, projectFunded, timberReserve, colonyMilestone } from "./development.js";
 export { CARE_BUILDINGS } from "./development.js";
 const activeGoal = (w) => w.memory.goals.find((g) => g.status === "active");
 function scoped(w, c) {
@@ -130,7 +130,7 @@ export function settlementChoices(w) {
   if (!independent(w) || w.community.project || !w.creatures.length ||
       w.objects.length >= LIMITS.objects - 4 || w.directives.pauseWork ||
       w.time-w.community.lastProjectAt < decisionPace(w.settings).development) return [];
-  const choices = [], goal = activeGoal(w), care = careContext(w), plan=developmentPlan(w);
+  const choices = [], goal = activeGoal(w), milestone=colonyMilestone(w), care = careContext(w), plan=developmentPlan(w);
   const workers = w.creatures.filter((c)=>scoped(w,c) && c.sickness<50);
   const camp = workers.find((c)=>allowedRegion(w,c));
   if (!camp) return [];
@@ -139,7 +139,7 @@ export function settlementChoices(w) {
   if (goal?.kind === "wood") resource("timber",goal.target,`Cut trees and gather logs until we store ${goal.target} wood, as requested.`);
   else if (goal?.kind === "ore") resource("quarry",goal.target,`Break rocks and collect ore until we store ${goal.target} ore, as requested. Keep the ore.`);
   else if (goal?.kind === "bridge" && !w.progress.bridge) resource("crossing",24,"Cut timber and carry stored wood to finish the river bridge.");
-  const resourceGoal=["wood","ore","bridge","blocks"].includes(goal?.kind);
+  const resourceGoal=!!milestone || ["wood","ore","bridge","blocks"].includes(goal?.kind);
   for (const type of INDEPENDENT_BUILDINGS) {
     const spec = BUILDINGS[type];
     if (!unlocked(w,spec) || (spec.cost && w.inventory.blocks < spec.cost) ||
@@ -167,8 +167,8 @@ export function settlementChoices(w) {
   }
   if (!resourceGoal && !w.progress.bridge && w.objects.some(o=>o.type==="bridge")) resource("crossing",24,"Gather timber and carry wood to finish the bridge, opening the other bank.");
   const hasFactory = w.objects.some(o=>o.type==="factory");
-  if ((!resourceGoal && w.stage>=2 && !hasFactory && w.inventory.blocks<300) || goal?.kind==="blocks")
-    resource("refine",goal?.kind==="blocks" ? goal.target : 300,"Break rocks, collect ore and work it into blocks by hand. Reach the factory unlock without help from the sky.");
+  if ((!resourceGoal && w.stage>=2 && !hasFactory && w.inventory.blocks<300) || goal?.kind==="blocks" || milestone?.project==="refine")
+    resource("refine",goal?.kind==="blocks" ? goal.target : 300,"Break rocks, collect ore and work it into blocks by hand. Reach the factory unlock without help from the sky.",goal||milestone?100:50);
   const reserve = timberReserve(w);
   // Crossing/first-block crews already gather their own inputs. A spare pile
   // must not postpone the milestones that unlock the rest of the economy.
@@ -199,14 +199,14 @@ export function startSettlement(w, choice, source) {
   if (!crew.length) return false;
   w.community.project = { id: w.community.nextProject++, type: choice.id, x: choice.x, y: choice.y,
     crew, target:Math.max(1,Math.min(1e6,Math.floor(choice.target || 24))), progress: 0, required: 32, started: w.time, source, blocked: "",
-    parentGoal:goal?.id||"colony", subgoal:choice.subgoal||choice.id,
+    parentGoal:goal?.id||colonyMilestone(w)?.id||"colony", subgoal:choice.subgoal||choice.id,
     siteReason:choice.density ? `At ${choice.x}, ${choice.y}; ${choice.density.residents.toFixed(1)} residents / 100 ground units; density reward ${choice.density.reward.toFixed(1)}; ${Math.round(choice.travel)} units from builder.` : "" };
   w.community.lastProjectAt = w.time;
   prepareTimber(w);
   w.commandRevision++;
   w.navRevision++;
   w.revision++;
-  activity(w,"construction",`We chose ${projectName(w.community.project).toLowerCase()} at ${Math.round(choice.x)}, ${Math.round(choice.y)}.`,source,`${crew.length} workers. ${w.community.project.siteReason} Goal: ${goal?.kind||"healthy growth"}. ${choice.description || "Gather real materials and respect our needs."}`);
+  activity(w,"construction",`We chose ${projectName(w.community.project).toLowerCase()} at ${Math.round(choice.x)}, ${Math.round(choice.y)}.`,source,`${crew.length} workers. ${w.community.project.siteReason} Goal: ${goal?.kind||colonyMilestone(w)?.title||"healthy growth"}. ${choice.description || "Gather real materials and respect our needs."}`);
   remember(w,"self-build",`The colony chose ${projectName(w.community.project).toLowerCase()} with ${source}.`);
   return true;
 }
@@ -253,7 +253,7 @@ export function prepareTimber(w) {
   }
 }
 export function settlementDecisionInput(w, choices) {
-  const care=careContext(w), reserve=timberReserve(w);
+  const care=careContext(w), reserve=timberReserve(w), storyGoal=colonyMilestone(w);
   const careFirst=choices.some(c=>CARE_BUILDINGS.includes(c.id) && c.priority>=80);
   const resourceLabel=c=>({
     crossing:`Build the bridge with ${c.target} wood; open land and mining`,
@@ -274,7 +274,7 @@ export function settlementDecisionInput(w, choices) {
   const priority=careFirst
     ? `Urgent care first; ${reserve.refill ? "replenish timber before optional expansion" : "gather missing building timber"}.`
     : `${milestone} Urgent care first; otherwise advance goals and unlock work. Gather missing timber.`;
-  const requiredContext = `${w.creatures.length} residents. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind||"grow"}. ${accessBrief(w)} ${priority} Prefer more help and reward closer to zero.`;
+  const requiredContext = `${w.creatures.length} residents. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind || (storyGoal ? `first ${storyGoal.target} blocks` : "grow")}. ${accessBrief(w)} ${priority} Prefer more help and reward closer to zero.`;
   const contextParts = choices.map(c=>c.description);
   return {options,requiredContext,contextParts,context:[requiredContext,...contextParts].join(" "),
     question:"Which project and location best advance the goal?",maxTokens:320};

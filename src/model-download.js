@@ -116,6 +116,15 @@ export function createModelDownloader({
         return publish(cache, url, meta);
       }
       if (!allowDownload) return new Response(null, { status: 404 });
+      // Transformers probes metadata with `Range: bytes=0-0`. This is not a
+      // model transfer or a resume: return its response without checkpointing
+      // or caching partial bytes under the complete-file key. Cached-only
+      // callers have already returned above, so probes cannot bypass consent.
+      if (new Headers(requestInit.headers).has("Range") || requestInit.method === "HEAD") {
+        const timeout = AbortSignal.timeout(60000);
+        const signal = requestInit.signal ? AbortSignal.any([requestInit.signal,timeout]) : timeout;
+        return fetcher(url,{...requestInit,signal,cache:"no-store"});
+      }
       let restarted = false;
       for (;;) {
         const controller = new AbortController();
@@ -168,7 +177,7 @@ export function createModelDownloader({
                 type: response.headers.get("content-type") || "application/octet-stream" };
             }
           } else {
-            if (response.status === 206) throw new Error("The model host sent an unexpected partial file.");
+            if (response.status === 206) throw new Error(`The model host sent an unexpected partial file for ${file}.`);
             return response; // Preserve optional-file 404s for Transformers.
           }
           if (!meta) {

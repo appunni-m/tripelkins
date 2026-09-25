@@ -4,7 +4,7 @@ import { accessContext, accessBrief } from "./access.js";
 import { COLONY_PREMISE } from "./prologue.js";
 import { isExplored, discoverySummary } from "./discovery.js";
 import { capacity } from "./jobs.js";
-import { projectName, projectStatus, timberReserve } from "./development.js";
+import { projectName, projectStatus, timberReserve, colonyMilestone } from "./development.js";
 import { bridgeProject } from "./bridge-project.js";
 import { feasiblePlans, POLICIES, planReward } from "./decisions.js";
 import { USEFUL_TASKS } from "./work-balance.js";
@@ -74,6 +74,7 @@ export function buildContext(w, { includePlans = true } = {}) {
   const context = {
     version: 4,
     workload,
+    currentMilestone: colonyMilestone(w),
     developmentPlan: developmentPlan(w),
     timber: timberReserve(w),
     blockedWork: accessContext(w),
@@ -189,7 +190,7 @@ export function buildContext(w, { includePlans = true } = {}) {
       : 0,
   );
   const localParts = [
-    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || "healthy growth"}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
+    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || (context.currentMilestone ? `first ${context.currentMilestone.target} blocks` : "healthy growth")}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
     ...plans.map(p=>`${p.id} planning score ${planReward(w,p).total.toFixed(2)}; density cost ${p.effects.space.toFixed(2)}, travel cost ${p.effects.travel.toFixed(2)}. Higher is better; estimates, not learned rewards.`),
     `Care capacity: ${careSummary(care)}.`,
     `Expansion: ${context.developmentPlan.expanding ? "scout new neighborhoods" : "balance space and care"}. Density target ${context.developmentPlan.density.target} per 100 ground units; crowding penalty 4, isolation penalty 0.6. Child goals: ${context.developmentPlan.children.filter(s=>s.status!=="satisfied").map(s=>s.kind).join(",")}.`,

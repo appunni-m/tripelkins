@@ -9,6 +9,17 @@ export const RESOURCE_PROJECTS = {
   crossing: { name: "Supply the bridge", material: "wood" },
 };
 export const DEVELOPMENT_TYPES = [...INDEPENDENT_BUILDINGS, ...Object.keys(RESOURCE_PROJECTS)];
+// The story's visible objective must reach both planners even when the player
+// has not spoken an explicit command. Player goals always take precedence.
+export function colonyMilestone(w) {
+  if (w.memory.goals.some(g=>g.status==="active") || w.stage>=3 || !w.progress.hatched) return null;
+  if (w.stage===2 && w.progress.peakBlocks<300) return {
+    id:"story-first-blocks", kind:"blocks", project:"refine", target:300,
+    value:w.progress.peakBlocks, remaining:Math.max(0,300-w.progress.peakBlocks),
+    title:"Brightness in the stone", step:"Quarry rocks, collect ore and refine the first 300 blocks to unlock a stone workshop.",
+  };
+  return null;
+}
 export const projectName = (p) => (BUILDINGS[p?.type] || RESOURCE_PROJECTS[p?.type])?.name || "Colony work";
 export const isConstruction = (p) => INDEPENDENT_BUILDINGS.includes(p?.type);
 export const projectFunded = (w, p = w.community.project) => p &&

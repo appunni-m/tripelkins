@@ -10,6 +10,8 @@ import { setIndependence } from "../src/game/community.js";
 import { buildContext } from "../src/game/context.js";
 import { packHostedContext, utf8Size } from "../src/game/context-budget.js";
 import { appendTimeline, readMoment } from "../src/game/timeline.js";
+import { colonyMilestone } from "../src/game/development.js";
+import { developmentPlan } from "../src/game/development-plan.js";
 
 function start(w,type) {
   const choice=settlementChoices(w).find(c=>c.id===type);
@@ -20,6 +22,30 @@ function run(w,seconds=230) {
   for(let i=0;i<seconds*10&&w.community.project;i++)stepWorld(w,.1);
   return w;
 }
+test("the stone story milestone reaches both model contexts without a player command",()=>{
+  const w=developmentWorld();
+  assert.equal(w.memory.goals.length,0);
+  const choices=settlementChoices(w);
+  assert.deepEqual(choices.map(c=>c.id),["refine"]);
+  assert.match(settlementDecisionInput(w,choices).context,/first 300 blocks/);
+  const snapshot=buildContext(w);
+  assert.match(snapshot.localParts[0],/first 300 blocks/);
+  assert.equal(packHostedContext(snapshot.context,16000).context.currentMilestone.target,300);
+  assert.equal(developmentPlan(w).parent,"story-first-blocks");
+  start(w,"refine"); w.inventory.blocks=170;
+  assert.equal(developmentPlan(w).children.find(c=>c.id==="project").remaining,130);
+});
+test("story progression yields to urgent care and explicit player goals and ends at the peak milestone",()=>{
+  const w=developmentWorld();
+  for(const c of w.creatures)c.fed=10;
+  w.objects=w.objects.filter(o=>o.type!=="orchard");w.navRevision++;
+  assert.ok(settlementChoices(w).some(c=>c.id==="orchard"));
+  w.memory.goals=[{id:"player",kind:"ore",target:18,status:"active"}];
+  assert.equal(colonyMilestone(w),null);
+  assert.ok(!settlementChoices(w).some(c=>c.id==="refine"));
+  w.memory.goals=[];w.progress.peakBlocks=300;w.inventory.blocks=0;
+  assert.equal(colonyMilestone(w),null,"spending stone cannot reopen the first-block milestone");
+});
 test("independent timber and stone projects gather real resources with no caretaker tools",()=>{
   for(const kind of ["timber","quarry"]) {
     const w=developmentWorld(kind);start(w,kind);run(w);

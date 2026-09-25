@@ -1,4 +1,4 @@
-import { scaleFixture } from "./game/scale-fixture.js";
+import { scaleFixture, groundFixture } from "./game/scale-fixture.js";
 import { stepWorld } from "./game/simulation.js";
 import { migrateWorld } from "./game/state.js";
 import { buildContext } from "./game/context.js";
@@ -13,23 +13,28 @@ $("run").onclick = async () => {
   $("run").disabled = true;
   $("results").replaceChildren();
   let failures = 0;
-  for (const population of [48, 1e6, 1e9]) {
+  const workloads = [[300,groundFixture],[600,groundFixture],[48,scaleFixture],[1e6,scaleFixture],[1e9,scaleFixture]];
+  for (const [population, fixture] of workloads) {
     $("status").textContent = `Measuring ${population.toLocaleString()} lives…`;
     await nextFrame();
     let view, life;
     const report = { population };
     try {
-      const w = scaleFixture(population), before = w.metrics.completed;
+      const w = fixture(population), before = w.metrics.completed;
       life = new ColonyLife();
       view = new WorldView($("world"), () => w, () => {}, () => {}, life);
       let renderMs = 0, simulationMs = 0;
+      const stepTimes = [], frameTimes = [];
       for (let i = 0; i < 120; i++) {
         await nextFrame();
+        const frameAt = performance.now();
         let at = performance.now(); stepWorld(w, 0.1);
-        simulationMs += performance.now() - at;
+        const stepMs = performance.now() - at;
+        simulationMs += stepMs; stepTimes.push(stepMs);
         life.update(w, w.time * 1000, { paused: false, listening: false, view });
         at = performance.now(); view.render(w.time * 1000);
         renderMs += performance.now() - at;
+        frameTimes.push(performance.now()-frameAt);
       }
       w.ui.paused = true;
       life.update(w, w.time * 1000, { paused: true, listening: false, view });
@@ -49,13 +54,18 @@ $("run").onclick = async () => {
       report.navigation = navigationMemory(w);
       report.meanRenderCpuMs = renderMs / 120;
       report.simulationCpuMs = simulationMs;
+      stepTimes.sort((a,b)=>a-b); frameTimes.sort((a,b)=>a-b);
+      report.p95SimulationMs = stepTimes[Math.floor(stepTimes.length*.95)];
+      report.maxSimulationMs = stepTimes.at(-1);
+      report.p95FrameCpuMs = frameTimes[Math.floor(frameTimes.length*.95)];
       report.pausedRedraws = 0;
       report.rendererTextures = view.renderer.info.memory.textures;
       report.rendererGeometries = view.renderer.info.memory.geometries;
       report.spriteMaterials = view.materials.size;
       report.jsHeapBytes = performance.memory?.usedJSHeapSize ?? "unavailable";
       assert(report.completed > 0, "Fixture did no useful work");
-      assert(report.bodies <= 192, "Population expanded into individual records");
+      assert(fixture===groundFixture ? report.bodies===population : report.bodies<=192,
+        "Fixture no longer has the requested individual-body count");
       assert(report.navigation.bytes < 5e6, "Navigation exceeded its typed-array budget");
       assert(report.saveBytes < 2e6, "Save grew beyond the fixture budget");
       report.status = "pass";
@@ -64,6 +74,6 @@ $("run").onclick = async () => {
     const row = document.createElement("article"), pre = document.createElement("pre");
     pre.textContent = JSON.stringify(report, null, 2); row.append(pre); $("results").append(row);
   }
-  $("status").textContent = `Finished: ${3 - failures} passed, ${failures} failed. JS heap excludes GPU memory; timings include browser overhead and are device-specific.`;
+  $("status").textContent = `Finished: ${workloads.length - failures} passed, ${failures} failed. JS heap excludes GPU memory; timings include browser overhead and are device-specific.`;
   $("run").disabled = false;
 };

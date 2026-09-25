@@ -209,7 +209,7 @@ async function acceptAudio(data, current) {
     if (current !== generation) return;
     if (!voiceStatus.ready && !(await prepareVoice({ background: true })))
       throw new Error(
-        voiceStatus.message || "Voice could not wake up. Please try again.",
+        voiceStatus.setupError || voiceStatus.message || "Voice could not wake up. Please try again.",
       );
     if (current !== generation) return;
     let result;

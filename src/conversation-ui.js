@@ -147,7 +147,7 @@ export function createConversation({
       return "Your microphone isn’t available. Please reconnect it or press T to type.";
     if (/timed out|too long/i.test(message))
       return "That took a little too long. Try a shorter message.";
-    return "We couldn’t hear you just now. Try again, or press T to type.";
+    return "Speech recognition couldn’t finish. Try again or reopen voice setup in Options. Press T to type.";
   }
   function setup() {
     openOptions();

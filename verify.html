@@ -101,6 +101,10 @@
       with independence accepted and births held to keep the comparison at 25.
       It uses cached Laya GPU weights only, reports actual model choices and
       each resident's work and movement, and never loads your saved colony.
+      Stone milestone starts with the river crossed and no player command;
+      it must quarry and refine 300 blocks. Whisper cached restart uses two
+      fresh workers with downloads disabled. Choose the recording below to
+      check transcription; without one it checks inference on silence only.
     </p>
     <details>
       <summary>Recording for speech checks</summary>
@@ -115,6 +119,8 @@
       <button id="run-platform">Site & storage</button>
       <button id="run-download">Download resume · ~53 MB</button>
       <button id="run-colony">25-resident audit · cached Laya GPU</button>
+      <button id="run-stone">Stone milestone · cached Laya GPU</button>
+      <button id="run-voice-cached">Whisper cached restart · no download</button>
       <button data-model="laya" data-backend="webgpu">Laya WebGPU</button>
       <button data-model="laya" data-backend="webgpu" data-buffer-cache="bucket">Compare original GPU buffer pool</button>
       <button data-model="laya" data-backend="wasm">Laya WASM</button>
