@@ -39,9 +39,9 @@
             ><small id="goal-detail">Tap the spacecraft.</small></span
           >
         </button>
-        <button id="inbox-button" class="inbox-button" aria-label="Open inbox" title="Words from below"><span aria-hidden="true">✉</span><b id="inbox-count" hidden></b></button>
+        <button id="inbox-button" class="inbox-button" aria-label="Open inbox" title="Words from below"><span data-ui-icon="inbox" aria-hidden="true"></span><b id="inbox-count" hidden></b></button>
         <button id="menu" class="menu" aria-label="Open options">
-          <i></i><i></i><i></i>
+          <span data-ui-icon="menu" aria-hidden="true"></span>
         </button>
       </header>
       <div id="resources" class="resources" aria-label="Colony resources"></div>
@@ -52,7 +52,7 @@
         aria-label="Selected creature or destination"
       ></section>
       <aside id="colony-notice" class="colony-notice" aria-label="New colony message" hidden>
-        <button id="colony-notice-close" aria-label="Dismiss notification">×</button>
+        <button id="colony-notice-close" aria-label="Dismiss notification" data-ui-icon="close"></button>
         <strong id="colony-notice-title"></strong><p id="colony-notice-text"></p>
         <button id="colony-notice-read">Read in inbox ↗</button>
       </aside>
@@ -81,7 +81,7 @@
       >
         <div>
           <b>A word with the colony</b
-          ><button id="chat-close" aria-label="Close typing">×</button>
+          ><button id="chat-close" aria-label="Close typing" data-ui-icon="close"></button>
         </div>
         <form id="chat-form">
           <label for="chat-input">Say hello, or give us a lasting goal.</label
@@ -142,68 +142,46 @@
             </svg>
             <i class="intelligence-alert" aria-hidden="true">!</i>
           </button>
-          <button id="pause" aria-label="Pause game">Ⅱ</button
-          ><button id="sound" aria-label="Toggle sound">♪</button
-          ><button id="journal-button" aria-label="Open colony journal">
-            ▤</button
+          <button id="pause" aria-label="Pause game" data-ui-icon="pause"></button
+          ><button id="sound" aria-label="Toggle sound" data-ui-icon="sound"></button
+          ><button id="journal-button" aria-label="Open colony journal" data-ui-icon="journal"></button
           ><button
             id="talk"
             class="talk-button"
             aria-label="Talk to Tripelkins"
             title="Tap to talk, tap again to send. Or hold Space and release."
           >
-            <svg
-              width="18"
-              height="20"
-              viewBox="0 0 18 20"
-              fill="none"
-              aria-hidden="true"
-            >
-              <rect
-                x="6"
-                y="1"
-                width="6"
-                height="11"
-                rx="3"
-                stroke="currentColor"
-                stroke-width="2"
-              />
-              <path
-                d="M3 8v2a6 6 0 0 0 12 0V8M9 16v3M5 19h8"
-                stroke="currentColor"
-                stroke-width="2"
-              /></svg
-            ><b id="talk-label">TALK</b></button
+            <span data-ui-icon="mic" aria-hidden="true"></span><b id="talk-label">TALK</b></button
           ><button
             id="talk-type"
             aria-label="Type to Tripelkins"
             title="Type a message (T)"
-          >
-            ⌨</button
+            data-ui-icon="keyboard"
+          ></button
           ><button
             id="goals-button"
             aria-label="Open long-term goals"
             title="Your colony goals"
-          >
-            ⚑</button>
+            data-ui-icon="flag"
+          ></button>
           <div class="camera-controls" role="group" aria-label="Camera controls">
-            <button id="zoom-out" aria-label="Zoom out" title="Zoom out (−)">−</button>
-            <button id="camera-home" aria-label="Return to colony" title="Return to your colony">⌖</button>
-            <button id="zoom-in" aria-label="Zoom in" title="Zoom in (+)">+</button>
+            <button id="zoom-out" aria-label="Zoom out" title="Zoom out (−)" data-ui-icon="minus"></button>
+            <button id="camera-home" aria-label="Return to colony" title="Return to your colony" data-ui-icon="home"></button>
+            <button id="zoom-in" aria-label="Zoom in" title="Zoom in (+)" data-ui-icon="plus"></button>
           </div>
           <small class="voice-key-hint">HOLD SPACE TO TALK</small
           ><span id="save-status">Saved on this device</span>
         </div>
         <section class="toolbox" aria-label="Colony tools">
           <nav id="tabs">
-            <button data-tab="care" class="active">♡ <span>CARE</span></button
-            ><button data-tab="build">⌂ <span>BUILD</span></button
-            ><button data-tab="tools">⚒ <span>TOOLS</span></button>
+            <button data-tab="care" class="active"><i data-ui-icon="care" aria-hidden="true"></i><span>CARE</span></button
+            ><button data-tab="build"><i data-ui-icon="build" aria-hidden="true"></i><span>BUILD</span></button
+            ><button data-tab="tools"><i data-ui-icon="tools" aria-hidden="true"></i><span>TOOLS</span></button>
           </nav>
           <div id="tool-tray" class="tool-tray" data-overflow="false">
-            <button id="tools-previous" class="tool-scroll" aria-label="Previous tools" aria-controls="tool-list" title="Previous tools" disabled>‹</button>
+            <button id="tools-previous" class="tool-scroll" aria-label="Previous tools" aria-controls="tool-list" title="Previous tools" data-ui-icon="previous" disabled></button>
             <div id="tool-list" class="tool-list" aria-label="Available tools"></div>
-            <button id="tools-next" class="tool-scroll" aria-label="More tools" aria-controls="tool-list" title="More tools" disabled>›</button>
+            <button id="tools-next" class="tool-scroll" aria-label="More tools" aria-controls="tool-list" title="More tools" data-ui-icon="next" disabled></button>
           </div>
           <div id="tool-hint" class="tool-hint">
             Tap a creature to meet them.

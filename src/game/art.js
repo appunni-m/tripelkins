@@ -20,7 +20,10 @@ const palette = {
 };
 const cache = new Map();
 export function sprite(type, variant = 0, frame = "idle", direction = 2) {
-  const key = `${type}:${variant}:${frame}:${direction}`;
+  return drawSprite(type, variant, frame, direction, false);
+}
+function drawSprite(type, variant, frame, direction, forIcon) {
+  const key = `${type}:${variant}:${frame}:${direction}:${forIcon}`;
   if (cache.has(key)) return cache.get(key);
   const canvas = document.createElement("canvas");
   canvas.width = 64;
@@ -45,7 +48,7 @@ export function sprite(type, variant = 0, frame = "idle", direction = 2) {
     c.fill();
   };
   const outline = palette.outline;
-  if (type !== "creature" && type !== "expression")
+  if (!forIcon && type !== "creature" && type !== "expression")
     ellipse(32, 73, type === "shadow" ? 13 : 22, 4, "#253d2b44");
   if (type === "shadow") {
     // Kept on the ground while the creature hops above it.
@@ -652,7 +655,33 @@ export function sprite(type, variant = 0, frame = "idle", direction = 2) {
 }
 const icons = new Map();
 export function iconUrl(type) {
-  if (!icons.has(type)) icons.set(type, sprite(type).toDataURL());
+  if (!icons.has(type)) {
+    // World sprites are anchored at their feet. UI artwork gets its own square
+    // frame, without the ground shadow influencing its visible size or centre.
+    const source = drawSprite(type, 0, "idle", 2, true);
+    const pixels = source.getContext("2d").getImageData(0, 0, source.width, source.height).data;
+    let left = source.width, top = source.height, right = -1, bottom = -1;
+    for (let y = 0; y < source.height; y++) {
+      for (let x = 0; x < source.width; x++) {
+        if (!pixels[(y * source.width + x) * 4 + 3]) continue;
+        left = Math.min(left, x);
+        top = Math.min(top, y);
+        right = Math.max(right, x);
+        bottom = Math.max(bottom, y);
+      }
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 64;
+    if (right >= left && bottom >= top) {
+      const width = right - left + 1, height = bottom - top + 1;
+      const scale = 56 / Math.max(width, height);
+      const w = Math.round(width * scale), h = Math.round(height * scale);
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(source, left, top, width, height, Math.round((64 - w) / 2), Math.round((64 - h) / 2), w, h);
+    }
+    icons.set(type, canvas.toDataURL());
+  }
   return icons.get(type);
 }
 export function terrain() {

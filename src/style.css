@@ -43,6 +43,19 @@ button {
 button img {
   image-rendering: pixelated;
 }
+.ui-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+[data-ui-icon] {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  line-height: 1;
+}
 #game,
 #world {
   position: fixed;
@@ -111,10 +124,11 @@ button img {
   padding: 0;
 }
 .population img {
-  width: 27px;
-  height: 34px;
-  object-fit: cover;
-  margin-top: -12px;
+  display: block;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 .population span {
   font-size: 23px;
@@ -164,15 +178,18 @@ button img {
 .menu {
   background: none;
   display: grid;
-  gap: 6px;
-  padding: 10px;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  padding: 0;
 }
-.menu i {
-  display: block;
-  width: 31px;
-  height: 5px;
-  background: #e1d7b7;
-  box-shadow: 1px 2px #565743;
+.menu .ui-icon {
+  width: 32px;
+  height: 32px;
+  stroke-width: 3;
+  color: #e1d7b7;
+  filter: drop-shadow(1px 2px #565743);
 }
 .resources {
   position: absolute;
@@ -197,9 +214,11 @@ button img {
   box-shadow: 2px 2px #45513d33;
 }
 .resource img {
+  display: block;
   width: 22px;
   height: 22px;
-  object-fit: cover;
+  flex-shrink: 0;
+  object-fit: contain;
   image-rendering: pixelated;
 }
 .panel {
@@ -218,8 +237,11 @@ button img {
 .inspector .close {
   float: right;
   background: none;
-  padding: 0 3px;
-  font-size: 20px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
 }
 .inspector h3 {
   margin: 0;
@@ -233,6 +255,10 @@ button img {
   margin: 8px 0 10px;
 }
 .identity-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   min-height: 32px;
   padding: 5px 9px;
   border: 1px solid #b3a17c;
@@ -241,7 +267,9 @@ button img {
   font-size: 11px;
   font-weight: 800;
 }
+.identity-actions .ui-icon { width: 14px; height: 14px; }
 .identity-actions button[aria-pressed="true"] { background: #c4c999; }
+.identity-actions button[aria-pressed="true"] .ui-icon { fill: currentColor; }
 .subgoal-list { list-style: none; padding: 0; }
 .subgoal-list li { display: flex; gap: 10px; margin: 12px 0; }
 .subgoal-list small { display: block; margin-top: 3px; opacity: .7; }
@@ -348,6 +376,11 @@ button img {
   max-width: 315px;
 }
 .world-controls button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
   background: #e5dec1d9;
   border: 2px solid #a79978;
   width: 31px;
@@ -362,7 +395,7 @@ button img {
   font-size: 20px;
   line-height: 1;
 }
-.world-controls span {
+.world-controls > #save-status {
   flex-basis: 100%;
   font-size: 10px;
   color: #eceaca;
@@ -370,6 +403,7 @@ button img {
   padding-top: 4px;
 }
 .world-controls .talk-button {
+  justify-content: center;
   width: auto;
   padding: 0 9px;
   display: flex;
@@ -1083,6 +1117,12 @@ button img {
   padding-right: 15px;
 }
 #tabs button {
+  display: grid;
+  justify-items: center;
+  grid-template-rows: 24px auto;
+  min-width: 62px;
+  gap: 4px;
+  line-height: 1;
   background: #796b51;
   color: #e8ddba;
   border: 3px solid #b9a988;
@@ -1091,13 +1131,14 @@ button img {
   font-size: 20px;
   box-shadow: inset 0 0 0 2px #655b47;
 }
+#tabs .ui-icon { width: 22px; height: 22px; }
 #tabs button span {
   display: block;
   font:
     600 11px "Barlow Condensed",
     sans-serif;
   letter-spacing: 1px;
-  margin-top: 2px;
+  margin-top: 0;
 }
 #tabs button.active {
   background: #e0d3ad;
@@ -1122,6 +1163,8 @@ button img {
   display: none;
 }
 .tool-scroll {
+  display: grid;
+  place-items: center;
   padding: 0;
   border: 1px solid #a4936e;
   background: #897958;
@@ -1165,26 +1208,26 @@ button img {
   position: relative;
   min-width: 0;
   width: 100%;
-  height: 76px;
+  height: 90px;
   scroll-snap-align: start;
   border: 2px solid #8e7f60;
   background: #837558;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-direction: column;
-  padding: 0 2px 3px;
+  display: grid;
+  grid-template-rows: 12px 42px minmax(24px, 1fr);
+  place-items: center;
+  padding: 3px 2px 4px;
   color: #e9dfbf;
 }
 .tool img {
-  height: 38px;
+  grid-row: 2;
+  display: block;
+  height: 40px;
   width: 40px;
   object-fit: contain;
-  position: absolute;
-  top: 10px;
-  left: calc(50% - 20px);
 }
 .tool span {
+  grid-row: 3;
+  justify-content: center;
   font:
     600 11px "Barlow Condensed",
     sans-serif;
@@ -1197,10 +1240,11 @@ button img {
   text-align: center;
 }
 .tool small {
+  grid-row: 1;
+  grid-column: 1;
   font-size: 8px;
-  position: absolute;
-  top: 2px;
-  right: 3px;
+  line-height: 1.1;
+  text-align: center;
   color: #fff1b6;
   z-index: 2;
 }
@@ -1213,13 +1257,6 @@ button img {
 .tool.locked img {
   opacity: 0.35;
   filter: grayscale(1);
-}
-.tool.locked:after {
-  content: "·";
-  position: absolute;
-  font-size: 32px;
-  top: 10px;
-  color: #efe2bd;
 }
 .tool-hint {
   font-size: 10px;
@@ -1497,6 +1534,12 @@ h2 {
   font-size: 37px;
 }
 .modal-header button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  flex-shrink: 0;
   background: none;
   font-size: 26px;
   line-height: 1;
@@ -1676,10 +1719,11 @@ label.wide {
 }
 .portrait {
   width: 80px;
-  height: 100px;
+  height: 80px;
+  object-fit: contain;
   image-rendering: pixelated;
   display: block;
-  margin: -15px auto 0;
+  margin: 0 auto;
 }
 .ending {
   text-align: center;
@@ -1731,8 +1775,8 @@ summary {
     border-width: 4px;
   }
   .population img {
-    width: 22px;
-    height: 27px;
+    width: 24px;
+    height: 24px;
   }
   .population span {
     font-size: 18px;
@@ -1761,12 +1805,11 @@ summary {
     line-height: 1.25;
   }
   .menu {
-    padding: 6px 0;
-    gap: 5px;
+    padding: 0;
   }
-  .menu i {
-    width: 23px;
-    height: 4px;
+  .menu .ui-icon {
+    width: 28px;
+    height: 28px;
   }
   .resources {
     top: 103px;
@@ -1818,13 +1861,13 @@ summary {
     min-width: 44px;
     min-height: 44px;
   }
-  .resources button {
+  .resource {
     min-height: 44px;
   }
   .inspector {
     top: 162px;
   }
-  .world-controls span {
+  .world-controls > #save-status {
     flex-basis: auto;
     font-size: 9px;
     padding: 0;
@@ -1963,7 +2006,8 @@ summary {
 }
 
 /* The clearing keeps moving while these small, optional overlays are visible. */
-.inbox-button { position:relative; margin-left:auto; min-width:44px; height:44px; border:2px solid #807252; background:var(--paper); border-radius:8px; font-size:25px; box-shadow:2px 3px #35473230; }
+.inbox-button { display:grid; place-items:center; padding:0; width:44px; flex-shrink:0; position:relative; margin-left:auto; min-width:44px; height:44px; border:2px solid #807252; background:var(--paper); border-radius:8px; font-size:25px; box-shadow:2px 3px #35473230; }
+.inbox-button .ui-icon { width:24px; height:24px; }
 .inbox-button b { position:absolute; top:-8px; right:-8px; background:#78543f; color:#fff3d0; border:2px solid var(--paper); border-radius:20px; padding:1px 5px; font-size:11px; }
 .hud .menu { margin-left:0; }
 .colony-notice { position:absolute; top:90px; right:28px; width:min(310px,calc(100vw - 32px)); padding:15px 34px 12px 15px; border:2px solid #a7946c; border-radius:8px; background:#eee8cdf5; box-shadow:3px 5px 0 #35473222; font-size:13px; z-index:6; }
@@ -1991,7 +2035,7 @@ summary {
 @media (max-width:700px) {
   .hud { gap:8px; }
   .hud .goal-label { display:none; }
-  .inbox-button { flex-shrink:0; min-width:38px; height:40px; }
+  .inbox-button { flex-shrink:0; min-width:44px; height:44px; }
   .colony-notice { right:16px; top:106px; }
   .thought-log { position:static; align-self:flex-end; width:260px; }
   #thought-content { max-height:27vh; }
@@ -2023,7 +2067,7 @@ summary {
 .orbit-map svg { width: 100%; height: 120px; }
 .orbit-ground, .orbit-home { position: absolute; font-size: 10px; bottom: 8px; left: 10px; }
 .orbit-home { left: auto; right: 10px; bottom: 47px; }
-.orbit-traveller { position: absolute; width: 18px; height: 23px; top: 30px; left: 80%; image-rendering: pixelated; }
+.orbit-traveller { position: absolute; width: 24px; height: 24px; object-fit: contain; top: 30px; left: 80%; image-rendering: pixelated; }
 .orbit-map.in-flight .orbit-traveller { top: 45px; left: 43%; }
 .orbit-census { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 10px; }
 .orbit-census b { display: block; font-size: 15px; overflow-wrap: anywhere; }

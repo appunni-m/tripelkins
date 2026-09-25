@@ -7,6 +7,7 @@ import { meteorSound } from "./meteor-sound.js";
 import { scenario } from "./game/scenarios.js";
 import { toolSignature as toolsKey, htmlIfChanged } from "./ui-budget.js";
 import { createToolTray } from "./tool-tray.js";
+import { mountUiIcons, uiIcon } from "./ui-icons.js";
 import { DECISION_SPEEDS, decisionPace, intelligenceWorkers } from "./intelligence-settings.js";
 import { intelligenceControls, updateIntelligenceControls } from "./intelligence-options.js";
 import { backgroundBudget } from "./background-budget.js";
@@ -122,6 +123,7 @@ const short = (n) =>
         : n >= 10000
           ? `${(n / 1000).toFixed(1)}K`
           : Math.floor(n).toLocaleString();
+mountUiIcons(document);
 const appEvents = new AbortController();
 const toolTray = createToolTray($("tool-tray"), $("tool-list"), $("tools-previous"), $("tools-next"), appEvents.signal);
 function listen(target, kind, callback, options = {}) {
@@ -279,7 +281,7 @@ function modal(title, eyebrow, body, type = "other") {
   $("speech").hidden = true;
   $("voice-subtitles").hidden = true;
   $("modal-content").innerHTML =
-    `<div class="modal-inner ${type === "options" ? "game-options" : ""}"><div class="modal-header"><div><div class="eyebrow">${esc(eyebrow)}</div><h2 id="dialog-title">${esc(title)}</h2></div><button data-action="close" aria-label="Close dialog">×</button></div>${body}</div>`;
+    `<div class="modal-inner ${type === "options" ? "game-options" : ""}"><div class="modal-header"><div><div class="eyebrow">${esc(eyebrow)}</div><h2 id="dialog-title">${esc(title)}</h2></div><button data-action="close" aria-label="Close dialog">${uiIcon("close")}</button></div>${body}</div>`;
   $("modal").setAttribute("aria-labelledby", "dialog-title");
   if (!$("modal").open) $("modal").showModal();
   renderUi();
@@ -820,14 +822,14 @@ function renderUi() {
   $("goal-title").textContent = title;
   $("goal-detail").textContent = detail;
   htmlIfChanged($("resources"),
-    `<button class="resource" data-material="wood" title="Put wood on the ground"><img src="${iconUrl("log")}" alt="Wood">${short(world.inventory.wood)}</button>${world.inventory.bones ? `<button class="resource" data-material="bones" title="Place bones">${short(world.inventory.bones)} bones</button>` : ""}${world.inventory.corpses ? `<button class="resource" data-material="corpses" title="Place stored remains">${short(world.inventory.corpses)} remains</button>` : ""}${world.stage >= 2 ? `<span class="resource" title="Cut stone for construction"><img src="${iconUrl("stone")}" alt="Cut stone">${short(world.inventory.blocks)}</span><button class="resource" data-material="ore" title="Place ore"><img src="${iconUrl("ore")}" alt="Ore">${short(world.inventory.ore)}</button>` : ""}${orbit.available ? `<button class="resource orbit-button ${orbit.flying ? "in-flight" : ""}" data-action="orbit" title="See their orbital home and arrivals" aria-label="View orbital home"><span aria-hidden="true">◉</span> ${short(orbit.residents)} <small>IN ORBIT</small></button>` : ""}`);
+    `<button class="resource" data-material="wood" title="Put wood on the ground"><img src="${iconUrl("log")}" alt="Wood">${short(world.inventory.wood)}</button>${world.inventory.bones ? `<button class="resource" data-material="bones" title="Place bones">${short(world.inventory.bones)} bones</button>` : ""}${world.inventory.corpses ? `<button class="resource" data-material="corpses" title="Place stored remains">${short(world.inventory.corpses)} remains</button>` : ""}${world.stage >= 2 ? `<span class="resource" title="Cut stone for construction"><img src="${iconUrl("stone")}" alt="Cut stone">${short(world.inventory.blocks)}</span><button class="resource" data-material="ore" title="Place ore"><img src="${iconUrl("ore")}" alt="Ore">${short(world.inventory.ore)}</button>` : ""}${orbit.available ? `<button class="resource orbit-button ${orbit.flying ? "in-flight" : ""}" data-action="orbit" title="See their orbital home and arrivals" aria-label="View orbital home">${uiIcon("orbit")} ${short(orbit.residents)} <small>IN ORBIT</small></button>` : ""}`);
   $("save-status").textContent = saveHealth.status;
   if ($("options-save-status"))
     $("options-save-status").textContent = saveHealth.status;
   const paused = world.ui.paused || $("modal").open;
-  $("pause").textContent = paused ? "▶" : "Ⅱ";
+  htmlIfChanged($("pause"), uiIcon(paused ? "play" : "pause"));
   $("pause").setAttribute("aria-label", paused ? "Resume game" : "Pause game");
-  $("sound").textContent = world.ui.muted ? "♫̸" : "♪";
+  htmlIfChanged($("sound"), uiIcon(world.ui.muted ? "muted" : "sound"));
   $("sound").setAttribute(
     "aria-label",
     world.ui.muted ? "Turn sound on" : "Mute sound",
@@ -848,13 +850,13 @@ function renderUi() {
   const selectedOrbit = world.ui.selected === "orbital-home" && orbit.available;
   $("inspector").hidden = !c && !o && !selectedOrbit;
   if (selectedOrbit) {
-    htmlIfChanged($("inspector"), `<button class="close" data-action="deselect" aria-label="Close orbital home">×</button><h3>Our orbital home</h3>${orbitDetails(world,orbit)}`);
+    htmlIfChanged($("inspector"), `<button class="close" data-action="deselect" aria-label="Close orbital home">${uiIcon("close")}</button><h3>Our orbital home</h3>${orbitDetails(world,orbit)}`);
   } else if (c) {
     htmlIfChanged($("inspector"),
-      `<button class="close" data-action="deselect" aria-label="Close creature details">×</button><h3 class="creature-name">${esc(c.name)}</h3><div class="identity-actions"><button data-action="rename" aria-label="Rename ${esc(c.name)}">✎ Rename</button><button data-action="favorite" aria-label="${c.favorite ? "Unpin" : "Pin"} this creature" aria-pressed="${!!c.favorite}">${c.favorite ? "★ Pinned" : "☆ Pin"}</button></div><p>${TASK_NAMES[c.task] || "Exploring"}${c.carry ? ` · ${c.carry} ${esc(c.cargoKind)}` : ""}</p><small>${esc(c.job?.state === "queued" ? "Waiting for a clear space" : c.job?.purpose || "")}</small>${["fed", "clean", "amused"].map((n) => `<div class="need"><span>${n === "fed" ? "FED" : n === "clean" ? "CLEAN" : "AMUSED"}</span><div class="meter" role="meter" aria-label="${n}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(c[n])}"><i style="width:${Math.round(c[n])}%;${c[n] < 30 ? "background:#be765c" : ""}"></i></div><span>${Math.round(c[n])}</span></div>`).join("")}<small>${Math.min(c.fed, c.clean, c.amused) > 65 ? "Feeling good. Growing a little more…" : "Every little need matters."}</small>`);
+      `<button class="close" data-action="deselect" aria-label="Close creature details">${uiIcon("close")}</button><h3 class="creature-name">${esc(c.name)}</h3><div class="identity-actions"><button data-action="rename" aria-label="Rename ${esc(c.name)}">${uiIcon("edit")} Rename</button><button data-action="favorite" aria-label="${c.favorite ? "Unpin" : "Pin"} this creature" aria-pressed="${!!c.favorite}">${uiIcon("star")} ${c.favorite ? "Pinned" : "Pin"}</button></div><p>${TASK_NAMES[c.task] || "Exploring"}${c.carry ? ` · ${c.carry} ${esc(c.cargoKind)}` : ""}</p><small>${esc(c.job?.state === "queued" ? "Waiting for a clear space" : c.job?.purpose || "")}</small>${["fed", "clean", "amused"].map((n) => `<div class="need"><span>${n === "fed" ? "FED" : n === "clean" ? "CLEAN" : "AMUSED"}</span><div class="meter" role="meter" aria-label="${n}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(c[n])}"><i style="width:${Math.round(c[n])}%;${c[n] < 30 ? "background:#be765c" : ""}"></i></div><span>${Math.round(c[n])}</span></div>`).join("")}<small>${Math.min(c.fed, c.clean, c.amused) > 65 ? "Feeling good. Growing a little more…" : "Every little need matters."}</small>`);
   } else if (o) {
     htmlIfChanged($("inspector"),
-      `<button class="close" data-action="deselect" aria-label="Close object details">×</button><h3>${esc(displayName(o.type))}${o.level > 1 ? " II" : ""}</h3><p>${esc(BUILDINGS[o.type]?.help || (o.type === "bridge" ? `Delivered: ${Math.floor(o.stock)}/${bridgeGeometry(o).required} · ${bridgeGeometry(o).delivered.wood} wood, ${bridgeGeometry(o).delivered.bones} bones` : o.type === "monolith" ? "Tap the survey beacon with the hand." : "Part of our little world."))}</p>${o.type === "bridge" ? bridgeDetails(o) : ""}${o.type === "cannon" ? orbitDetails(world,orbit) : ""}${["factory", "mine", "dwelling"].includes(o.type) && o.level < 2 ? '<button class="upgrade" data-action="upgrade">Upgrade structure</button>' : ""}`);
+      `<button class="close" data-action="deselect" aria-label="Close object details">${uiIcon("close")}</button><h3>${esc(displayName(o.type))}${o.level > 1 ? " II" : ""}</h3><p>${esc(BUILDINGS[o.type]?.help || (o.type === "bridge" ? `Delivered: ${Math.floor(o.stock)}/${bridgeGeometry(o).required} · ${bridgeGeometry(o).delivered.wood} wood, ${bridgeGeometry(o).delivered.bones} bones` : o.type === "monolith" ? "Tap the survey beacon with the hand." : "Part of our little world."))}</p>${o.type === "bridge" ? bridgeDetails(o) : ""}${o.type === "cannon" ? orbitDetails(world,orbit) : ""}${["factory", "mine", "dwelling"].includes(o.type) && o.level < 2 ? '<button class="upgrade" data-action="upgrade">Upgrade structure</button>' : ""}`);
   }
   if ($("brain-status"))
     $("brain-status").textContent =
