@@ -114,3 +114,41 @@ starting the port; reducing one kernel did not solve main-thread isolation.
 - [serde_json](https://docs.rs/serde_json/latest/serde_json/)
 - [wasm-bindgen](https://docs.rs/wasm-bindgen/latest/wasm_bindgen/)
 - [ECMAScript number formatter, ryu-js 1.0.3](https://crates.io/crates/ryu-js/1.0.3)
+
+## Browser measurements on the verified build
+
+Measured on an Apple M3 Pro (18 GiB), macOS/Darwin 24.6.0, in the Codex browser.
+Each disposable expanded-map fixture walked for 12.1 simulated seconds while
+context queries ran on the separate planning worker. These are local measurements,
+not a performance guarantee for other devices.
+
+| Residents | p95 frame work | p95 frame gap | Maximum gap | Main-thread long tasks | Wall time for 12.1 s simulation |
+|---:|---:|---:|---:|---:|---:|
+| 25 | 3.7 ms | 10.2 ms | 23.9 ms | 0 | 12.05 s |
+| 300 | 4.6 ms | 10.2 ms | 19.9 ms | 0 | 12.39 s |
+| 600 | 4.4 ms | 10.2 ms | 27.3 ms | 0 | 14.92 s |
+
+All three fixtures passed pause, restore, resident-count and useful-work checks.
+The 600-resident simulation still ran slower than real time; rendering remained
+responsive. Further throughput optimization can be made independently of the UI.
+A real IndexedDB save also reloaded and restored through the game's options with
+its custom name, inventory and needs preserved; restoring left it paused.
+
+The local production HTTP preview verified all 45 shipped files, including both
+worker entries and the engine WASM, against their SHA-256 hashes and MIME types.
+Inference adapters and microphone capture remain browser integrations. This
+migration verifies their scheduling/revision boundaries; it does not establish
+new live-model accuracy or microphone-quality measurements.
+
+## Verification record
+
+The clean code snapshot `bb1e91f` passed 198/198 JavaScript regressions,
+938/938 canonical comparisons across native and WASM, and 3,934/3,934 checks
+during LLVM collection. All 132/132 component thresholds and 20/20 performance
+budgets passed. The generated evidence page records immutable binary/consumer
+digests, run IDs, coverage counts, and the exact manifest identity.
+
+The static contract audit reports 282/282 engine exports, 292/292 parity
+requirement mappings, 282/282 coverage mappings and 10/10 benchmark mappings.
+The retained diagnostic suites remain available; no old evidence was substituted
+for live comparisons.
