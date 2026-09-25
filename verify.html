@@ -90,11 +90,11 @@
       require a new download. Site & storage does not download models.
     </p>
     <p>
-      Download resume transfers one site runtime file (about 14 MB) into a
+      Download resume transfers one Laya model file (about 53 MB) into a
       disposable cache. It interrupts at a saved checkpoint, resumes in a fresh
       worker, checks the complete file's SHA-256, then removes the test cache.
-      It does not initialize a model. Run this on GitHub Pages or a server with
-      byte ranges and strong ETags; Vite's default weak ETags cannot prove safe resume.
+      It does not initialize a model. The transfer comes from the same model
+      host used by the game; data charges may apply.
     </p>
     <details>
       <summary>Recording for speech checks</summary>
@@ -107,7 +107,7 @@
     <nav aria-label="Verification actions">
       <button id="run-all">Run all checks</button>
       <button id="run-platform">Site & storage</button>
-      <button id="run-download">Download resume · ~14 MB</button>
+      <button id="run-download">Download resume · ~53 MB</button>
       <button data-model="laya" data-backend="webgpu">Laya WebGPU</button>
       <button data-model="laya" data-backend="webgpu" data-buffer-cache="bucket">Compare original GPU buffer pool</button>
       <button data-model="laya" data-backend="wasm">Laya WASM</button>

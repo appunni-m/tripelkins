@@ -469,13 +469,14 @@ async function assets() {
 }
 async function resumableDownload() {
   if (!navigator.locks) throw new DOMException("Web Locks are unavailable; resumable downloads need this browser feature.", "NotSupportedError");
-  const manifest = await (await fetch(new URL("deployment-manifest.json", base), { cache: "no-store" })).json();
-  const asset = manifest.assets.find(a => a.path === "ort/ort-wasm-simd-threaded.wasm");
-  assert(asset, "The runtime fixture is missing from the deployment.");
-  const cacheName = `tripelkins-resume-check-${crypto.randomUUID()}`, url = new URL(asset.path, base).href;
+  // Pages compresses its WASM responses. Use an actual immutable model file to
+  // exercise the same cross-origin byte ranges as model setup, without inference.
+  const asset = { bytes: 53076992, sha256: "cfdf7c199378b07758c69f58935871cf517c97c29914328d4b11fcfbe50b7f8b" };
+  const url = "https://huggingface.co/nvkudva/laya-web-q8/resolve/a1f49ac3c927b2e694a074af081d043adaa0fda1/v1/head_q8.onnx.data";
+  const cacheName = `tripelkins-resume-check-${crypto.randomUUID()}`;
   const start = () => activeWorker = new Worker(new URL("./download-check.worker.js", import.meta.url), { type: "module" });
   try {
-    showProgress("Downloading a site runtime; stopping after its first saved checkpoint…");
+    showProgress("Downloading one Laya file; stopping after its first saved checkpoint…");
     const interrupted = await callWorker(start(), { url, cacheName, interrupt: true });
     assert(interrupted.interrupted, "The initial download did not stop at a checkpoint.");
     activeWorker.terminate();

@@ -56,16 +56,19 @@ to be exposed by a cross-origin host.
 - `npm test`: interruption/reload, complete-file reuse, consent, ignored ranges,
   changed ETags, malformed ranges, truncation, missing blocks, failed publication,
   concurrent callers, optional 404s, and non-resumable fallbacks.
-- `verify.html` → **Download resume · ~14 MB**: real HTTP, real CacheStorage and
+- `verify.html` → **Download resume · ~53 MB**: real HTTP, real CacheStorage and
   three successive workers. Interrupt after 4,194,304 bytes, request
   `bytes=4194304-` in the second worker, compare the completed file's SHA-256 with
-  the deployment manifest, and confirm cache-only reuse in the third worker.
+  the published LFS hash, and confirm cache-only reuse in the third worker.
+  This uses a pinned Laya Q8 head file (53,076,992 bytes) from the actual model
+  host, including its cross-origin range headers. It does not initialize a model.
   The cache is disposable and never touches saved colonies or model caches.
 - Current Laya FP16/Q8 and Whisper hosts returned `206`, strong ETags, valid
   Content-Range values, and CORS-exposed validators in small range probes.
   This confirms the hosts' current HTTP behavior, not uninterrupted availability.
 
-Vite's default preview server uses weak ETags, so it intentionally takes the
-complete-file fallback. Verify byte resumption on GitHub Pages or a static server
-with strong validators. The local production check used the latter and matched
-all 14,239,897 bytes against the build manifest.
+Vite's default preview server uses weak ETags, and GitHub Pages compresses WASM
+responses with weak ETags. Those responses intentionally take the complete-file
+fallback. The model-host check works from either site and avoids conflating
+runtime compression with model download behavior. An earlier local check also
+matched all 14,239,897 runtime bytes using a server with strong validators.
