@@ -392,6 +392,15 @@ impl Engine {
             return true;
         }
         if !self.can_enter_bridge(c, point) {
+            if let Some(holding) = self.bridge_waiting_point(c) {
+                let delta = holding.offset(-num(c, "x"), -num(c, "y"));
+                let distance = Point { x: 0., y: 0. }.distance(delta);
+                if distance > 0.15 {
+                    let stride = (1.65 * dt).min(distance);
+                    let moved = self.steer_move(c, delta.x / distance * stride, delta.y / distance * stride);
+                    if moved > 0.01 { c["heading"] = json!(delta.y.atan2(delta.x)); }
+                }
+            }
             c["job"]["state"] = json!("queued");
             c["job"]["lastProgress"] = json!(time);
             c["job"]["progressAt"] = json!(time);
@@ -459,6 +468,24 @@ impl Engine {
                 path.best_distance = remaining;
                 c["job"]["progressAt"] = json!(time);
             }
+        }
+        // A live queue is not a terrain obstruction. Keep the existing job
+        // while nearby travellers take their turn, including long bridge queues.
+        let cell = (old.x.floor() as i32, old.y.floor() as i32);
+        let crowd_wait = (cell.0 - 2..=cell.0 + 2).any(|x| {
+            (cell.1 - 2..=cell.1 + 2).any(|y| {
+                self.sim.bodies.get(&(x, y)).into_iter().flatten().any(|i| {
+                    let other = &self.world["creatures"][*i];
+                    !same_id(&other["id"], &c["id"])
+                        && Point::read(other).distance(Point::read(c)) < 1.2
+                        && matches!(text(&other["job"], "state"), "travelling" | "queued")
+                })
+            })
+        });
+        if crowd_wait {
+            c["job"]["lastProgress"] = json!(time);
+            c["job"]["progressAt"] = json!(time);
+            increment(&mut c["job"], "started", dt);
         }
         if time - num(&c["job"], "lastProgress") > 8.
             || time

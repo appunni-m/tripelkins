@@ -21,6 +21,8 @@ Options → Intelligence provides local Laya or Jev through OpenRouter. The opti
 
 Explore through the fog, complete the bridge and grow a working settlement. Resource collection, transport, construction and production happen through physical jobs. The colony's movement and completed actions drive its animations and sounds.
 
+Crowds use passing lanes on wide bridges and take turns on narrow crossings. Waiting groups step beside the approach to leave room for arrivals. A Tripelkin waiting behind other travellers keeps its task; time spent in that queue does not count as a blocked route. Leave the approaches clear of buildings and other obstacles.
+
 ### Mines and stone workshops
 
 Place a mine on a stone deposit: its outline snaps to the deposit and turns green when the surrounding ground has enough room. A mine cannot be placed on ordinary grass. Leave clear space around buildings so workers can reach their entrances.
