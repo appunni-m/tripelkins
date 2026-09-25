@@ -1,6 +1,6 @@
 # Tripelkins naming and release review
 
-Audit date: 25 September 2026. Baseline: `3fcfd60`.
+Audit date: 25 September 2026. The initial three-commit baseline was replaced with a reviewed fresh root after the owner approved permanent history cleanup.
 
 **Status: technical naming cleanup verified; release clearance remains open.** Checked boxes mean the stated inspection was completed. They are not a legal opinion or a guarantee against third-party claims. Unchecked items are real outstanding work.
 
@@ -39,9 +39,10 @@ Keep the intelligence layer, physical work, multiplication, movement, needs, his
 
 - [x] Inspect all local branches, tags, remote-tracking refs, stash listing and reflogs. Scan the entire local object database, including unreachable objects: 32 commits, 586 blobs and 198 trees; 234 blobs, one tree and one commit still contain former references. Codex-managed checkpoint refs also exist and must be included in any coordinated purge.
 - [x] Confirm the Tripelkins remote at the audit baseline has one branch, `main`, and no tags; its three published commits begin at a fresh root. The former project is not an ancestor of that main branch.
-- [ ] Remove or isolate the local `codex/pre-tripelkins-migration` recovery branch and expire the associated reflogs/unreachable Git objects if permanent loss of the 29-commit recovery history is approved. The audit found 211 historical file versions containing former names, plus old commit messages and a historical filename.
+- [x] Permanently remove the local recovery branch and all three Codex checkpoint/capture refs after explicit owner approval. Expire all reflogs and prune unreachable Git objects. `git fsck --full --no-reflogs --unreachable` reports none. Before deletion, 211 historical file versions contained former names, plus old commit messages and a historical filename.
 - [ ] Owner will manually retire the separate legacy remote repository and its Pages deployment, actions artifacts, releases and other retained project metadata. At audit time it was public and unarchived, with Pages enabled, 26 Actions artifacts, no releases and no forks reported by the public API. Deleting a local branch does not remove it. The browser was signed out; the owner chose to handle hosted deletion directly.
-- [ ] Rewrite the early Tripelkins commits if the removed speech recording and inherited narrative must disappear from every published revision. A normal cleanup commit does not remove those files from prior commits. This changes commit IDs and requires a coordinated force push. Three existing Tripelkins Actions artifacts also retain the pre-cleanup release files and need separate removal.
+- [x] Replace Tripelkins `main` with the reviewed current tree as a fresh parentless commit, using a force push guarded by the exact prior remote revision. The removed speech recording is absent from all retained commits. Only local `main` and `origin/main` remain; no old branches or tags retain the baseline. This history operation does not resolve the narrative concerns listed above.
+- [ ] Owner will manually remove the three pre-cleanup Tripelkins Actions runs/artifacts and verify the legacy remote's deletion. A history rewrite does not delete Actions artifacts, workflow logs, deployments or host-retained commit objects.
 - [ ] Rename the active local workspace directory and update its desktop-project/dev-server configuration. Its directory name is still the former name; it is not part of the published site.
 - [x] Read-only audit of this browser at `http://localhost:5173`: the old database namespace still exists with 227 journal records and six world-store records. No former-name matches in their serialized contents. Four old cache names remain; one current Laya cache also exists. No data was changed. The temporary audit page was removed before building.
 - [ ] Migrate the old local database/cache names while preserving verified contents, and separately audit saved history at the Pages origin, other browser profiles and exported world files. Current migration intentionally preserves free-form history verbatim. No stored player history was deleted or silently rewritten by this audit.
@@ -52,9 +53,22 @@ Keep the intelligence layer, physical work, multiplication, movement, needs, his
 - [x] Run the existing 104 regression tests after the naming and speech-fixture changes: all passed.
 - [x] Build and inspect the asset manifest: 34 files including notices; the retired recording is absent.
 - [x] Inspect opening-screen branding and recording-required behavior. A speech check without a file reports skipped in 1 ms, before worker/model loading.
+- [x] Deploy the fresh-root build to GitHub Pages. [Build, deploy and published-file verification all passed](https://github.com/appunni-m/tripelkins/actions/runs/36104946862). The local final rerun also passed all 104 tests and built all 34 assets.
 - [x] Scan the candidate tree and build: 139 project files and all emitted files, including source maps, contained no matches for former names or brands. The retired recording is absent from the build.
-- [ ] Re-scan published history after the approved history rewrite.
+- [x] Re-scan every retained Git object after the approved rewrite: 138 blobs, 14 trees and one root commit; zero former-name matches. Confirm the push replaced the expected remote revision. Subsequent checklist-only commits must also pass the scan.
 - [ ] Obtain human sign-off on the open items above. Do not describe this release as having “no IP issues pending” while these remain open.
+
+### Hosted cleanup assigned to the owner
+
+Delete the separate legacy repository, including its Pages deployment. In Tripelkins, remove these pre-cleanup workflow runs and their artifacts:
+
+| Run | Artifact ID |
+| --- | --- |
+| [36100745024](https://github.com/appunni-m/tripelkins/actions/runs/36100745024) | 10848583144 |
+| [36101004965](https://github.com/appunni-m/tripelkins/actions/runs/36101004965) | 10848558497 |
+| [36102728312](https://github.com/appunni-m/tripelkins/actions/runs/36102728312) | 10849955986 |
+
+Keep the fresh-root deployment run 36104946862 and its artifact 10850502566, along with subsequent clean deployments. Check old deployment records separately. GitHub may retain unreferenced commits or cached views after a force push; repository history cleanup is not proof of host-side erasure.
 
 ## Guidance used
 
