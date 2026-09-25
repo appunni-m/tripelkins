@@ -1,4 +1,4 @@
-import { BUILDINGS } from "./catalog.js";
+import { BUILDINGS, unlocked } from "./catalog.js";
 
 export const CARE_BUILDINGS = ["orchard", "bath", "roundabout"];
 export const INDEPENDENT_BUILDINGS = [...CARE_BUILDINGS, "mine", "factory", "dwelling", "theatre"];
@@ -14,6 +14,21 @@ export const isConstruction = (p) => INDEPENDENT_BUILDINGS.includes(p?.type);
 export const projectFunded = (w, p = w.community.project) => p &&
   w.inventory.wood >= (BUILDINGS[p.type]?.wood || 0) &&
   w.inventory.blocks >= (BUILDINGS[p.type]?.cost || 0);
+
+// Refill in batches, leaving room for the next building. This is a planning
+// target, not a spending lock: care/building crews may always use stored wood.
+// A single development crew works at a time, so huge colonies need no huge pile.
+export function timberReserve(w) {
+  const largest = Math.max(12,...INDEPENDENT_BUILDINGS
+    .filter(type=>unlocked(w,BUILDINGS[type]))
+    .map(type=>BUILDINGS[type].wood || 0));
+  const target = Math.max(24,largest*2,Math.min(144,Math.ceil(w.creatures.length/8)*6));
+  const minimum = Math.max(12,largest,Math.ceil(target/2));
+  const stock = Math.floor(w.inventory.wood);
+  const goal = w.memory.goals.find(g=>g.status==="active");
+  return { stock, minimum, target, short:Math.max(0,target-stock),
+    refill:stock<minimum && (!goal || ["grow","care"].includes(goal.kind)) };
+}
 export function projectPercent(w,p) {
   const value = p.type === "crossing" ? (w.objects.find(o=>o.type==="bridge")?.stock || 0)/24
     : RESOURCE_PROJECTS[p.type] ? w.inventory[RESOURCE_PROJECTS[p.type].material]/p.target

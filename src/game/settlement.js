@@ -6,14 +6,14 @@ import { DENSITY, siteDensity, SETTLEMENT_TYPES } from "./density.js";
 import { developmentPlan } from "./development-plan.js";
 import { careContext, careDemand, careServices, CARE_TYPES } from "./care-context.js";
 import { isExplored } from "./discovery.js";
-import { BUILDINGS, LIMITS, unlocked } from "./catalog.js";
+import { BUILDINGS, LIMITS, unlocked, buildingMaterials, buildingCost } from "./catalog.js";
 import { canPlace, clearPosition, serviceSlots, bridgeGeometry } from "./geometry.js";
 import { nearbyObjects, westBank } from "./map.js";
 import { routeCost } from "./navigation.js";
 import { materializeObject, remember } from "./state.js";
 import { activity, postMessage } from "./community.js";
 import { CARE_BUILDINGS, INDEPENDENT_BUILDINGS, RESOURCE_PROJECTS, DEVELOPMENT_TYPES,
-  projectName, isConstruction, projectFunded } from "./development.js";
+  projectName, isConstruction, projectFunded, timberReserve } from "./development.js";
 export { CARE_BUILDINGS } from "./development.js";
 const activeGoal = (w) => w.memory.goals.find((g) => g.status === "active");
 function scoped(w, c) {
@@ -134,8 +134,8 @@ export function settlementChoices(w) {
   const workers = w.creatures.filter((c)=>scoped(w,c) && c.sickness<50);
   const camp = workers.find((c)=>allowedRegion(w,c));
   if (!camp) return [];
-  const resource = (id,target,description) => choices.push({id,x:camp.x,y:camp.y,target,
-    priority:goal?100:id==="crossing"?60:id==="refine"?50:20,description});
+  const resource = (id,target,description,priority=goal?100:id==="crossing"?60:id==="refine"?50:20) => choices.push({id,x:camp.x,y:camp.y,target,
+    priority,description});
   if (goal?.kind === "wood") resource("timber",goal.target,`Cut trees and gather logs until we store ${goal.target} wood, as requested.`);
   else if (goal?.kind === "ore") resource("quarry",goal.target,`Break rocks and collect ore until we store ${goal.target} ore, as requested. Keep the ore.`);
   else if (goal?.kind === "bridge" && !w.progress.bridge) resource("crossing",24,"Cut timber and carry stored wood to finish the river bridge.");
@@ -162,14 +162,18 @@ export function settlementChoices(w) {
     const priority = status ? (!existing && status.unserved ? 100 : strained ? 80 : status.short ? 70 : status.growthShort ? 60 : type==="orchard" && plan.expanding ? 56 : 30) +
       Math.min(15,status.urgent + status.short/w.creatures.length*10) : ["mine","factory"].includes(type) ? 55 : 40;
     const sites = findSites(w,type,plan.expanding), point=sites[0];
-    if (point) choices.push({id:type,...point,sites,cost:spec.wood||spec.cost,
-      priority,description:`Build ${spec.name}: ${existing} now${status ? `; ${status.low} low, ${status.short} residents lack nearby capacity, ${status.unserved} out of reach` : ""}; costs ${spec.wood ? `${spec.wood} wood, gather missing timber` : `${spec.cost} blocks`}. ${spec.help}`});
+    if (point) choices.push({id:type,...point,sites,cost:buildingMaterials(spec),
+      priority,description:`Build ${spec.name}: ${existing} now${status ? `; ${status.low} low, ${status.short} residents lack nearby capacity, ${status.unserved} out of reach` : ""}; costs ${buildingCost(spec)}. Gather missing timber before construction. ${spec.help}`});
   }
   if (!resourceGoal && !w.progress.bridge && w.objects.some(o=>o.type==="bridge")) resource("crossing",24,"Gather timber and carry wood to finish the bridge, opening the other bank.");
   const hasFactory = w.objects.some(o=>o.type==="factory");
   if ((!resourceGoal && w.stage>=2 && !hasFactory && w.inventory.blocks<300) || goal?.kind==="blocks")
     resource("refine",goal?.kind==="blocks" ? goal.target : 300,"Break rocks, collect ore and work it into blocks by hand. Reach the factory unlock without help from the sky.");
-  if (!goal && w.inventory.wood<12 && !choices.some(c=>CARE_BUILDINGS.includes(c.id) && c.priority>=80)) resource("timber",24,"Cut nearby trees and collect logs for a small reserve of 24 wood.");
+  const reserve = timberReserve(w);
+  // Crossing/first-block crews already gather their own inputs. A spare pile
+  // must not postpone the milestones that unlock the rest of the economy.
+  if (reserve.refill && !choices.some(c=>["crossing","refine"].includes(c.id) || (CARE_BUILDINGS.includes(c.id) && c.priority>=80)))
+    resource("timber",reserve.target,`Replenish building timber: ${reserve.stock} wood stored, below the ${reserve.minimum} minimum. Collect loose logs or cut trees until ${reserve.target} wood is ready for upcoming buildings.`,75);
   return choices.sort((a,b)=>b.priority-a.priority).slice(0,8);
 }
 export function startSettlement(w, choice, source) {
@@ -249,21 +253,21 @@ export function prepareTimber(w) {
   }
 }
 export function settlementDecisionInput(w, choices) {
-  const care=careContext(w);
+  const care=careContext(w), reserve=timberReserve(w);
   // Keep the effect of each building in its short option label. Optional site
   // descriptions can be omitted by the token budget; internal type names alone
   // do not tell a small classifier which need a building will actually serve.
   const options = Object.fromEntries([...choices.map(c=>[c.key||c.id,
-    c.id==="clearance" ? `Clear ${c.obstacle || "obstacle"} to ${c.resume || "resume blocked work"}` : c.density ? `Build ${careServices(c.id).join("/") || BUILDINGS[c.id]?.name || c.id}; help ${Math.round(c.benefit)}; reward ${Math.round(c.density.reward)}`
+    c.id==="clearance" ? `Clear ${c.obstacle || "obstacle"} to ${c.resume || "resume blocked work"}` : c.density ? `Build ${careServices(c.id).join("/") || BUILDINGS[c.id]?.name || c.id}; ${buildingCost(BUILDINGS[c.id])}; help ${Math.round(c.benefit)}; reward ${Math.round(c.density.reward)}`
       : `${c.id}: target ${c.target} ${RESOURCE_PROJECTS[c.id]?.material||"wood"}`]),["wait","Postpone building; no new care capacity"]]);
   const shortage=Object.entries(care).map(([k,s])=>`${k}: ${s.low} low, ${s.short} short, ${s.urgent} urgent`).join("; ");
-  const requiredContext = `${w.creatures.length} residents. ${shortage}. Wood ${Math.floor(w.inventory.wood)}, ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind||"grow"}. ${accessBrief(w)} Care first. Gather missing wood. Prefer more help and reward closer to zero.`;
+  const requiredContext = `${w.creatures.length} residents. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind||"grow"}. ${accessBrief(w)} Urgent care first; ${reserve.refill ? "replenish timber before optional expansion" : "gather missing building timber"}. Prefer more help and reward closer to zero.`;
   const contextParts = choices.map(c=>c.description);
   return {options,requiredContext,contextParts,context:[requiredContext,...contextParts].join(" "),
     question:"Which project and location best advance the goal?",maxTokens:320};
 }
 export function settlementContext(w,choices) {
-  return {care:careContext(w), plan:developmentPlan(w),
+  return {care:careContext(w), plan:developmentPlan(w), timber:timberReserve(w),
     densityRule:{target:DENSITY.target,above:DENSITY.above,below:DENSITY.below,units:"residents per 100 ground units; asymmetric squared penalty"},
     choices:choices.map(({key,id,x,y,target,cost,priority,description,density,benefit,travel,subgoal,request,blocker})=>({key,id,at:[x,y],target,cost,priority,description,density,benefit,travel,subgoal,request,blocker}))};
 }
@@ -333,7 +337,7 @@ export function finishSettlement(w, placeBuilding) {
   w.community.completed++;
   w.community.lastProjectAt = w.time;
   w.community.project = null;
-  activity(w,"built",`${BUILDINGS[p.type].name} finished.`,p.source,`${BUILDINGS[p.type].wood || BUILDINGS[p.type].cost} ${BUILDINGS[p.type].wood ? "wood" : "blocks"} used. The whole colony can use it now.`);
+  activity(w,"built",`${BUILDINGS[p.type].name} finished.`,p.source,`${buildingCost(BUILDINGS[p.type])} used. The whole colony can use it now.`);
   postMessage(w,completionLetter(w,p,BUILDINGS[p.type].name));
   return p.id;
 }

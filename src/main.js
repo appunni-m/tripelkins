@@ -47,6 +47,8 @@ import {
 } from "./game/simulation.js";
 import {
   BUILDINGS,
+  buildingMaterials,
+  buildingCost,
   TOOLS,
   TASK_NAMES,
   displayName,
@@ -770,7 +772,7 @@ function renderTools() {
     .map(([key, spec]) => {
       const ready = unlocked(world, spec) || (key === "grabber" && !!world.ui.held);
       const tool = tab === "build" ? `build:${key}` : key;
-      return `<button class="tool ${world.ui.tool === tool ? "active" : ""} ${ready ? "" : "locked"}" data-tool="${tool}" aria-pressed="${world.ui.tool === tool}" aria-label="${esc(spec.name)}${ready ? "" : `, unlock at ${lockReason(spec)}`}" title="${esc(ready ? spec.help : lockReason(spec))}"><img src="${iconUrl(spec.icon)}" alt=""><span>${esc(spec.name)}</span>${tab === "build" && ready ? `<small>${spec.wood ? `${spec.wood} wood` : spec.cost ? `${short(spec.cost)} blocks` : ""}</small>` : !ready ? `<small>${esc(lockReason(spec))}</small>` : ""}</button>`;
+      return `<button class="tool ${world.ui.tool === tool ? "active" : ""} ${ready ? "" : "locked"}" data-tool="${tool}" aria-pressed="${world.ui.tool === tool}" aria-label="${esc(spec.name)}${ready ? "" : `, unlock at ${lockReason(spec)}`}" title="${esc(ready ? `${spec.help}${tab === "build" ? ` Cost: ${buildingCost(spec)}.` : ""}` : lockReason(spec))}"><img src="${iconUrl(spec.icon)}" alt=""><span>${esc(spec.name)}</span>${tab === "build" && ready ? `<small>${Object.entries(buildingMaterials(spec)).filter(([,amount])=>amount>0).map(([kind,amount])=>`${short(amount)} ${kind}`).join("<br>")}</small>` : !ready ? `<small>${esc(lockReason(spec))}</small>` : ""}</button>`;
     })
     .join(""));
   toolTray.refresh(tab, world.ui.tool, focusedTool);

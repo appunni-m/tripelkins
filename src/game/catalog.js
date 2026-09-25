@@ -48,6 +48,7 @@ export const BUILDINGS = {
     icon: "mine",
     blocks: 50,
     cost: 25,
+    wood: 12,
     capacity: 4,
     stage: 2,
     help: "Place on a stone deposit. Workers extract ore.",
@@ -57,6 +58,7 @@ export const BUILDINGS = {
     icon: "dwelling",
     blocks: 200,
     cost: 100,
+    wood: 18,
     capacity: 6,
     stage: 2,
     help: "Food, showers, and somewhere to belong.",
@@ -66,6 +68,7 @@ export const BUILDINGS = {
     icon: "factory",
     blocks: 300,
     cost: 150,
+    wood: 24,
     capacity: 5,
     stage: 2,
     help: "Turns ore into blocks. Leaves pollution behind.",
@@ -75,6 +78,7 @@ export const BUILDINGS = {
     icon: "theatre",
     blocks: 1000,
     cost: 500,
+    wood: 36,
     capacity: 20,
     stage: 2,
     help: "Entertains a crowd and puts a spring in their step.",
@@ -213,6 +217,13 @@ export function displayName(type) {
 }
 export function eventLabel(kind) {
   return { hatch: "arrival", monolith: "survey", tnt: "demolition", nuke: "departure" }[kind] || String(kind).replaceAll("-", " ");
+}
+export function buildingMaterials(spec) {
+  return { wood: spec?.wood || 0, blocks: spec?.cost || 0 };
+}
+export function buildingCost(spec) {
+  return Object.entries(buildingMaterials(spec)).filter(([,amount])=>amount>0)
+    .map(([kind,amount])=>`${amount.toLocaleString()} ${kind}`).join(" + ") || "No materials";
 }
 export function unlocked(w, spec) {
   return (

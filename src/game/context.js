@@ -4,7 +4,7 @@ import { accessContext, accessBrief } from "./access.js";
 import { COLONY_PREMISE } from "./prologue.js";
 import { isExplored, discoverySummary } from "./discovery.js";
 import { capacity } from "./jobs.js";
-import { projectName, projectStatus } from "./development.js";
+import { projectName, projectStatus, timberReserve } from "./development.js";
 import { bridgeProject } from "./bridge-project.js";
 import { feasiblePlans, POLICIES } from "./decisions.js";
 export { POLICIES };
@@ -66,6 +66,7 @@ export function buildContext(w, { includePlans = true } = {}) {
   const context = {
     version: 4,
     developmentPlan: developmentPlan(w),
+    timber: timberReserve(w),
     blockedWork: accessContext(w),
     growthBudget: w.runtime?.growth ? { target:w.runtime.growth.target,
       held:w.runtime.growth.held, reason:w.runtime.growth.reason,
@@ -216,7 +217,7 @@ export function buildContext(w, { includePlans = true } = {}) {
     w.commandRevision,
     w.community.consent, w.community.project,
     w.community.access.map(r=>[r.id,r.status,r.blocker,r.crew]),
-    care, w.discovery.revision,
+    care, w.discovery.revision, context.timber, Math.floor(w.inventory.blocks),
     plans.map(p=>[p.id,p.assignments.reduce((a,j)=>{a[j.task]=(a[j.task]||0)+1;return a;},{})]),
     w.objects.map(o=>[o.id,Math.floor(o.stock||0),Math.floor(o.inputOre||0)]),
     w.progress.bridge,

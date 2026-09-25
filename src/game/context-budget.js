@@ -20,6 +20,7 @@ export function packHostedContext(full, budget) {
     version: 4,
     care: full.care,
     developmentPlan: concisePlan(full.developmentPlan),
+    timber: full.timber,
     growthBudget: full.growthBudget,
     ...(full.blockedWork?.length ? {blockedWork:{count:full.blockedWork.length,
       requests:full.blockedWork.slice(0,3).map(({id,target,at,status,task,project,purpose,reason,prerequisite,nextStep,resume})=>({

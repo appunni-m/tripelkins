@@ -2,6 +2,7 @@ import { careContext } from "./care-context.js";
 import { densitySummary } from "./density.js";
 import { discoverySummary } from "./discovery.js";
 import { BUILDINGS } from "./catalog.js";
+import { timberReserve } from "./development.js";
 
 // Bounded child goals derived from authoritative state. The model chooses a
 // feasible project/site to satisfy them; completion comes from the simulation.
@@ -26,6 +27,9 @@ export function developmentPlan(w) {
       remaining:Math.max(0,goal.target-value),status:value>=goal.target?"satisfied":"needed"});
   }
   const project = w.community.project;
+  const timber = timberReserve(w);
+  if (!project && timber.refill && w.community.consent==="accepted") children.push({id:"timber-buffer",kind:"timber",
+    title:`Keep ${timber.target} wood ready for building`,remaining:timber.short,status:"needed"});
   if (project && BUILDINGS[project.type]) {
     const wood=Math.max(0,(BUILDINGS[project.type].wood||0)-w.inventory.wood);
     children.push({id:"materials",kind:"timber",title:"Gather materials for our building",

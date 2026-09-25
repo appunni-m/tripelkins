@@ -5,7 +5,7 @@ import { requestAccess, reviewAccess, clearanceTask } from "./access.js";
 import { bridgeProject } from "./bridge-project.js";
 import { meteorImpact } from "./destruction.js";
 import { canEnterBridge } from "./traffic.js";
-import { BUILDINGS, TOOLS, LIMITS, unlocked, displayName } from "./catalog.js";
+import { BUILDINGS, TOOLS, LIMITS, unlocked, displayName, buildingCost } from "./catalog.js";
 import {
   addCreature,
   addObject,
@@ -499,7 +499,7 @@ export function placeBuilding(w, type, x, y) {
     w.inventory.wood < (spec.wood || 0) ||
     w.inventory.blocks < (spec.cost || 0)
   )
-    return "We need more resources first.";
+    return `We need ${buildingCost(spec)} for this building.`;
   let node;
   if (type === "mine") {
     node = nearbyObjects(w, x, y, 3).find(
