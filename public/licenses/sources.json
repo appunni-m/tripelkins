@@ -1,0 +1,8 @@
+{
+  "onnxruntime-LICENSE.txt": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.30.0/LICENSE",
+  "onnxruntime-1.30-NOTICES.txt": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.30.0/ThirdPartyNotices.txt",
+  "onnxruntime-8d85527a0-NOTICES.txt": "https://raw.githubusercontent.com/microsoft/onnxruntime/8d85527a0/ThirdPartyNotices.txt",
+  "Nunito-OFL.txt": "https://raw.githubusercontent.com/google/fonts/main/ofl/nunito/OFL.txt",
+  "BarlowCondensed-OFL.txt": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/OFL.txt",
+  "Whisper-LICENSE.txt": "https://raw.githubusercontent.com/openai/whisper/main/LICENSE"
+}

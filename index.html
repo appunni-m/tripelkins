@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#839c65" />
+    <style>
+      html,
+      body,
+      #world {
+        background: #789695;
+      }
+      body {
+        margin: 0;
+      }
+    </style>
+    <title>Tripelkins · If one of them survives, everyone survives.</title>
+  </head>
+  <body>
+    <main id="game" aria-label="Tripelkins game">
+      <div
+        id="world"
+        role="application"
+        aria-label="Colony world. Drag or use arrow keys to explore. Scroll, pinch or use plus and minus to zoom. Click COLONY to return to your colony. Choose a care tool, then tap the ground."
+      ></div>
+      <div class="vignette" aria-hidden="true"></div>
+      <header class="hud">
+        <button id="population" class="population" title="Find your colony">
+          <img alt="" id="population-icon" /><span id="population-count">0</span
+          ><small>COLONY</small>
+        </button>
+        <button id="goal" class="goal">
+          <span class="goal-label">GOAL</span
+          ><span
+            ><b id="goal-title">A LITTLE LANDING</b
+            ><small id="goal-detail">Tap the spacecraft.</small></span
+          >
+        </button>
+        <button id="inbox-button" class="inbox-button" aria-label="Open inbox" title="Words from below"><span aria-hidden="true">✉</span><b id="inbox-count" hidden></b></button>
+        <button id="menu" class="menu" aria-label="Open options">
+          <i></i><i></i><i></i>
+        </button>
+      </header>
+      <div id="resources" class="resources" aria-label="Colony resources"></div>
+      <section
+        id="inspector"
+        class="inspector panel"
+        hidden
+        aria-label="Selected creature or destination"
+      ></section>
+      <aside id="colony-notice" class="colony-notice" aria-label="New colony message" hidden>
+        <button id="colony-notice-close" aria-label="Dismiss notification">×</button>
+        <strong id="colony-notice-title"></strong><p id="colony-notice-text"></p>
+        <button id="colony-notice-read">Read in inbox ↗</button>
+      </aside>
+      <div id="speech" class="speech" role="status" hidden></div>
+      <div id="fog-hint" class="fog-hint" hidden>UNEXPLORED<small>The mist lifts where your colony ventures.</small></div>
+      <div id="toast" class="toast" role="status" hidden></div>
+      <section
+        id="voice-subtitles"
+        class="voice-subtitles"
+        aria-label="Conversation subtitles"
+        aria-live="polite"
+        hidden
+      >
+        <p id="player-subtitle" class="player-subtitle" hidden></p>
+        <p id="colony-subtitle" class="colony-subtitle" hidden></p>
+      </section>
+      <div id="voice-live" class="voice-live" role="status" hidden>
+        <i></i><span id="voice-live-text">Listening…</span>
+        <div class="voice-live-meter"><b id="voice-live-level"></b></div>
+      </div>
+      <aside
+        id="chat-composer"
+        class="chat-composer panel"
+        aria-label="Type to the colony"
+        hidden
+      >
+        <div>
+          <b>A word with the colony</b
+          ><button id="chat-close" aria-label="Close typing">×</button>
+        </div>
+        <form id="chat-form">
+          <label for="chat-input">Say hello, or give us a lasting goal.</label
+          ><input
+            id="chat-input"
+            maxlength="500"
+            autocomplete="off"
+            placeholder="Grow to 50 Tripelkins…"
+          /><button id="chat-send" type="submit">Send →</button>
+        </form>
+        <small>One goal per message · conversations stay with your world</small>
+      </aside>
+      <footer class="game-footer">
+        <details id="thought-log" class="thought-log">
+          <summary><span aria-hidden="true">✦</span> <span id="thought-status">Intelligence off</span> <small>ACTIVITY</small></summary>
+          <div id="thought-content"></div>
+        </details>
+        <div class="world-controls">
+          <button
+            id="intelligence-status"
+            class="intelligence-status"
+            data-action="intelligence"
+            data-state="off"
+            aria-label="Intelligence off. Open intelligence options"
+            title="Intelligence off · Open options to enable"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <g
+                class="intelligence-glyph"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M12 6c0-4-5-4-6-1-3 0-4 3-2 5-3 3-1 7 2 7 0 4 6 4 6 0V6Zm0 0c0-4 5-4 6-1 3 0 4 3 2 5 3 3 1 7-2 7 0 4-6 4-6 0"
+                />
+                <path
+                  d="M6 5v3m-2 2h3l1 2m-2 5 2-2m10-10v3m2 2h-3l-1 2m2 5-2-2"
+                />
+              </g>
+              <path
+                class="intelligence-off"
+                d="m3 21 18-18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <circle
+                class="intelligence-orbit"
+                cx="12"
+                cy="12"
+                r="11"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-dasharray="12 57"
+              />
+            </svg>
+            <i class="intelligence-alert" aria-hidden="true">!</i>
+          </button>
+          <button id="pause" aria-label="Pause game">Ⅱ</button
+          ><button id="sound" aria-label="Toggle sound">♪</button
+          ><button id="journal-button" aria-label="Open colony journal">
+            ▤</button
+          ><button
+            id="talk"
+            class="talk-button"
+            aria-label="Talk to Tripelkins"
+            title="Tap to talk, tap again to send. Or hold Space and release."
+          >
+            <svg
+              width="18"
+              height="20"
+              viewBox="0 0 18 20"
+              fill="none"
+              aria-hidden="true"
+            >
+              <rect
+                x="6"
+                y="1"
+                width="6"
+                height="11"
+                rx="3"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M3 8v2a6 6 0 0 0 12 0V8M9 16v3M5 19h8"
+                stroke="currentColor"
+                stroke-width="2"
+              /></svg
+            ><b id="talk-label">TALK</b></button
+          ><button
+            id="talk-type"
+            aria-label="Type to Tripelkins"
+            title="Type a message (T)"
+          >
+            ⌨</button
+          ><button
+            id="goals-button"
+            aria-label="Open long-term goals"
+            title="Your colony goals"
+          >
+            ⚑</button>
+          <div class="camera-controls" role="group" aria-label="Camera controls">
+            <button id="zoom-out" aria-label="Zoom out" title="Zoom out (−)">−</button>
+            <button id="camera-home" aria-label="Return to colony" title="Return to your colony">⌖</button>
+            <button id="zoom-in" aria-label="Zoom in" title="Zoom in (+)">+</button>
+          </div>
+          <small class="voice-key-hint">HOLD SPACE TO TALK</small
+          ><span id="save-status">Saved on this device</span>
+        </div>
+        <section class="toolbox" aria-label="Colony tools">
+          <nav id="tabs">
+            <button data-tab="care" class="active">♡ <span>CARE</span></button
+            ><button data-tab="build">⌂ <span>BUILD</span></button
+            ><button data-tab="tools">⚒ <span>TOOLS</span></button>
+          </nav>
+          <div id="tool-tray" class="tool-tray" data-overflow="false">
+            <button id="tools-previous" class="tool-scroll" aria-label="Previous tools" aria-controls="tool-list" title="Previous tools" disabled>‹</button>
+            <div id="tool-list" class="tool-list" aria-label="Available tools"></div>
+            <button id="tools-next" class="tool-scroll" aria-label="More tools" aria-controls="tool-list" title="More tools" disabled>›</button>
+          </div>
+          <div id="tool-hint" class="tool-hint">
+            Tap a creature to meet them.
+          </div>
+        </section>
+      </footer>
+      <div id="pause-label" hidden>PAUSED</div>
+    </main>
+    <dialog id="modal"><div id="modal-content"></div></dialog>
+    <input
+      id="import-file"
+      type="file"
+      accept=".json,application/json"
+      hidden
+    />
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Tripelkins · Deployment checks</title>
+    <style>
+      body {
+        font:
+          16px/1.6 system-ui,
+          sans-serif;
+        background: #f1eedb;
+        color: #344332;
+        max-width: 960px;
+        margin: 32px auto;
+        padding: 0 20px;
+      }
+      h1 {
+        line-height: 1.2;
+      }
+      button,
+      a {
+        color: inherit;
+      }
+      button {
+        font: inherit;
+        padding: 10px 16px;
+        cursor: pointer;
+        border: 1px solid #829071;
+        background: #dce3cc;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: wait;
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 20px 0;
+      }
+      article {
+        background: #fffdf2;
+        border: 1px solid #b5bea5;
+        padding: 16px;
+        margin: 16px 0;
+        overflow-wrap: anywhere;
+      }
+      article[data-status="pass"] {
+        border-left: 6px solid #65834b;
+      }
+      article[data-status="fail"] {
+        border-left: 6px solid #b2573d;
+      }
+      article[data-status="running"] {
+        border-left: 6px solid #b2933d;
+      }
+      h2 {
+        font-size: 18px;
+        margin: 0 0 6px;
+      }
+      pre {
+        white-space: pre-wrap;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+      #progress {
+        min-height: 2em;
+      }
+      small {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="./">← Back to Tripelkins</a>
+    <h1>Deployment checks</h1>
+    <p>
+      These checks use this deployed site's real workers and runtime files. They
+      don't read or change your colony. Speech checks use a recording you choose
+      below. The file stays on your device; the microphone is never opened.
+    </p>
+    <p>
+      Running every model check can use about 2 GB of internet data and browser
+      storage. Metered data charges may apply. Clicking a model check or Run all
+      approves its downloads. Models run one at a time and each worker is
+      released afterward. Downloads remain in the same browser caches used by
+      the game. Clearing those caches, storage eviction, or changed files can
+      require a new download. Site & storage does not download models.
+    </p>
+    <details>
+      <summary>Recording for speech checks</summary>
+      <p>Record yourself saying “Hello little friends. Please keep everyone happy and healthy.”
+        Choose a recording up to 15 seconds and 4 MB that you have permission to use.
+        Without a file, speech checks are marked skipped before loading a model.</p>
+      <label for="speech-file">Your local speech recording</label>
+      <input id="speech-file" type="file" accept="audio/*">
+    </details>
+    <nav aria-label="Verification actions">
+      <button id="run-all">Run all checks</button>
+      <button id="run-platform">Site & storage</button>
+      <button data-model="laya" data-backend="webgpu">Laya WebGPU</button>
+      <button data-model="laya" data-backend="webgpu" data-buffer-cache="bucket">Compare original GPU buffer pool</button>
+      <button data-model="laya" data-backend="wasm">Laya WASM</button>
+      <button data-model="whisper" data-backend="webgpu">
+        Whisper Base English WebGPU
+      </button>
+      <button data-model="whisper" data-backend="wasm">
+        Whisper Base English WASM
+      </button>
+      <button id="stop" disabled>Stop</button>
+      <button id="download" disabled>Download report</button>
+    </nav>
+    <p id="progress" role="status">Choose a check to begin.</p>
+    <section id="results" aria-label="Verification results"></section>
+    <p>
+      <small
+        >OpenRouter/Jev needs your API key and remains a separate check in the
+        game's Advanced options. Browser microphone permission, live recording
+        quality and mobile compatibility also need checks on the target
+        device.</small
+      >
+    </p>
+    <script type="module" src="/src/deployment-checks.js"></script>
+  </body>
+</html>

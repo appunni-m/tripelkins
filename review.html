@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tripelkins · Scene review</title>
+    <style>
+      body {
+        margin: 24px;
+        background: #202a24;
+        color: #efeccb;
+        font: 16px system-ui;
+      }
+      h1 {
+        font-size: 24px;
+      }
+      nav {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+      }
+      button,
+      select {
+        font: inherit;
+        padding: 10px;
+        background: #ede9cc;
+        color: #30382c;
+        border: 0;
+      }
+      iframe {
+        display: block;
+        border: 2px solid #afa77d;
+        max-width: 100%;
+        height: 844px;
+      }
+      p {
+        max-width: 760px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Scenes from the clearing</h1>
+    <p>
+      These scenes are disposable previews. Your saved colony is never opened or
+      changed. Each scene starts paused; use the play button to watch it.
+    </p>
+    <nav>
+      <label
+        >Scene
+        <select id="scene">
+          <option value="opening">First landing</option>
+          <option value="bridge">First bridge</option>
+          <option value="industry" selected>Industry</option>
+        </select></label
+      ><label
+        >Width
+        <select id="width">
+          <option value="390">Phone · 390px</option>
+          <option value="768">Tablet · 768px</option>
+          <option value="1200">Desktop · 1200px</option>
+        </select></label
+      ><button id="restart">Restart scene</button>
+    </nav>
+    <iframe
+      id="review-frame"
+      title="Disposable Tripelkins scene"
+      width="390"
+      src="./?preview=industry"
+    ></iframe>
+    <script>
+      const frame = document.getElementById("review-frame"),
+        scene = document.getElementById("scene"),
+        width = document.getElementById("width");
+      scene.onchange = () => (frame.src = "./?preview=" + scene.value);
+      width.onchange = () => (frame.width = width.value);
+      document.getElementById("restart").onclick = () =>
+        (frame.src = "./?preview=" + scene.value);
+    </script>
+  </body>
+</html>

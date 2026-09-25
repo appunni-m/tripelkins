@@ -1,0 +1,7 @@
+node_modules/
+dist/
+public/ort/
+public/ort-whisper/
+public/licenses/dependencies.txt
+.DS_Store
+*.log
