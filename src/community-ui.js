@@ -7,7 +7,8 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 const stamp = (tick) => `${Math.floor(tick/60)}:${String(Math.floor(tick%60)).padStart(2,"0")}`;
 export function createCommunityUI({ getWorld, ready, modal, closeModal, save, openIntelligence, onConsent, listen }) {
-  let timer, wasReady = false;
+  let timer, wasReady = false, inboxFilter = "all";
+  const categories = {flight:"Flight records",letter:"Colony letters",milestone:"Milestones",work:"Work & discoveries",help:"Requests"};
   function independenceText() {
     return ready()
       ? "Someone in the sky taught us how to stand on our own feet. May we cut trees, gather stone, work ore into blocks, supply the bridge and build our own care facilities, homes and workplaces? We will still listen to you, and care comes first."
@@ -22,12 +23,13 @@ export function createCommunityUI({ getWorld, ready, modal, closeModal, save, op
     for (const m of w.community.inbox) { m.read = true; m.notified = true; }
     w.revision++;
     $("colony-notice").hidden = true;
-    const entries = w.community.inbox.slice().reverse().map((m) => {
+    const entries = w.community.inbox.slice().reverse().filter(m=>inboxFilter==="all" || m.category===inboxFilter).map((m) => {
       const story = m.story && storyEntry(m.story);
       const pending = story && !w.story.responses.some((r)=>r.id===story.id) && story.responses.length>1;
-      return `<article class="inbox-entry"><small>${stamp(m.tick)} IN THIS WORLD</small><h3>${esc(m.title)}</h3><p>${esc(m.action === "independence" ? independenceText() : m.text)}</p>${m.action === "independence" ? `<div class="button-row">${consentButtons()}</div>` : pending ? `<div class="button-row">${story.responses.map((r)=>`<button class="secondary" data-inbox-story="${esc(story.id)}" data-inbox-answer="${esc(r)}">${esc(r)}</button>`).join("")}</div>` : ""}</article>`;
+      return `<article class="inbox-entry" data-category="${esc(m.category || "letter")}"><small>${stamp(m.tick)} · ${esc(categories[m.category] || "Colony letters")}${pending || m.action ? " · AWAITING YOUR REPLY" : ""}</small><h3>${esc(m.title)}</h3><p>${esc(m.action === "independence" ? independenceText() : m.text)}</p>${m.action === "independence" ? `<div class="button-row">${consentButtons()}</div>` : pending ? `<div class="button-row">${story.responses.map((r)=>`<button class="secondary" data-inbox-story="${esc(story.id)}" data-inbox-answer="${esc(r)}">${esc(r)}</button>`).join("")}</div>` : ""}</article>`;
     }).join("");
-    modal("Words from below", "THE INBOX · GAME PAUSED", `<p class="muted">Small moments and conversations, kept here after they leave the screen. Your latest 64 messages stay with this world.</p>${entries || '<p>No messages yet. The clearing is quiet.</p>'}`, "inbox");
+    const filters = Object.entries({all:"Everything",...categories}).map(([key,label])=>`<button class="secondary" data-inbox-filter="${key}" aria-pressed="${inboxFilter===key}">${label}</button>`).join("");
+    modal("Letters from the clearing", "THE INBOX · GAME PAUSED", `<p class="muted">Their journey, little victories, and the things they need help with. Up to 64 messages stay with this world; unanswered choices are kept first.</p><nav class="inbox-filters" aria-label="Filter inbox">${filters}</nav>${entries || '<p>No messages here yet. Their story unfolds as the colony grows.</p>'}`, "inbox");
     save();
   }
   function independence() {
@@ -74,10 +76,14 @@ export function createCommunityUI({ getWorld, ready, modal, closeModal, save, op
       }
     }
   }
-  listen($("inbox-button"),"click",inbox);
+  listen($("inbox-button"),"click",()=>{inboxFilter="all";inbox();});
   listen($("colony-notice-close"),"click",()=>$("colony-notice").hidden=true);
   listen($("colony-notice-read"),"click",inbox);
   listen(document,"click",(event)=>{
+    const filter = event.target.closest("[data-inbox-filter]");
+    if (filter && (filter.dataset.inboxFilter==="all" || Object.hasOwn(categories,filter.dataset.inboxFilter))) {
+      inboxFilter=filter.dataset.inboxFilter; inbox();
+    }
     if (event.target.closest("[data-community-enable]")) { $("colony-notice").hidden=true;openIntelligence(); }
     const consent = event.target.closest("[data-independence]");
     if (consent) {
@@ -93,7 +99,7 @@ export function createCommunityUI({ getWorld, ready, modal, closeModal, save, op
       const w = getWorld();w.story.active=answer.dataset.inboxStory;
       answerStory(w,answer.dataset.inboxAnswer);
       const message = w.community.inbox.find((m)=>m.story===answer.dataset.inboxStory);
-      if (message) { message.story=null;message.read=true; }
+      if (message) { message.story=null;message.read=true;message.responseRequired=false; }
       save();inbox();
     }
   });

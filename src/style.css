@@ -2030,3 +2030,9 @@ summary {
 .inspector .orbit-arrival { margin-bottom: 8px; }
 .orbit-arrivals { font-size: 11px; margin-top: 12px; }
 .orbit-arrivals ul { padding-left: 18px; }
+.inbox-filters{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0 22px}
+.inbox-filters .secondary{padding:7px 10px;font-size:12px}
+.inbox-filters [aria-pressed="true"]{background:#435e5c;color:#fff3d9;border-color:#435e5c}
+.inbox-entry[data-category="flight"]{border-left:3px solid #928399;padding-left:16px}
+.inbox-entry[data-category="work"]{border-left:3px solid #8aa178;padding-left:16px}
+.inbox-entry[data-category="help"]{border-left:3px solid #bd9670;padding-left:16px}

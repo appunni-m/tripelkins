@@ -4,7 +4,7 @@ export const BEATS = [
   [
     "awakening",
     "A little life",
-    "You opened the sky. Was someone waiting for you, too?",
+    "The spacecraft is quiet now. Your clearing smells of rain and growing things. Could this be somewhere we can stay?",
     (w) => w.progress.hatched,
   ],
   [
@@ -28,7 +28,7 @@ export const BEATS = [
   [
     "first-child",
     "More than one",
-    "There are two ways to look at the sky now.",
+    "There is another pair of paws beside us. The journey did not end with just one little life.",
     (w) => w.population >= 2,
   ],
   [
@@ -257,7 +257,12 @@ export const INCIDENTS = [
   ],
 ].map(([id, text, when, request]) => ({
   id: `incident-${id}`,
-  title: "A voice from below",
+  title: ({hunger:"Small paws, empty tummies",dirt:"A little help with muddy fur",lonely:"A day needs more than work",
+    "first-loss":"One place is empty","hammer-loss":"Please look before you strike",sacrifice:"A name we will keep",
+    "wood-route":"Timber beneath our feet","bone-route":"What this crossing carries",pollution:"The air by the workshop",
+    cleanup:"Room to breathe",upgrade:"A little more room for work",blocked:"Our next step needs a path",bond:"A familiar face",
+    renamed:"That name belongs to me","promise-kept":"We remembered what you asked","project-held":"A gentler pace",
+    "orbital-care":"Two homes to care for",refusal:"We heard your answer"})[id],
   text,
   when,
   request,
@@ -284,7 +289,7 @@ export const PHILOSOPHY = [
   id: `thought-${id}`,
   title: "A small question",
   text,
-  when: (w) => w.story.completed.length >= 2 + i * 2,
+  when: (w) => w.story.completed.filter(id=>!id.startsWith("letter-")).length >= 2 + i * 2,
   participants: "collective",
   responses: ["What do you think?", "We can choose together"],
   effect: "reflection",
@@ -294,8 +299,8 @@ export const PHILOSOPHY = [
 export const ARCHIVES = [
   [
     "arrival",
-    "01 / The first observer",
-    "A little spacecraft found this clearing. Someone inside is hoping for a friend.",
+    "01 / Three suns, one last spacecraft",
+    "A simultaneous flare from three suns destroyed the Tripelkins' home. In this fictional history, a change in their DNA preserved their bodies and instincts but cost them deliberate planning. Their spacecraft found this clearing. Care can keep them alive; shared intelligence can help their growing family build a future. Replay their journey in Game options.",
   ],
   [
     "care",

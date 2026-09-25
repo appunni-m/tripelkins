@@ -5,6 +5,7 @@ import { naturalObject } from "./map.js";
 import { materializeObject, remember } from "./state.js";
 import { activity, postMessage } from "./community.js";
 import { workOrder, working, recordWork } from "./work-balance.js";
+import { BUILDINGS, displayName, TASK_NAMES } from "./catalog.js";
 
 export const ACCESS_LIMIT = 8;
 const objectAt = (w,id) => w.objects.find(o=>o.id===id) || naturalObject(w,id);
@@ -24,6 +25,10 @@ export function requestAccess(w,{target=null,point,unit,task,project=null,reason
   if (!point || !isExplored(w,point) || !inRegion(w,point)) return;
   const c=w.creatures.find(c=>c.id===unit);
   if (!c) return;
+  // Gathering/hauling assignments do not always carry a construction job ID.
+  // Preserve their parent project when its own crew encounters an obstruction.
+  if (!project && ["gather","quarry","construct","refine","haul"].includes(task) && w.community.project?.crew.includes(unit))
+    project=w.community.project.id;
   const destination=target && objectAt(w,target);
   // Another entrance may be reserved by a worker. That is a capacity queue,
   // not terrain to clear; check every entrance without the reservation filter.
@@ -31,10 +36,14 @@ export function requestAccess(w,{target=null,point,unit,task,project=null,reason
       .some(p=>Number.isFinite(routeCost(w,c,p)))) return;
   const key=target || (project ? `project:${project}` : `ground:${Math.round(point.x)}:${Math.round(point.y)}`);
   let r=w.community.access.find(r=>r.key===key);
-  if (r) { r.lastSeen=w.time; return r; }
+  if (r) {
+    r.lastSeen=w.time;
+    if (!r.project && project) { r.project=project;r.task=task;r.unit=unit;w.revision++; }
+    return r;
+  }
   if (w.community.access.length>=ACCESS_LIMIT) return;
   r={id:w.community.nextAccess++,key,target,point:{x:point.x,y:point.y},unit,task,project,
-    label:target ? objectAt(w,target)?.type||"destination" : project ? "building site" : "new ground",
+    label:target ? displayName(objectAt(w,target)?.type).toLowerCase() : project ? "building site" : "new ground",
     reason,created:w.time,lastSeen:w.time,checked:-10,status:"waiting",blocker:null,crew:[],source:"",notified:false};
   w.community.access.push(r);
   activity(w,"blocked",`${c.name} needs a route to the ${r.label}.`,"Instincts",reason);
@@ -47,6 +56,8 @@ function removeRequest(w,r,resolved) {
   if (resolved) {
     activity(w,"unblocked",`The path to the ${r.label} is open again.`,r.source||"Instincts");
     remember(w,"unblocked",`The colony can reach the ${r.label} again.`);
+    if (r.notified) postMessage(w,{key:`access-open:${r.id}`,category:"work",title:"There is a way through now",
+      text:`The path to the ${r.label} near ${Math.round(r.point.x)}, ${Math.round(r.point.y)} is open. We can try ${accessPurpose(w,r)} again. We will check the route before sending the next worker.`});
   }
   w.revision++;
 }
@@ -54,7 +65,7 @@ function askForHelp(w,r,text) {
   if (r.status==="help") r.reason=text;
   if (r.notified || w.time-r.created<12) return;
   postMessage(w,{key:`access:${r.id}`,title:"Could you help us get through?",
-    text:`We cannot reach the ${r.label} near ${Math.round(r.point.x)}, ${Math.round(r.point.y)}. ${text}`});
+    category:"help",text:`${w.creatures.find(c=>c.id===r.unit)?.name || "One of our workers"} is trying to ${accessPurpose(w,r)}, but cannot reach the ${r.label} near ${Math.round(r.point.x)}, ${Math.round(r.point.y)}. ${text}`});
   r.notified=true;
 }
 
@@ -145,16 +156,19 @@ export function reviewAccess(w) {
 }
 export function clearanceChoices(w) {
   if(!clearanceEnabled(w))return [];
-  return w.community.access.filter(r=>r.status==="ready" && r.blocker).slice(0,2).map(r=>({
+  return w.community.access.filter(r=>r.status==="ready" && r.blocker)
+    .sort((a,b)=>accessPriority(b)-accessPriority(a) || a.created-b.created).slice(0,2).map(r=>({
     id:"clearance",key:`clearance_${r.id}`,request:r.id,blocker:r.blocker,x:r.point.x,y:r.point.y,
-    priority:90,subgoal:`access:${r.id}`,description:r.reason}));
+    priority:accessPriority(r),subgoal:`access:${r.id}`,description:`${r.reason} This unblocks ${accessPurpose(w,r)}.`,
+    task:r.task,project:r.project,obstacle:objectAt(w,r.blocker)?.type,resume:accessPurpose(w,r)}));
 }
 export function startClearance(w,choice,source) {
   if(!clearanceEnabled(w))return false;
   const r=w.community.access.find(r=>r.id===choice.request && r.blocker===choice.blocker && r.status==="ready"),
     o=r && objectAt(w,r.blocker);
   if(!o || !["tree","rock"].includes(o.type) || !inRegion(w,o))return false;
-  const c=w.creatures.filter(c=>capable(w,c) && !working(c) && !w.community.project?.crew.includes(c.id))
+  const c=w.creatures.filter(c=>capable(w,c) && !working(c) &&
+      (!w.community.project?.crew.includes(c.id) || r.project===w.community.project?.id))
     .filter(c=>!w.community.access.some(a=>a!==r && a.status==="clearing" && a.crew.includes(c.id)))
     .sort(workOrder).find(c=>serviceSlots(w,o,c).some(p=>Number.isFinite(routeCost(w,c,p))));
   if(!c)return false;
@@ -172,6 +186,26 @@ export function clearanceTask(w,c) {
   return o && inRegion(w,o) && ["tree","rock"].includes(o.type) ?
     {target:o.id,task:o.type==="tree"?"gather":"quarry"} : null;
 }
-export const accessContext = w => w.community.access.slice(0,ACCESS_LIMIT).map(r=>({
-  id:r.id,target:r.label,at:[Math.round(r.point.x),Math.round(r.point.y)],status:r.status,
-  reason:r.reason,blocker:r.blocker,crew:r.crew.length}));
+const accessPriority = r => ["eat","wash","play","home"].includes(r.task) ? 110 : r.project ? 100 : 90;
+export function accessPurpose(w,r) {
+  const task=({gather:"gather timber",quarry:"collect ore",mine:"mine ore",work:"make blocks",haul:"deliver materials",
+    eat:"get food",wash:"wash",play:"play",home:"rest",construct:"build",explore:"explore"})[r.task] || TASK_NAMES[r.task]?.toLowerCase() || "continue work";
+  const p=w.community.project?.id===r.project ? w.community.project : null;
+  return p ? `${task} for ${BUILDINGS[p.type]?.name || ({timber:"the wood reserve",quarry:"the ore reserve",refine:"the block reserve",crossing:"the river bridge"})[p.type] || "our project"}` : task;
+}
+export function accessBrief(w) {
+  const requests=[...w.community.access].sort((a,b)=>accessPriority(b)-accessPriority(a) || a.created-b.created);
+  const r=requests.find(r=>r.status==="ready") || requests[0];
+  if(!r)return "";
+  const o=r.blocker && objectAt(w,r.blocker);
+  return `Blocked ${r.task}${r.project && w.community.project?.id===r.project ? ` for ${w.community.project.type}` : ""}: ${r.status}. ${o ? `${r.status==="clearing" ? "Crew clearing" : "Clear"} ${o.type}; then resume ${r.task}.` : "Needs a safe route or rested crew; do not repeat the blocked journey."}`;
+}
+export const accessContext = w => [...w.community.access].sort((a,b)=>accessPriority(b)-accessPriority(a) || a.created-b.created).slice(0,ACCESS_LIMIT).map(r=>{
+  const o=r.blocker && objectAt(w,r.blocker);
+  return {id:r.id,target:r.label,at:[Math.round(r.point.x),Math.round(r.point.y)],status:r.status,
+    task:r.task,project:r.project,purpose:accessPurpose(w,r),reason:r.reason,blocker:r.blocker,crew:r.crew.length,
+    prerequisite:o ? {action:o.type==="tree"?"gather":"quarry",object:o.id,type:o.type,at:[Math.round(o.x),Math.round(o.y)]} : null,
+    nextStep:r.status==="clearing" ? "Finish the assigned clearing step, then check the route again." : r.status==="ready" ?
+      (clearanceEnabled(w) ? "Choose the matching clearance option. Keep the parent project; replan its route after removal." : "Ask for independence, intelligence or work permission before assigning clearance.") : r.reason,
+    resume:{task:r.task,target:r.target,project:r.project}};
+});

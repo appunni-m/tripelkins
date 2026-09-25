@@ -1,6 +1,6 @@
 import { refreshDistrict, syncPopulation } from "./population.js";
 import { LIMITS } from "./catalog.js";
-import { initialStory, initialEvidence, STORY_IDS } from "./story.js";
+import { initialStory, initialEvidence, STORY_IDS, STORY_LIMIT, storyEntry } from "./story.js";
 import {
   bridgeGeometry,
   serviceSlots,
@@ -202,11 +202,13 @@ export function migrateExtensions(w, raw) {
   const s = raw.story || {};
   w.story = {
     ...initialStory(),
-    completed: list(s.completed, 24).filter((id) => STORY_IDS.has(id)),
-    seen: list(s.seen, 64).filter((id) => STORY_IDS.has(id)),
+    completed: [...new Set(list(s.completed, STORY_LIMIT).filter((id) => STORY_IDS.has(id)))],
+    seen: [...new Set(list(s.seen, STORY_LIMIT).filter((id) => STORY_IDS.has(id)))],
     queue: list(s.queue, 24).filter((id) => STORY_IDS.has(id)),
     active: STORY_IDS.has(s.active) ? s.active : null,
     lastAt: n(s.lastAt ?? -60, -60, 1e12),
+    lastLetterAt: n(s.lastLetterAt ?? w.time,0,w.time),
+    lastIncidentAt: n(s.lastIncidentAt ?? 0,0,w.time),
     refusals: list(s.refusals, 24).map((x) => text(x, 40)),
     promises: list(s.promises, 16).map((p) => ({
       request: text(p.request, 40),
@@ -303,6 +305,8 @@ export function migrateExtensions(w, raw) {
       title: text(m.title,100), text: text(m.text,1200), tick:n(m.tick,0,w.time),
       story: STORY_IDS.has(m.story) ? m.story : null,
       action: m.action === "independence" ? "independence" : null,
+      category:["letter","flight","milestone","work","help"].includes(m.category) ? m.category : "letter",
+      responseRequired:!!(STORY_IDS.has(m.story) && storyEntry(m.story)?.responses.length>1 && !w.story.responses.some(r=>r.id===m.story)),
       read:!!m.read, notified:!!m.notified,
     })),
     activity: list(community.activity,40).map((a) => ({tick:n(a.tick,0,w.time),kind:text(a.kind,32),text:text(a.text,220),source:text(a.source,80),detail:text(a.detail,300)})),

@@ -1,4 +1,5 @@
 import { isExplored } from "./game/discovery.js";
+import { openingMarkup, playOpening } from "./opening-story.js";
 import { GrowthBudget } from "./growth-budget.js";
 import { developmentPlan } from "./game/development-plan.js";
 import { meteorImpact, meteorTargetError } from "./game/destruction.js";
@@ -148,12 +149,13 @@ let world,
   recoveryEntries = [],
   historyMoments = [],
   animationFrame,
-  frameTimer;
+  frameTimer,
+  prologuePlayer;
 const previewScene = new URLSearchParams(location.search).get("preview");
-const disposable = ["opening", "bridge", "bridge-stock", "industry"].includes(previewScene);
+const disposable = ["opening", "prologue", "bridge", "bridge-stock", "industry"].includes(previewScene);
 try {
   world = disposable
-    ? scenario(previewScene)
+    ? scenario(previewScene === "prologue" ? "opening" : previewScene)
     : (await loadWorld()) || createWorld();
   if (disposable)
     saveHealth.status = "Preview · your saved colony is untouched";
@@ -266,6 +268,8 @@ function save(force = true) {
   });
 }
 function modal(title, eyebrow, body, type = "other") {
+  prologuePlayer?.dispose();
+  prologuePlayer = null;
   if (type !== "download") downloadRequest = null;
   conversation.close();
   if (type !== "recovery") recoveryEntries = [];
@@ -282,6 +286,7 @@ function modal(title, eyebrow, body, type = "other") {
 }
 function closeModal() {
   if (changingWorld) return;
+  if (prologuePlayer) { prologuePlayer.finish(); return; }
   if (dialogType === "welcome") {
     world.ui.welcome = true;
     save();
@@ -331,6 +336,20 @@ function captureSettings() {
     modelLoadId++;
     stopBrain();
   }
+}
+function openingStory(replay = false) {
+  modal("Tripelkins", "BEFORE THE FIRST LANDING", openingMarkup(iconUrl("creature")), "prologue");
+  prologuePlayer = playOpening($("modal-content"), () => {
+    prologuePlayer = null;
+    if (!disposable) {
+      try { localStorage.setItem("tripelkins-opening-v1", "seen"); } catch {}
+    }
+    if (replay) options("game");
+    else welcome();
+  });
+}
+function openingSeen() {
+  try { return localStorage.getItem("tripelkins-opening-v1") === "seen"; } catch { return false; }
 }
 function welcome() {
   modal(
@@ -436,7 +455,7 @@ async function options(tab = "game") {
     : "game";
   const pages = {
     game: () =>
-      `<p class="options-intro">The mist lifts as your colony explores. Discovered ground stays on your map.</p>${intelligenceCard()}${world.population > 20 || world.community.consent !== "unasked" ? `<div class="option-row"><span><b>Colony independence</b><small>${world.community.consent === "accepted" ? "Allowed · they gather resources, supply projects and build their settlement." : "Let the colony ask to gather, build and grow independently."}</small></span><button class="secondary" data-action="independence">Change</button></div>` : ""}<div class="option-list"><label class="option-row"><span><b>Sound</b><small>Little songs, chirps and sounds of the clearing.</small></span><input class="game-toggle" id="option-sound" type="checkbox" ${world.ui.muted ? "" : "checked"}><span class="toggle-track" aria-hidden="true"></span></label><label class="option-row"><span><b>Colony initiative</b><small>Let the colony choose how to work together.</small></span><input class="game-toggle" id="autonomy" type="checkbox" ${world.settings.autonomy ? "checked" : ""}><span class="toggle-track" aria-hidden="true"></span></label><div class="option-row"><span><b>Talk to the colony</b><small>${world.settings.voiceEnabled ? "Tap the microphone, or hold Space and release." : "Let them hear your voice, or press T to type."}</small></span><button class="secondary" data-options-tab="controls">${world.settings.voiceEnabled ? "Controls" : "Set up"}</button></div></div>`,
+      `<p class="options-intro">The mist lifts as your colony explores. Discovered ground stays on your map.</p>${intelligenceCard()}${world.population > 20 || world.community.consent !== "unasked" ? `<div class="option-row"><span><b>Colony independence</b><small>${world.community.consent === "accepted" ? "Allowed · they gather resources, supply projects and build their settlement." : "Let the colony ask to gather, build and grow independently."}</small></span><button class="secondary" data-action="independence">Change</button></div>` : ""}<div class="option-list"><label class="option-row"><span><b>Sound</b><small>Little songs, chirps and sounds of the clearing.</small></span><input class="game-toggle" id="option-sound" type="checkbox" ${world.ui.muted ? "" : "checked"}><span class="toggle-track" aria-hidden="true"></span></label><label class="option-row"><span><b>Colony initiative</b><small>Let the colony choose how to work together.</small></span><input class="game-toggle" id="autonomy" type="checkbox" ${world.settings.autonomy ? "checked" : ""}><span class="toggle-track" aria-hidden="true"></span></label><div class="option-row"><span><b>Talk to the colony</b><small>${world.settings.voiceEnabled ? "Tap the microphone, or hold Space and release." : "Let them hear your voice, or press T to type."}</small></span><button class="secondary" data-options-tab="controls">${world.settings.voiceEnabled ? "Controls" : "Set up"}</button></div><div class="option-row"><span><b>Their journey here</b><small>A one-minute story of three suns and one small spacecraft.</small></span><button class="secondary" data-action="opening-story">Replay opening</button></div></div>`,
     intelligence: () =>
       `${intelligenceCard()}${intelligenceControls(world.settings)}<p>Built-in instincts keep them moving, eating, washing, playing and growing as their needs are met. You can use every care and building tool with intelligence off.</p><p>Enable intelligence to interpret your messages, agree on lasting goals and refine group plans. Existing goals continue through the game’s own rules when intelligence is off.</p><div class="provider-options"><button class="provider-card ${world.settings.provider === "laya" ? "selected" : ""}" data-action="choose-local"><span class="badge">ON YOUR DEVICE</span><strong>Laya · local intelligence</strong><span>Free inference. A large initial download, kept in browser storage. Review the size before you start.</span></button><button class="provider-card ${world.settings.provider === "jev" ? "selected" : ""}" data-provider="jev"><span class="badge">ONLINE CONNECTION</span><strong>Jev via OpenRouter</strong><span>No local intelligence model download. Your API key and internet are required; usage may cost credits.</span></button></div><p class="muted">Voice is a separate, optional download in Controls. With intelligence enabled, you can type with T without downloading voice files. If you arrived here after writing a message, it is kept in the typing box; resend it when you are ready.</p><button class="secondary" data-options-tab="advanced">Connection & runtime options</button>`,
     controls: () =>
@@ -1258,6 +1277,10 @@ async function action(name) {
       save();
       options("intelligence");
       break;
+    case "opening-story":
+      captureSettings();
+      openingStory(true);
+      break;
     case "independence":
       communityUI.independence();
       break;
@@ -1724,7 +1747,8 @@ renderUi();
 conversation.warm();
 modelBudget.hidden(document.hidden);
 animationFrame = requestAnimationFrame(frame);
-if (!world.ui.welcome) welcome();
+if (previewScene === "prologue" || (!world.ui.welcome && !openingSeen())) openingStory();
+else if (!world.ui.welcome) welcome();
 else if (world.stage === 4) ending();
 else if (world.settings.provider === "laya" && world.settings.localEnabled)
   loadModel();
@@ -1732,6 +1756,7 @@ else if (world.settings.provider === "laya" && world.settings.localEnabled)
 if (import.meta.hot)
   import.meta.hot.dispose(() => {
     appEvents.abort();
+    prologuePlayer?.dispose();
     cancelAnimationFrame(animationFrame);
     clearTimeout(frameTimer);
     modelBudget.dispose();

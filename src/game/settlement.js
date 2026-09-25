@@ -1,5 +1,6 @@
 import { decisionPace } from "../intelligence-settings.js";
-import { clearanceChoices, startClearance, requestAccess, accessPoint } from "./access.js";
+import { completionLetter } from "./colony-letters.js";
+import { clearanceChoices, startClearance, requestAccess, accessPoint, accessBrief } from "./access.js";
 import { workOrder, working } from "./work-balance.js";
 import { DENSITY, siteDensity, SETTLEMENT_TYPES } from "./density.js";
 import { developmentPlan } from "./development-plan.js";
@@ -248,15 +249,15 @@ export function prepareTimber(w) {
   }
 }
 export function settlementDecisionInput(w, choices) {
-  const care=careContext(w), plan=developmentPlan(w);
+  const care=careContext(w);
   // Keep the effect of each building in its short option label. Optional site
   // descriptions can be omitted by the token budget; internal type names alone
   // do not tell a small classifier which need a building will actually serve.
   const options = Object.fromEntries([...choices.map(c=>[c.key||c.id,
-    c.id==="clearance" ? c.description : c.density ? `Build ${careServices(c.id).join("/") || BUILDINGS[c.id]?.name || c.id}; help ${Math.round(c.benefit)}; reward ${Math.round(c.density.reward)}`
+    c.id==="clearance" ? `Clear ${c.obstacle || "obstacle"} to ${c.resume || "resume blocked work"}` : c.density ? `Build ${careServices(c.id).join("/") || BUILDINGS[c.id]?.name || c.id}; help ${Math.round(c.benefit)}; reward ${Math.round(c.density.reward)}`
       : `${c.id}: target ${c.target} ${RESOURCE_PROJECTS[c.id]?.material||"wood"}`]),["wait","Postpone building; no new care capacity"]]);
   const shortage=Object.entries(care).map(([k,s])=>`${k}: ${s.low} low, ${s.short} short, ${s.urgent} urgent`).join("; ");
-  const requiredContext = `${w.creatures.length} residents. ${shortage}. Wood ${Math.floor(w.inventory.wood)}, ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind||"grow"}. Next ${plan.children.filter(s=>s.status!=="satisfied").slice(0,3).map(s=>s.kind).join(",")||"growth"}. ${w.community.access.length} blocked routes; clearance opens access for work. Need care first. Prefer more help and reward closer to zero. Density target ${DENSITY.target}/100; above penalty ${DENSITY.above}, below ${DENSITY.below}. Gather missing wood.`;
+  const requiredContext = `${w.creatures.length} residents. ${shortage}. Wood ${Math.floor(w.inventory.wood)}, ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind||"grow"}. ${accessBrief(w)} Care first. Gather missing wood. Prefer more help and reward closer to zero.`;
   const contextParts = choices.map(c=>c.description);
   return {options,requiredContext,contextParts,context:[requiredContext,...contextParts].join(" "),
     question:"Which project and location best advance the goal?",maxTokens:320};
@@ -333,6 +334,6 @@ export function finishSettlement(w, placeBuilding) {
   w.community.lastProjectAt = w.time;
   w.community.project = null;
   activity(w,"built",`${BUILDINGS[p.type].name} finished.`,p.source,`${BUILDINGS[p.type].wood || BUILDINGS[p.type].cost} ${BUILDINGS[p.type].wood ? "wood" : "blocks"} used. The whole colony can use it now.`);
-  postMessage(w,{ title: "We made this together", text: `Our ${BUILDINGS[p.type].name.toLowerCase()} is ready. Someone in the sky taught us how to stand on our own feet.` });
+  postMessage(w,completionLetter(w,p,BUILDINGS[p.type].name));
   return p.id;
 }

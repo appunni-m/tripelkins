@@ -22,7 +22,8 @@ export function packHostedContext(full, budget) {
     developmentPlan: concisePlan(full.developmentPlan),
     growthBudget: full.growthBudget,
     ...(full.blockedWork?.length ? {blockedWork:{count:full.blockedWork.length,
-      requests:full.blockedWork.slice(0,3).map(({id,target,at,status})=>({id,target,at,status}))}} : {}),
+      requests:full.blockedWork.slice(0,3).map(({id,target,at,status,task,project,purpose,reason,prerequisite,nextStep,resume})=>({
+        id,target,at,status,task,project,purpose,reason,prerequisite,nextStep,resume}))}} : {}),
     ...(full.development ? {development:{densityRule:full.development.densityRule,
       choices:full.development.choices.map(({key,id,at,target,cost,priority,density,benefit,travel,subgoal,request,blocker,description})=>({
         key,id,at,target,cost,priority,density:density?{residents:Math.round(density.residents*10)/10,reward:Math.round(density.reward*10)/10}:undefined,
@@ -75,6 +76,7 @@ export function packHostedContext(full, budget) {
     full.candidates.map((c) => ({ id: c.id, effects: c.expected })),
   );
   add("promises", full.story?.promises || []);
+  add("colonyStory", full.story?.premise);
   add("projects", full.projects || []);
   add("outcomes", full.outcomes || []);
   add("orbital", full.orbital);

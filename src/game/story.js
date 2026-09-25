@@ -1,6 +1,8 @@
 import { BEATS, INCIDENTS, PHILOSOPHY, ARCHIVES } from "./story-content.js";
+import { CHAPTERS } from "./colony-letters.js";
 import { postMessage } from "./community.js";
-const all = [...BEATS, ...INCIDENTS, ...PHILOSOPHY];
+const all = [...BEATS, ...INCIDENTS, ...PHILOSOPHY, ...CHAPTERS];
+export const STORY_LIMIT = 128;
 export function initialStory() {
   return {
     completed: [],
@@ -8,6 +10,8 @@ export function initialStory() {
     queue: [],
     active: null,
     lastAt: -60,
+    lastLetterAt: 0,
+    lastIncidentAt: 0,
     refusals: [],
     promises: [],
     responses: [],
@@ -68,7 +72,17 @@ export function updateStory(w) {
       !w.community.inbox.some((m) => m.key === `story:${b.id}`));
     if (thought) enqueue(w,thought.id);
   }
-  if (w.time - w.story.lastAt > 90 && w.story.queue.length < 3) {
+  // One new letter at most per minute of play, and only after its actual event.
+  // Save its ID separately from inbox retention so an old letter never repeats.
+  if (w.time - w.story.lastLetterAt >= 60) {
+    const letter = CHAPTERS.find(b => !w.story.completed.includes(b.id) && b.when(w));
+    if (letter) {
+      w.story.completed.push(letter.id);
+      w.story.lastLetterAt = w.time;
+      enqueue(w,letter.id);
+    }
+  }
+  if (w.time - Math.max(w.story.lastAt,w.story.lastIncidentAt) > 90 && w.story.queue.length < 3) {
     const incident = INCIDENTS.find(
       (b) =>
         !w.story.seen.includes(b.id) &&
@@ -76,7 +90,7 @@ export function updateStory(w) {
         !w.community.inbox.some((m) => m.key === `story:${b.id}`) &&
         b.when(w),
     );
-    if (incident) enqueue(w, incident.id);
+    if (incident) { enqueue(w, incident.id); w.story.lastIncidentAt = w.time; }
     // Reflections stay in the archive/inbox only after a concrete milestone.
   }
   const flags = [
@@ -116,11 +130,13 @@ export function collectStoryMessages(w) {
   for (const id of ids) {
     const entry = storyEntry(id);
     if (!entry || w.story.seen.includes(id)) continue;
-    const message = postMessage(w,{ key:`story:${id}`, title:entry.title, text:entry.text, story:id });
+    const message = postMessage(w,{ key:`story:${id}`, title:entry.title,
+      text:typeof entry.text === "function" ? entry.text(w) : entry.text, story:id,
+      category:entry.category || (entry.request ? "help" : "milestone"), responseRequired:entry.responses.length>1 });
     if (message && id.startsWith("thought-")) message.notified = true;
     // Archiving a one-way observation needs no player answer. Decisions retain
     // their response buttons and are never silently answered on dismissal.
-    if (entry.responses.length === 1) w.story.seen = [...new Set([...w.story.seen,id])].slice(-64);
+    if (entry.responses.length === 1) w.story.seen = [...new Set([...w.story.seen,id])].slice(-STORY_LIMIT);
   }
 }
 export function nextStory(w) {
@@ -150,7 +166,7 @@ export function answerStory(w, response) {
       `Asked the collective about ${entry.id.replace("thought-", "")}.`,
     );
   w.story.seen.push(entry.id);
-  w.story.seen = [...new Set(w.story.seen)].slice(-64);
+  w.story.seen = [...new Set(w.story.seen)].slice(-STORY_LIMIT);
   w.story.lastAt = w.time;
   w.story.active = null;
   if (entry.request && response === "Not now") {

@@ -8,15 +8,16 @@ export function initialCommunity() {
     visited: [], explored: 0, activity: [], plan: null, workTurn: 0, access: [], nextAccess: 1,
   };
 }
-export function postMessage(w, { key = null, title = "A voice from below", text, story = null, action = null }) {
+export function postMessage(w, { key = null, title = "A note from the colony", text, story = null, action = null, category = "letter", responseRequired = false }) {
   const s = w.community;
   if (key && s.inbox.some((m) => m.key === key)) return null;
   const message = { id: s.nextMessage++, key, title: title.slice(0, 100), text: String(text).slice(0, 1200),
-    tick: w.time, story, action, read: false, notified: false };
+    tick: w.time, story, action, category, responseRequired, read: false, notified: false };
   s.inbox.push(message);
   if (s.inbox.length > INBOX_LIMIT) {
     // Keep unresolved decisions in preference to routine/read conversation lines.
-    const expendable = s.inbox.findIndex((m) => !m.action && !m.story);
+    let expendable = s.inbox.findIndex(m=>m.read && !m.action && !m.responseRequired);
+    if (expendable<0) expendable = s.inbox.findIndex(m=>!m.action && !m.responseRequired);
     s.inbox.splice(expendable < 0 ? 0 : expendable, 1);
   }
   w.revision++;
@@ -32,7 +33,7 @@ export function offerIndependence(w) {
   if (w.population <= 20 || w.community.consent !== "unasked" || w.stage >= 3) return;
   w.community.consent = "offered";
   postMessage(w, { key: "independence", title: "Could we stand on our own?",
-    text: "There are more than twenty of us now. Someone in the sky showed us how to live. Could we gather timber and stone, make our own food and baths, and build places to live and work?", action: "independence" });
+    text: "There are more than twenty of us now. You helped our family survive. Could we use shared intelligence to gather timber and stone, grow food, and build a home of our own?", action: "independence", category:"help" });
 }
 export function setIndependence(w, accepted) {
   if (accepted && w.population <= 20 && w.community.consent === "unasked") return false;

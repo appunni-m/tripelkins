@@ -1,6 +1,7 @@
 import { careContext, careSummary } from "./care-context.js";
 import { developmentPlan } from "./development-plan.js";
-import { accessContext } from "./access.js";
+import { accessContext, accessBrief } from "./access.js";
+import { COLONY_PREMISE } from "./prologue.js";
 import { isExplored, discoverySummary } from "./discovery.js";
 import { capacity } from "./jobs.js";
 import { projectName, projectStatus } from "./development.js";
@@ -82,6 +83,7 @@ export function buildContext(w, { includePlans = true } = {}) {
     orbital: { ...w.orbital },
     district: { ...w.district },
     story: {
+      premise: COLONY_PREMISE,
       completed: w.story.completed.slice(-4),
       promises: w.story.promises.slice(-3),
     },
@@ -175,7 +177,7 @@ export function buildContext(w, { includePlans = true } = {}) {
       : 0,
   );
   const localParts = [
-    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || "care and growth"}. Project ${w.community.project?.type || "none"}. ${context.blockedWork.length} blocked routes; clearance crews unblock work. Rotate rested workers; finish commitments. Care first. Space: ${context.developmentPlan.density.crowded} crowded neighborhoods; target 6 per 100 ground units. Crowding penalty 4, isolation 0.6.`,
+    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || "care and growth"}. Care first; rotate rested workers. ${accessBrief(w)}`,
     `Care capacity: ${careSummary(care)}.`,
     `Expansion: ${context.developmentPlan.expanding ? "scout new neighborhoods" : "balance space and care"}. Density target ${context.developmentPlan.density.target} per 100 ground units; crowding penalty 4, isolation penalty 0.6. Child goals: ${context.developmentPlan.children.filter(s=>s.status!=="satisfied").map(s=>s.kind).join(",")}.`,
     `Independent development ${w.community.consent}; ${w.community.project ? `${projectName(w.community.project)}: ${projectStatus(w)}` : "no current project"}. Scouted ${w.community.explored} areas.`,
