@@ -41,6 +41,47 @@ OpenRouter/Jev requests require a player-supplied key. Test connection and an ac
 - The game and verification page have no server, secret or backend dependency.
 - `localhost` and GitHub Pages have different storage origins. Existing local worlds must be exported and imported to move them to the public site. Model caches are also downloaded separately for each origin.
 
+## Site payload and caching
+
+Production builds keep Three.js in its own content-hashed chunk. Changes to the
+game's rendering and colony code no longer change the renderer's asset URL, so
+returning browsers can reuse it from cache. This uses the same installed Three.js
+package, exports and renderer settings. No game, model, prompt, sound or save
+logic changes.
+
+Debug source maps are omitted from the published package by default. To produce
+a local debug build, run `BUILD_SOURCEMAPS=true npm run build`. Vite development
+debugging is unaffected. Licenses, credits, verification pages and all matching
+runtime binaries remain included.
+
+Measured against commit `77fd3ce`, using the same locked dependencies:
+
+| Measurement | Before | After |
+| --- | ---: | ---: |
+| Published files, including source maps, excluding the manifest itself | 121,765,795 B | 113,632,890 B |
+| Initial game JavaScript, uncompressed | 894,547 B | 894,094 B |
+| Initial game JavaScript, local gzip estimate | 261,174 B | 260,902 B |
+| Renderer reusable independently of game chunks | bundled with game code | 533,435 B (131,044 B gzip estimate) |
+
+The package is about 6.7% smaller; first-visit JavaScript is effectively unchanged.
+The main player-facing saving is reuse of the renderer after game updates when
+the browser retains its cache. Gzip figures are local estimates, not measured CDN
+transfer sizes. Source maps were not part of normal game startup downloads.
+CSS and the public runtime loaders/binaries match their previous SHA-256 hashes.
+
+Verification: all 104 existing Node tests pass, the production industry preview
+renders with the split renderer, and all three browser drawing workloads pass.
+The performance fixture now distributes its 48 surface bodies across both
+riverbanks, spanning at least 60 by 30 ground units. Collision clearance and
+non-overlap are checked before simulation; jobs are planned from the new
+positions. The million/billion cases still represent orbital populations as
+aggregates. These are different workloads from earlier clustered benchmarks,
+so their timings should not be presented as a speedup comparison.
+
+The source-entry variant of Three.js was also measured and rejected: it increased
+the renderer's gzip size by about 4 KB. Model worker code is identical apart from
+the removed debug source-map links.
+
 ## Cloudflare CDN in front of GitHub Pages
 
 Cloudflare needs a hostname on a domain you control; it cannot proxy the default `github.io` hostname. Add the hostname in Repository Settings → Pages → Custom domain, then create a Cloudflare `CNAME` from that hostname to `appunni-m.github.io` (do not append `/tripelkins/`). Keep the DNS record DNS-only until GitHub Pages has issued its HTTPS certificate. Then enable the Cloudflare proxy and set SSL/TLS mode to **Full (strict)**.

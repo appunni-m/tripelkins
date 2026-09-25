@@ -112,6 +112,11 @@ test("toolbar and HTML only change when their actual displayed content changes",
 test("million and billion populations retain bounded records, real work and exact save totals", () => {
   for(const population of [1e6,1e9]) {
     const w=scaleFixture(population), before=w.metrics.completed;
+    assert.ok(Math.max(...w.creatures.map(c=>c.x))-Math.min(...w.creatures.map(c=>c.x))>=60);
+    assert.ok(Math.max(...w.creatures.map(c=>c.y))-Math.min(...w.creatures.map(c=>c.y))>=30);
+    assert.ok(w.creatures.every(c=>clearPosition(w,c)));
+    assert.ok(w.creatures.every((c,i)=>w.creatures.slice(i+1).every(other=>
+      Math.hypot(c.x-other.x,c.y-other.y)>=BODY_RADIUS*2+0.06)));
     const orbitalBefore=w.orbital.population, launchesBefore=w.orbital.launches;
     for(let i=0;i<300;i++)stepWorld(w,.1);
     assert.ok(w.metrics.completed>before);

@@ -28,8 +28,16 @@ export default defineConfig({
   plugins: [removeBundledRuntimeCopies()],
   build: {
     target: "es2022",
-    sourcemap: true,
+    // Keep debug builds available without publishing source maps to every site.
+    sourcemap: process.env.BUILD_SOURCEMAPS === "true",
     rolldownOptions: {
+      output: {
+        // Keep the renderer's content hash independent of changing game code.
+        // Returning players can reuse this large, unchanged download.
+        codeSplitting: {
+          groups: [{ name: "three", test: /node_modules\/three\// }],
+        },
+      },
       input: {
         game: "index.html",
         verification: "verify.html",
