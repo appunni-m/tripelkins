@@ -271,7 +271,6 @@ export async function replaceWorld(
   if (writer) await writer;
   const record = interruptCommands(migrateWorld(next));
   record.ui.paused = true;
-  record.ui.welcome = true;
   record.savedAt = new Date().toISOString();
   const prior = migrateWorld(current);
   prior.savedAt = saveHealth.lastSaved || record.savedAt;

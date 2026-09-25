@@ -322,15 +322,9 @@ function openingStory(replay = false) {
   modal("Tripelkins", "BEFORE THE FIRST LANDING", openingMarkup(iconUrl("creature")), "prologue");
   prologuePlayer = playOpening($("modal-content"), () => {
     prologuePlayer = null;
-    if (!disposable) {
-      try { localStorage.setItem("tripelkins-opening-v1", "seen"); } catch {}
-    }
     if (replay) options("game");
     else welcome();
   });
-}
-function openingSeen() {
-  try { return localStorage.getItem("tripelkins-opening-v1") === "seen"; } catch { return false; }
 }
 function welcome() {
   modal(
@@ -479,6 +473,7 @@ async function switchWorld(next, message, source = next, origin = null) {
     return;
   }
   if (changingWorld) return;
+  const showOpening = !next.ui?.welcome;
   changingWorld = true;
   modelLoadId++;
   conversation.close();
@@ -495,7 +490,8 @@ async function switchWorld(next, message, source = next, origin = null) {
     changingWorld = false;
     closeModal();
     renderUi();
-    toast(message);
+    if (showOpening) openingStory();
+    else toast(message);
     if (world.settings.provider === "laya" && world.settings.localEnabled)
       loadModel();
   } catch (error) {
@@ -1652,8 +1648,7 @@ renderUi();
 conversation.warm();
 modelBudget.hidden(document.hidden);
 animationFrame = requestAnimationFrame(frame);
-if (previewScene === "prologue" || (!world.ui.welcome && !openingSeen())) openingStory();
-else if (!world.ui.welcome) welcome();
+if (previewScene === "prologue" || !world.ui.welcome) openingStory();
 else if (world.stage === 4) ending();
 else if (world.settings.provider === "laya" && world.settings.localEnabled)
   loadModel();

@@ -139,7 +139,7 @@ async function operate(message){
       case 'replace':{
         paused=true;
         result=preview?call('state.migrateWorld',{raw:args.next}):await storage.replaceWorld(state(),args.next,args.source,args.origin);
-        result.ui.paused=true;result.ui.welcome=true;
+        result.ui.paused=true;
         stopPlanner('A different saved world was opened.');
         scheduler.reset();
         engine.free();engine=new Engine(JSON.stringify(result));clock();awaitingGeneration=generation+1;break;
