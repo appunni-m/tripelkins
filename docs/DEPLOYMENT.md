@@ -4,14 +4,30 @@ The public game is served from `https://appunni-m.github.io/tripelkins/`.
 Repository Settings → Pages → Build and deployment → Source must be **GitHub Actions**.
 The workflow runs on pushes to `main` and can also be dispatched manually.
 
+## Prerequisites
+
+Use the Node, Rust and wasm-pack versions in [Contributing](../CONTRIBUTING.md).
+Pages CI uses Ubuntu and Node 24, installs Rust 1.98.1 and wasm-pack 0.15.0, and
+checks out full history for the pinned migration reference.
+
 ## Deployment checks
 
 1. `npm ci` installs the committed lockfile.
-2. `npm run build` compiles the locked Rust engine to WASM, generates software notices, copies each ONNX runtime's matching loaders and binaries, builds the game and verification pages, removes unused duplicate ONNX binaries, and writes a SHA-256 deployment manifest. Missing runtime files, invalid WASM binaries, escaped HTML base paths and oversized output fail the build.
-3. GitHub uploads and deploys `dist`.
-4. The verification job downloads every published manifest asset, checks JavaScript/WASM MIME types, and compares file lengths and SHA-256 hashes against a build of the same commit. It waits briefly for CDN propagation before checking.
+2. `npm test` and `npm run verify:engine` run the Node regressions and native/WASM canonical migration comparisons.
+3. `npm run build` compiles the locked Rust engine to WASM, generates software notices, copies each ONNX runtime's matching loaders and binaries, builds the game and verification pages, removes unused duplicate ONNX binaries, and writes a SHA-256 deployment manifest. Missing runtime files, invalid WASM binaries, escaped HTML base paths and oversized output fail the build.
+4. GitHub uploads and deploys `dist`.
+5. The verification job downloads every published manifest asset, checks JavaScript/WASM MIME types, and compares file lengths and SHA-256 hashes against a build of the same commit. It waits briefly for CDN propagation before checking.
 
-Run the HTTP checks locally after building:
+Run the HTTP checks against the same build environment and revision as the deployment.
+The command compares the local `dist/deployment-manifest.json` with the hosted
+bytes; matching source commits alone do not promise identical macOS and Linux
+WASM hashes. The CI verification job rebuilds on Linux. A macOS build may report
+missing hashed filenames when compared with the Linux release. Use the matching
+CI artifact for a manual production comparison.
+
+For a local preview, build and serve `dist/`, then pass the URL printed by Vite
+(with a trailing slash) to `npm run verify:pages`. For the matching production
+artifact:
 
 ```sh
 npm run verify:pages -- https://appunni-m.github.io/tripelkins/
@@ -22,7 +38,7 @@ Open `https://appunni-m.github.io/tripelkins/verify.html`, also linked from Opti
 - HTTPS, all asset URLs, and the real microphone capture AudioWorklet module.
 - IndexedDB and CacheStorage write/read using disposable, isolated test storage.
 - Actual Laya load and inference on FP16 WebGPU and single-thread Q8 WASM.
-- Actual Whisper Base English load and transcription: FP32 encoder with FP16 WebGPU or Q8 WASM decoder.
+- Actual Whisper Base English load and transcription: FP32 encoder with a Q8 decoder on both WebGPU and WASM.
 - Expected model files present in the game's browser caches.
 - **25-resident audit · cached Laya GPU** measures real choices, workload and
   movement over five simulated minutes without reading saved colonies. See the
@@ -48,7 +64,12 @@ The `/tripelkins/engine-verify.html` page runs disposable 25/300/600-resident Ru
 - The game and verification page have no server, secret or backend dependency.
 - `localhost` and GitHub Pages have different storage origins. Existing local worlds must be exported and imported to move them to the public site. Model caches are also downloaded separately for each origin.
 
-## Site payload and caching
+## Earlier site-payload measurements
+
+This section records the pre-Rust JavaScript payload experiment at `77fd3ce`.
+Its sizes and test counts are historical. For the current engine workload, use
+the [Rust migration report](RUST_ENGINE_MIGRATION.md); inspect the current
+`dist/deployment-manifest.json` for current artifact sizes.
 
 Production builds keep Three.js in its own content-hashed chunk. Changes to the
 game's rendering and colony code no longer change the renderer's asset URL, so
@@ -94,3 +115,20 @@ the removed debug source-map links.
 Cloudflare needs a hostname on a domain you control; it cannot proxy the default `github.io` hostname. Add the hostname in Repository Settings → Pages → Custom domain, then create a Cloudflare `CNAME` from that hostname to `appunni-m.github.io` (do not append `/tripelkins/`). Keep the DNS record DNS-only until GitHub Pages has issued its HTTPS certificate. Then enable the Cloudflare proxy and set SSL/TLS mode to **Full (strict)**.
 
 Create a Cache Rule for the exact hostname with **Eligible for cache**. Override the origin Edge TTL for successful `200–299` responses to one day; do not cache `300–599` responses. Leave Browser TTL set to respect origin headers. Enable Tiered Cache to reduce duplicate cache fills from different Cloudflare locations. After a deployment, purge this hostname so the HTML and stable-name WASM runtime files update promptly. A repeat request should show `cf-cache-status: HIT` in its response headers.
+
+## Failed deployment and rollback
+
+Inspect the build, deploy and verify jobs independently. A successful upload is
+not a successful published-file check. A failed build leaves the prior Pages
+deployment in place; a failure after publication requires checking what commit
+the live `deployment-manifest.json` identifies.
+
+For a bad application release, revert the specific offending change through a
+reviewed commit on `main`, then let the normal pipeline rebuild and verify it.
+Do not rewrite repository history or delete browser saves as a rollback method.
+Export a colony before running an older application against it: restoring site
+files does not roll back IndexedDB, and an older schema reader may reject a newer
+world. Check import/restore compatibility on a disposable world first.
+
+The public model checks are optional and may download large files. Rollback or
+asset verification does not automatically run paid requests or microphone tests.

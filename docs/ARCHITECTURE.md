@@ -1,41 +1,107 @@
-# Tripelkins systems
+# Tripelkins architecture
 
-## Runtime engine
+Tripelkins is a static browser game. A Rust/WASM worker owns the world; browser
+code draws it, handles input and connects optional models. There is no game
+server. [Documentation index](README.md) · [Contributor guide](../CONTRIBUTING.md)
 
-The live game now uses the [Rust/WASM engine](RUST_ENGINE_MIGRATION.md).
-Simulation, planning, goals, story, save validation and history algorithms live in
-`engine/src/`. `src/engine/worker.js` owns the world and browser storage adapter;
-`query-worker.js` runs read-only Rust planning on snapshots. Rendering, input,
-audio and provider transport remain browser adapters. The JavaScript rule files
-listed in older subsystem notes below remain the migration reference.
+## One authoritative world
 
+The main thread sends commands to the simulation worker. That worker advances
+needs, movement, jobs, resources, growth and story on a fixed 100 ms simulation
+step. It sends bounded snapshots back for rendering. A separate Rust/WASM worker
+calculates read-only plans from snapshots so candidate searches do not block the
+simulation loop.
 
-Tripelkins is a static browser application built with Three.js and Vite. No game server is required.
+```mermaid
+flowchart TD
+    UI[Input, options and Three.js rendering] -->|Commands| SIM[Rust/WASM simulation worker]
+    SIM -->|Presentation snapshots| UI
+    SIM <-->|Validated saves and history| DB[(IndexedDB)]
+    UI -->|Snapshot queries| PLAN[Rust/WASM planning worker]
+    PLAN -->|Feasible choices and bounded context| BRAIN[Browser intelligence coordinator]
+    BRAIN <-->|Local decisions| LAYA[Laya workers]
+    BRAIN <-->|Hosted requests| HOST[Jev / OpenRouter]
+    BRAIN -->|Choice with world revision| SIM
+    MIC[Local speech worker] -->|Transcript| BRAIN
+```
 
-## Simulation and presentation
+All state changes are committed by the simulation worker. Model outputs cannot
+write arbitrary world state. A choice is expanded and checked against the
+current world before assignments apply. World generation and command revision
+checks discard stale work after restoration or newer commands.
 
-`src/game/simulation.js` advances needs, multiplication, jobs and progression. Shared geometry, navigation, service reservations and traffic rules keep rendering and movement consistent. `src/game/access.js` detects blocked work and supports practical clearing plans. Terrain is generated deterministically in bounded chunks; discovery masks preserve fog-of-war exploration.
+## Where the rules live
 
-`src/world.js` renders the world. `src/game/art.js` supplies procedural sprites. `src/colony-life.js` coordinates animation and local reactions with the unchanged Web Audio sound engine in `src/creature-voice.js`.
+| Responsibility | Authoritative source |
+| --- | --- |
+| Needs, multiplication, physical work and resources | `engine/src/simulation.rs`, `jobs.rs`, `resources.rs` |
+| Terrain, discovery, collision and paths | `engine/src/terrain.rs`, `discovery.rs`, `geometry.rs`, `navigation.rs` |
+| Blocked work, clearing and local crews | `engine/src/access.rs`, `development.rs` |
+| Groups, goals, development, outposts and context | `engine/src/planning.rs`, `goals.rs`, `development.rs`, `outposts.rs`, `context.rs` |
+| Save validation, timelines and restoration algorithms | `engine/src/save.rs`, `timeline.rs` |
+| Worker lifecycle and browser persistence | `src/engine/`, `src/persistence.js` |
 
-## Intelligence
+The JavaScript rules under `src/game/` remain a comparison reference and support
+older diagnostics. Presentation helpers are still used by the renderer. The
+[migration report](RUST_ENGINE_MIGRATION.md) defines this boundary, and the
+[generated contract](generated/engine-contract.md) inventories engine operations.
+These are internal application interfaces, not a stable external SDK.
 
-The planner constructs feasible group schedules. Laya, Jev or a configured OpenRouter model selects a bounded option; the chosen policy is expanded again against current state before assignments apply. Missing resources, care emergencies, player restrictions and blocked paths cannot be overridden by a model response.
+## Rendering and sound
 
-Laya runs in dedicated single-thread WASM or WebGPU workers. The worker slider permits one to three concurrent model instances; the decision-speed control affects scheduling frequency. Jev uses OpenRouter's typed Decisions endpoint. The general chat adapter is separate. Long-term goals retain progress and blockers across saves.
+`src/world.js` renders Three.js sprites and terrain. `src/game/art.js` generates
+textures; `src/fog.js` presents discovered areas. `src/colony-life.js` coordinates
+local reactions with `src/creature-voice.js` and the Web Audio engine. Camera,
+DOM, microphone permission and audio remain browser responsibilities.
 
-## Speech and conversation
+Only one presentation snapshot may be awaiting acknowledgment, preventing an
+unbounded rendering backlog. This keeps simulation throughput separate from
+frame responsiveness. An expanded 600-resident workload can still run slower
+than real time; smooth drawing does not imply unlimited simulation capacity.
+See the measured workload in the [migration report](RUST_ENGINE_MIGRATION.md).
 
-Whisper Base English runs locally in a dedicated worker. Voice capture is bounded, supports tap and hold gestures, and never stores raw audio in snapshots. Recognized commands use the chosen intelligence provider. Conversations and activity are bounded and compacted into longer-lived summaries.
+## Intelligence and conversation
 
-## Storage
+`src/brain.js` coordinates group schedules, development choices and conversations.
+Rust constructs feasible choices using care, inventory, access, commitments,
+local demand and goals. Laya, Jev or the chat adapter selects a bounded choice;
+the engine validates it again before committing physical work.
 
-`src/persistence.js` manages IndexedDB snapshots, earlier moments, the journal and recovery transactions. `src/game/save-schema.js` validates saved state. `src/game/timeline.js` combines snapshots and bounded changes; restoration applies saved state without replaying simulation or model requests.
+Laya runs in dedicated WASM or WebGPU workers. The one-to-three worker setting
+limits concurrent model work; it does not change the number of simulation
+workers. Hosted providers use the same request cap. Request cadence is measured
+in playing time and can respond sooner to meaningful events. See
+[intelligence controls](INTELLIGENCE_CONTROLS.md).
 
-The Tripelkins database and model-cache names use their own namespace. World schemas and import behavior are unchanged. Existing world exports remain compatible. To carry a colony from a different namespace, export it from that installation and import it in Tripelkins. Browser histories stay in their original database; a world export is not a full database backup.
+Whisper Base English transcribes locally in a separate worker. Capture is bounded
+and raw recordings do not enter world saves. Conversations and commands become
+bounded history used by future context. Hosted requests can include recognized
+text. [Voice](VOICE.md) and [data boundaries](../SECURITY.md) describe the adapters.
 
-## Runtime and deployment
+## Saves, pause and failure
 
-GitHub Pages uses `/tripelkins/`. Dev and build commands copy the installed ONNX runtime versions into `public/ort/` and `public/ort-whisper/`. These generated files are excluded from Git and included in the built site. `scripts/deployment-manifest.mjs` checks required files and records sizes and SHA-256 hashes. `scripts/verify-pages.mjs` compares published assets with that manifest.
+The simulation worker calls the IndexedDB adapter in `src/persistence.js`.
+Rust validates saves and manages snapshots, bounded timeline changes and
+compaction. Restore adopts validated state without replaying elapsed simulation
+or issuing old model requests. A restored world opens paused.
 
-See the topic documents for implementation detail: context architecture, goals, work/access, independent development, discovery, voice and adaptive expansion.
+Options, explicit pause and hidden tabs stop advancement; there is no offline
+catch-up. Save operations are ordered with simulation commands. A write conflict
+pauses this tab. Quota or write failures preserve the live world for export and
+retry. A browser close can interrupt an unfinished write; the latest completed
+autosave is the recovery boundary.
+
+World exports preserve the colony, not the full rewind database or model cache.
+Origins and browser profiles have independent storage. See
+[context and recovery](CONTEXT_ARCHITECTURE.md).
+
+## Hosting and generated output
+
+Vite emits the static `dist/` site with relative URLs for `/tripelkins/` or a
+custom-domain root. Build preparation compiles the locked engine, copies matching
+ONNX loaders/binaries and generates component notices. Worker instances do not
+require shared memory or cross-origin isolation headers.
+
+The build manifest records file sizes and SHA-256 hashes. Pages CI compares the
+published files with a build of the same commit in its Linux environment.
+[Deployment](DEPLOYMENT.md) explains that verification, browser checks and rollback.

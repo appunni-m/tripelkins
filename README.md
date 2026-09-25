@@ -1,107 +1,97 @@
+<p align="center"><img src="public/favicon.svg" width="96" height="96" alt="A cheerful lilac Tripelkin with pink ears and a cream muzzle"></p>
+
 # Tripelkins
 
 **If one of them survives, everyone survives.**
 
-A browser colony game about nurturing cheerful little creatures, watching them multiply, and helping them become independent. Tripelkins gather resources, explore through the fog, build a settlement and work toward shared goals with optional local or hosted intelligence.
+Nurture a small colony of cheerful creatures. Watch them multiply, explore through the fog, gather materials and build a home. Once the colony grows beyond twenty, you can let it become independent, with optional intelligence choosing how it works together.
+
+**[Play in your browser](https://appunni-m.github.io/tripelkins/)** · [Game guide](docs/GAME_GUIDE.md) · [Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md)
+
+Tripelkins is an experimental browser game. It runs on a static site with a Rust/WASM simulation, Three.js rendering and browser-local saves. Intelligence and speech are optional; **no model download or API key is needed to start playing**. Performance and WebGPU support depend on your device. The project has not declared a license for its own code and artwork; see [licensing status](#license-and-credits).
+
+## Your first colony
+
+1. Open the game and enter the clearing. Tap the spacecraft to meet your first Tripelkin.
+2. Use **Care** to offer a banana, wash with a cloth, or play with a cricket ball. Healthy residents multiply.
+3. Pan and zoom to follow them. Open **Build** as new facilities become available.
+4. Read colony messages in the **inbox**. Expand **Activity** to see work and intelligence decisions.
+5. When the colony asks for independence, choose whether to allow it. Enable intelligence in **Options → Intelligence** for autonomous development and conversations.
+
+| Control | Action |
+| --- | --- |
+| Drag / arrow keys | Move the camera |
+| Scroll / pinch / `+` / `−` | Zoom |
+| **COLONY** | Return to your residents |
+| `P` / **Options** | Pause / open the paused options screen |
+| `T` | Type to the colony |
+| Hold `Space`, then release | Talk after enabling voice |
+| Tap **Talk**, then tap again | Start and send a recording |
+
+See [playing and saving](docs/GAME_GUIDE.md) or [troubleshooting](docs/TROUBLESHOOTING.md).
+
+## Optional intelligence and voice
+
+The game starts with built-in instincts. Laya makes decisions locally; Jev and the OpenRouter chat adapter send bounded colony context to your chosen endpoint. Models choose validated plans and lasting goals. The engine checks resource availability, access and current commands before applying them.
+
+| Option | Where it runs | Download allowance |
+| --- | --- | ---: |
+| Laya · CPU compatibility | Single-thread WASM workers | About 600 MB |
+| Laya · WebGPU | GPU model workers | About 950 MB |
+| Whisper Base English · voice | Local WASM or WebGPU worker | About 180 MB |
+| Jev / OpenRouter chat | Configured hosted endpoint | No local model weights; provider charges may apply |
+
+Allowances include supporting files and are shown before you approve a download. Completed files are reused; interrupted transfers can resume from saved checkpoints where supported. Browser eviction or changed files can require another download. See [download behavior](docs/MODEL_DOWNLOADS.md).
+
+**Options → Intelligence** controls decision speed and concurrency. One worker is the default. More local copies need more memory and may compete for the same GPU; hosted concurrency may increase API spending. See [pace and worker limits](docs/INTELLIGENCE_CONTROLS.md).
+
+Voice transcribes English locally. Raw recordings are not saved or uploaded. With hosted intelligence selected, recognized words and bounded colony context are sent to the configured endpoint. API keys stay in the current tab and are not saved or exported. The site also requests fonts from Google Fonts and approved model files from Hugging Face; local inference does not make initial loading network-free. See [data and trust boundaries](SECURITY.md).
+
+## Saved on your device
+
+Worlds, names, goals, conversations, explored terrain, camera state and bounded history are stored in IndexedDB. There is no account or cloud sync. Paused and hidden tabs do not advance the simulation.
+
+Use **Options → Saved worlds** to export a backup, import a world, or return to an earlier moment. Restored worlds open paused. An export contains the world, not the complete rewind database or downloaded models. Browsers, devices, `localhost` and the public site have separate storage. [Save and recovery details](docs/CONTEXT_ARCHITECTURE.md).
 
 ## Run locally
 
-Install Node.js 24 and Rust via rustup. The repository pins the Rust toolchain and WASM target. Install the WASM packaging tool once:
+Use **Node.js 24**, **Rust 1.98.1** through rustup, and **wasm-pack 0.15.0**. These match the repository's toolchain and CI configuration.
 
 ```sh
+git clone git@github.com:appunni-m/tripelkins.git
+cd tripelkins
 cargo install wasm-pack --version 0.15.0 --locked
-```
-
-```sh
 npm ci
-npm run dev
+npm run dev -- --host 127.0.0.1
 ```
 
-Open `http://localhost:5173/tripelkins/`.
+Open [localhost:5173/tripelkins/](http://localhost:5173/tripelkins/). The repository's `rust-toolchain.toml` selects Rust and the WASM target. The first start compiles the engine and prepares browser runtime files; subsequent starts reuse unchanged engine output. Public HTTPS cloning is also available from the repository's **Code** menu.
+
+For a production build:
 
 ```sh
-npm test
-npm run verify:engine
 npm run build
-npm run preview
+npm run preview -- --host 127.0.0.1
 ```
 
-The game runs entirely in the browser. Rust/WASM workers own simulation and planning; Three.js renders the world. Vite builds the static site. The dev/build commands compile the engine when its source changes and prepare the installed ONNX runtime files automatically. No server or cross-origin isolation headers are required.
+Vite prints the preview URL. Serve `dist/` over HTTP; opening `index.html` as a local file will not run the workers correctly. No game server or cross-origin isolation headers are required. The default scripts bind all interfaces unless you pass the local-only host override above.
 
-## Play
+## Develop and deploy
 
-- Welcome a Tripelkin from its spacecraft and nurture it with food, washing and play. Healthy creatures multiply.
-- Drag or use arrows to pan; scroll, pinch or use + / − to zoom.
-- Inspect residents, assign custom names, gather resources and place buildings.
-- Expand the Activity log to follow work and intelligence decisions. Read messages in the inbox and past actions in the journal.
-- After more than twenty residents, the colony can ask for independence. With permission and intelligence enabled, it gathers, builds and expands itself.
-- P pauses. Options pauses the game while you change settings.
-- T opens typing. Voice supports tap-to-record / tap-to-send or hold Space and release after enabling it in Options.
+- [Contributor guide](CONTRIBUTING.md): repository layout, checks and change workflow.
+- [Architecture](docs/ARCHITECTURE.md): authoritative simulation, planning, inference and saves.
+- [Engine migration report](docs/RUST_ENGINE_MIGRATION.md): parity evidence and measured performance limits.
+- [Generated engine contract](docs/generated/engine-contract.md): the migration's operation inventory; not a stable external SDK.
+- [GitHub Pages deployment](docs/DEPLOYMENT.md): build, publish, asset verification and recovery.
 
-Read the [game guide](docs/GAME_GUIDE.md) and [system overview](docs/ARCHITECTURE.md).
+Pushes to `main` run tests, engine parity checks, a production build and Pages deployment, followed by verification of published asset hashes. Browser checks at `/tripelkins/engine-verify.html` use disposable colonies; model checks at `/tripelkins/verify.html` require separate download consent.
 
-## Intelligence and voice
+## Help and contribution
 
-The game is playable with built-in instincts and no model download. Optional Laya runs locally using WASM or WebGPU. Jev runs through OpenRouter's typed Decisions API; a general OpenRouter chat adapter is also available. Models select validated plans and persistent goals. The token stays in the current tab and is never saved or exported.
+For ordinary bugs or suggestions, [open an issue](https://github.com/appunni-m/tripelkins/issues). Include reproduction steps, browser/device, population and provider/runtime if relevant. Remove API keys and private conversation text from diagnostics. Read [troubleshooting](docs/TROUBLESHOOTING.md) first and [CONTRIBUTING.md](CONTRIBUTING.md) before submitting changes. Security concerns follow [SECURITY.md](SECURITY.md).
 
-Options contains decision speed, concurrent worker count, runtime selection and connection settings. Each additional local worker uses more working memory; hosted requests may incur API charges.
+## License and credits
 
-Downloads start only after explicit approval. Approximate allowances, including runtime/supporting files:
+**No project license is currently declared.** This repository does not grant an open-source license for the game's own code or artwork. Dependency licenses do not provide that permission. A project license requires the owner's decision.
 
-| Optional download | WASM | WebGPU |
-| --- | ---: | ---: |
-| Laya | 600 MB | 950 MB |
-| Whisper Base English | 180 MB | 180 MB |
-
-Speech recognition runs locally. Raw audio is not stored or uploaded. With a hosted intelligence provider, recognized text and bounded colony context are sent to the configured endpoint. Creature sounds are generated by the existing Web Audio engine.
-
-## Saved worlds
-
-IndexedDB `tripelkins-local-index` stores the current world, recovery snapshots, bounded history and journal. Names, activities, goals, conversations, positions, terrain changes and camera state are retained. Older detail is compacted within fixed storage budgets. Hidden tabs do not advance the simulation.
-
-Export from Options for a portable backup. World-file compatibility is preserved. To bring a colony from another installation or storage namespace, export there and import here. The source database remains intact; its complete rewind history is not included in a world-file export.
-
-## Project map
-
-| Area | Files |
-| --- | --- |
-| Rules, multiplication and physical work | `engine/src/simulation.rs`, `resources.rs`, `jobs.rs` |
-| Paths, collision and blocked work | `engine/src/navigation.rs`, `geometry.rs`, `access.rs` |
-| Procedural map and fog | `engine/src/terrain.rs`, `discovery.rs`, `src/fog.js` |
-| Group decisions and lasting goals | `src/brain.js`, `engine/src/context.rs`, `goals.rs` |
-| Local inference and hosted provider | `src/laya/`, `src/providers/jev.js` |
-| Sprites, animations and sound | `src/game/art.js`, `src/world.js`, `src/colony-life.js`, `src/creature-voice.js` |
-| Voice and conversation | `src/voice/`, `src/voice.js`, `src/conversation-ui.js` |
-| Save, history and recovery | `src/engine/`, `src/persistence.js`, `engine/src/save.rs`, `timeline.rs` |
-
-The JavaScript rules remain as the pinned migration reference and for existing diagnostics. The live game uses the Rust engine. See [migration architecture and verification](docs/RUST_ENGINE_MIGRATION.md).
-
-### Engine verification
-
-`npm run verify:engine` builds native Rust and the shipped WASM, audits the complete public API inventory and compares both against the pinned JavaScript implementation. `npm test` covers the browser adapters, worker queues, restore fencing and existing game regressions.
-
-Open `/tripelkins/engine-verify.html` for the actual worker/rendering workload at 25, 300 and 600 residents, including pause and restore checks. The older `performance.html` and `benchmark:*` commands are retained JavaScript reference workloads.
-
-Native source coverage and matched operation benchmarks are separate, more expensive checks:
-
-```sh
-rustup component add llvm-tools
-node scripts/migration/contracts/coverage.mjs
-node scripts/migration/contracts/benchmark.mjs
-node scripts/migration/contracts/aggregate.mjs
-node scripts/migration/contracts/docs.mjs
-```
-
-Coverage includes shared engine support and public bindings. The native CLI test harness is excluded; WASM source coverage is not claimed. Evidence from a dirty working tree is diagnostic until rerun from a clean commit.
-
-## Deployment
-
-Repository: [appunni-m/tripelkins](https://github.com/appunni-m/tripelkins).
-
-GitHub Pages is configured for `/tripelkins/`. Enable **GitHub Actions** as the Pages source in repository settings before deployment. Pushes to `main` build, run the existing tests, deploy and verify the published asset hashes. See [deployment instructions](docs/DEPLOYMENT.md).
-
-The browser verification page at `/tripelkins/verify.html` checks storage and real model loading after explicit download consent. It does not exercise paid API calls or capture microphone input automatically.
-
-## Release review and credits
-
-See the [naming and release checklist](docs/RELEASE_CHECKLIST.md) for completed checks and outstanding review. Required software, model and font credits are available in Options → Advanced → Credits & licenses.
+Third-party software, fonts and optional models retain their respective terms. [Third-party notices](THIRD_PARTY_NOTICES.md) explain their sources; the built game includes **Options → Advanced → Credits & licenses**. The [release checklist](docs/RELEASE_CHECKLIST.md) records outstanding human review separately from automated checks.
