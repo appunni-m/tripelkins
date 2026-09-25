@@ -29,6 +29,8 @@ Place a mine on a stone deposit: its outline snaps to the deposit and turns gree
 
 Use Hand to select a mine or stone workshop. Its panel shows remaining or delivered ore, assigned workers, arrivals and any reported access problem. Mining extracts ore; carriers deliver it to workshops, which turn each ore into eight blocks. Stored colony ore and ore delivered to a workshop are shown separately. Work follows the colony's priorities and your requests, so selecting a building does not directly order a crew to it. Open Activity to see what they are doing.
 
+The small ore item on a Tripelkin shows a carried load. If no delivery can be assigned, they put that load into colony storage and free their hands for other work. An assigned delivery keeps its load through travel and traffic queues. A workshop still needs a clear entrance and delivered ore before it can produce blocks.
+
 The panel also explains upgrade requirements and costs. The upgrade button becomes available when both are met; level II buildings show that they are fully upgraded.
 
 ### Orbital home

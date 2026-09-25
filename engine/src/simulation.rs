@@ -725,6 +725,17 @@ impl Engine {
     }
     fn process_creature_job(&mut self, c: &mut Value, dt: f64) {
         let task = text(c, "task").to_string();
+        // The scheduler tried delivery before choosing rest/idle. Keeping a
+        // load after that fallback can lock the entire crew out of production:
+        // a full local workshop and an empty distant one never clear cargo.
+        // Use the existing colony store, conserving the load and freeing hands.
+        // Completed mining jobs remain loaded until their next assignment.
+        if num(c, "carry") > 0.
+            && (matches!(task.as_str(), "rest" | "social")
+                || (task == "idle" && text(&c["job"], "state") == "reserved"))
+        {
+            self.release_cargo(c);
+        }
         if task == "idle"
             || c["job"].is_null()
             || matches!(
