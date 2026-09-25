@@ -12,7 +12,7 @@ import {
 import { routeCost, JOB_RADIUS } from "./navigation.js";
 import { frontier, scoutLimit } from "./exploration.js";
 import { densityAt, densityReward, DENSITY } from "./density.js";
-import { constructionSlots, projectTasks, projectTask, refiningShortage, storedSupply } from "./settlement.js";
+import { constructionSlots, projectTasks, projectTask, refiningShortage, storedSupply, deliveryStock } from "./settlement.js";
 import { projectFunded, projectName } from "./development.js";
 export const TASKS = [
   "idle",
@@ -173,11 +173,11 @@ function desired(w, c, policy) {
     policy = "balanced";
   const work =
     policy === "build"
-      ? ["haul"]
+      ? ["haul", "work", "mine"]
       : policy === "mine"
-        ? ["mine"]
+        ? ["mine", "haul", "work"]
         : policy === "industry"
-          ? ["work", "mine", "orbit"]
+          ? ["work", "haul", "mine", "orbit"]
           : ["haul", "work", "mine", "orbit"];
   const role = workRole(w, c);
   // Maintenance is shared, physical work at a polluted factory. Healthy workers
@@ -270,7 +270,7 @@ export function makePlan(w, policy = "balanced") {
       oldTargetValid &&
       oldStockValid &&
       !(c.task==="haul" && !c.carry && storedSupply(w,c,target||{}) &&
-        w.inventory[storedSupply(w,c,target)]-(stock.get(`inventory:${storedSupply(w,c,target)}`)||0)<=0) &&
+        deliveryStock(w,storedSupply(w,c,target))-(stock.get(`inventory:${storedSupply(w,c,target)}`)||0)<=0) &&
       old.point &&
       clearPosition(w, old.point) &&
       !assignments.some(
@@ -394,7 +394,7 @@ export function makePlan(w, policy = "balanced") {
       let candidates = [];
       for (const o of workTargets(w, c, task)) {
         const supply = task==="haul" && !c.carry && storedSupply(w,c,o);
-        if (supply && w.inventory[supply]-(stock.get(`inventory:${supply}`)||0)<=0) continue;
+        if (supply && deliveryStock(w,supply)-(stock.get(`inventory:${supply}`)||0)<=0) continue;
         if (
           (c.blocked || []).some(
             (b) =>
@@ -544,7 +544,7 @@ export function applyPlan(w, plan) {
       return false;
     const target = w.objects.find((o) => o.id === a.target);
     const supply = a.task==="haul" && !c.carry && target && storedSupply(w,c,target);
-    if (supply && w.inventory[supply]-(stock.get(`inventory:${supply}`)||0)<=0) return false;
+    if (supply && deliveryStock(w,supply)-(stock.get(`inventory:${supply}`)||0)<=0) return false;
     if (
       target &&
       ["eat", "mine", "haul"].includes(a.task) &&

@@ -27,10 +27,10 @@ export function packHostedContext(full, budget) {
     ...(full.blockedWork?.length ? {blockedWork:{count:full.blockedWork.length,
       requests:full.blockedWork.slice(0,3).map(({id,target,at,status,task,project,purpose,reason,prerequisite,nextStep,resume})=>({
         id,target,at,status,task,project,purpose,reason,prerequisite,nextStep,resume}))}} : {}),
-    ...(full.development ? {development:{densityRule:full.development.densityRule,
-      choices:full.development.choices.map(({key,id,at,camps,target,cost,priority,density,benefit,travel,subgoal,request,blocker,description})=>({
+    ...(full.development ? {development:{densityRule:full.development.densityRule,outposts:full.development.outposts,
+      choices:full.development.choices.map(({key,id,at,camps,target,cost,priority,density,benefit,travel,outpost,subgoal,request,blocker,description})=>({
         key,id,at,camps,target,cost,priority,density:density?{residents:Math.round(density.residents*10)/10,reward:Math.round(density.reward*10)/10}:undefined,
-        benefit:benefit===undefined?undefined:Math.round(benefit),travel:travel===undefined?undefined:Math.round(travel),subgoal,
+        benefit:benefit===undefined?undefined:Math.round(benefit),travel:travel===undefined?undefined:Math.round(travel),outpost,subgoal,
         ...(id==="clearance"?{request,blocker,description:description.slice(0,160)}:{}),
       }))}} : {}),
     tick: full.tick,

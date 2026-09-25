@@ -1,5 +1,6 @@
 import { careContext } from "./care-context.js";
 import { workProjects } from "./work-projects.js";
+import { outpostContext } from "./outposts.js";
 import { densitySummary } from "./density.js";
 import { discoverySummary } from "./discovery.js";
 import { BUILDINGS } from "./catalog.js";
@@ -19,6 +20,9 @@ export function developmentPlan(w) {
   }));
   const expanding = n>20 && growing && (density.crowded>0 ||
     discoverySummary(w).area < n / density.target * 100 * 2);
+  for(const camp of outpostContext(w).slice(0,2))children.push({id:`outpost:${camp.kind}:${camp.at.join(":")}`,
+    kind:{food:"orchard",wash:"bath",play:"roundabout"}[camp.kind],status:"needed",remaining:camp.residents,
+    title:`Support ${camp.residents} residents at ${camp.at.join(", ")}: ${camp.unserved?"no reachable service":`${camp.roundTripSeconds}s care round trip`}`});
   children.push({id:"space",kind:"explore",title:"Scout space for the next neighborhood",
     remaining:density.crowded,status:expanding?"needed":"satisfied"});
   if (milestone) children.push({id:milestone.id,kind:milestone.project,title:milestone.step,

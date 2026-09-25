@@ -150,7 +150,11 @@ test('the next story objective keeps production and expansion materials in model
 });
 
 test('material progress can trigger development before the old full-interval gate',()=>{
-  const w=groundFixture(120);w.memory.goals=[{id:'large',kind:'blocks',target:3000,status:'active'}];begin(w);w.time=11;
+  const w=groundFixture(120);
+  // The fourth camp needs a discovered input source; unseen stone must not be
+  // treated as available merely to make a development option appear.
+  const rock=addObject(w,'rock',70,-25);reveal(w,rock,8);
+  w.memory.goals=[{id:'large',kind:'blocks',target:3000,status:'active'}];begin(w);w.time=11;
   assert.ok(settlementChoices(w).length>0,'medium event-driven review can assign another free local group after ten seconds');
 });
 

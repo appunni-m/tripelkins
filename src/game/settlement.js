@@ -5,18 +5,26 @@ import { clearanceChoices, startClearance, requestAccess, accessPoint, accessBri
 import { workOrder, working } from "./work-balance.js";
 import { DENSITY, siteDensity, SETTLEMENT_TYPES } from "./density.js";
 import { developmentPlan } from "./development-plan.js";
+import { assessOutpost, outpostCamps, outpostContext } from "./outposts.js";
 import { careContext, careDemand, careServices, CARE_TYPES } from "./care-context.js";
 import { isExplored } from "./discovery.js";
 import { BUILDINGS, LIMITS, unlocked, buildingMaterials, buildingCost } from "./catalog.js";
 import { canPlace, clearPosition, serviceSlots, bridgeGeometry } from "./geometry.js";
 import { nearbyObjects, westBank } from "./map.js";
-import { routeCost } from "./navigation.js";
+import { routeCost, withRouteCosts } from "./navigation.js";
 import { materializeObject, remember } from "./state.js";
 import { activity, postMessage } from "./community.js";
 import { CARE_BUILDINGS, INDEPENDENT_BUILDINGS, RESOURCE_PROJECTS, DEVELOPMENT_TYPES,
   projectName, isConstruction, projectFunded, projectRequirements, timberReserve, colonyMilestone, industryMilestone, uncommittedBlocks } from "./development.js";
 export { CARE_BUILDINGS } from "./development.js";
 const activeGoal = (w) => w.memory.goals.find((g) => g.status === "active");
+export function outpostReason(p) {
+  if(!p?.worthwhile)return "";
+  if(p.purpose==="ore-delivery")return p.unserved ? `Process ore beside ${p.workers} miners without a reachable workshop.`
+    : `Shorter ore trips for ${p.workers} miners: save about ${Math.round(p.savedSeconds)} worker-seconds over five minutes; repay building effort in ${p.paybackSeconds}s.`;
+  return p.unserved ? `Local support for ${p.workers} residents without a reachable service.`
+    : `Local support for ${p.workers} residents: save about ${Math.round(p.savedSeconds)} worker-seconds over five minutes; repay building effort in ${p.paybackSeconds}s.`;
+}
 function scoped(w, c) {
   return (!w.directives.members.length || w.directives.members.includes(c.id)) && !w.directives.pauseWork;
 }
@@ -39,10 +47,35 @@ export function projectTask(w, c) {
   return w.inventory.wood < projectRequirements(w,p).wood ? "gather" : projectFunded(w,p) ? "construct" : null;
 }
 export function refiningShortage(w,p) {
-  const loose=w.objects.reduce((n,o)=>n+(o.type==="ore"?o.stock:0),0);
-  const carried=w.creatures.reduce((n,c)=>n+(c.cargoKind==="ore"?c.carry:0),0);
+  const loose=localOre(w,p).reduce((n,o)=>n+o.stock,0);
+  const carried=w.creatures.reduce((n,c)=>n+(p.crew.includes(c.id) && c.cargoKind==="ore" &&
+    w.objects.find(o=>o.id===c.target)?.type!=="factory" ? c.carry:0),0);
   return Math.max(0,Math.ceil((p.target-w.inventory.blocks)/10)-w.inventory.ore-loose-carried);
 }
+const oreReachability=new WeakMap();
+export function localOre(w,p) {
+  const stamp=`${Math.floor(w.time/2)}:${w.navRevision}:${w.map.revision}:${w.discovery.revision}:${w.objects.length}`;
+  let cache=oreReachability.get(w);
+  if(cache?.stamp!==stamp) {cache={stamp,projects:new Map()};oreReachability.set(w,cache);}
+  if(!cache.projects.has(p.id)) {
+    const crew=w.creatures.filter(c=>p.crew.includes(c.id));
+    const ids=w.objects.filter(o=>o.type==="ore" && isExplored(w,o) && Math.hypot(o.x-p.x,o.y-p.y)<=32 &&
+      crew.slice().sort((a,b)=>Math.hypot(a.x-o.x,a.y-o.y)-Math.hypot(b.x-o.x,b.y-o.y)).slice(0,4)
+        .some(c=>serviceSlots(w,o,c).some(s=>Number.isFinite(routeCost(w,c,s))))).map(o=>o.id);
+    cache.projects.set(p.id,new Set(ids));
+  }
+  const ids=cache.projects.get(p.id);
+  return w.objects.filter(o=>ids.has(o.id) && o.type==="ore" && o.stock>0);
+}
+// Keep one real input batch for hand-processing crews. Workshops may consume
+// the surplus; otherwise their delivery reservations can starve new buildings.
+export function refiningOreReserve(w) {
+  const projects=workProjects(w).filter(p=>p.type==="refine");
+  const needed=Math.max(0,...projects.map(p=>Math.ceil((p.target-w.inventory.blocks)/10)));
+  return independent(w) ? Math.min(needed,projects.reduce((n,p)=>n+p.crew.length,0)) : 0;
+}
+export const deliveryStock=(w,kind)=>Math.max(0,w.inventory[kind]-(kind==="ore"?refiningOreReserve(w):0));
+export const factoryInputTarget=o=>Math.min(60,2*3*BUILDINGS.factory.capacity*(o.level||1));
 export function projectTasks(w,c) {
   const task=projectTask(w,c), p=workerProject(w,c);
   if(!task) return [];
@@ -54,12 +87,12 @@ export function projectTasks(w,c) {
   // already counted toward the goal, so the crew must collect it even when
   // no further quarrying is needed.
   return [...(w.inventory.ore>0?["refine"]:[]),
-    ...(w.objects.some(o=>o.type==="ore" && o.stock>0)?["haul"]:[]),
+    ...(localOre(w,p).length?["haul"]:[]),
     ...(refiningShortage(w,p)>0?["quarry"]:[])];
 }
 export function storedSupply(w,c,o) {
   if (!independent(w) || !scoped(w,c) || !allowedRegion(w,o.type==="bridge" ? bridgeGeometry(o).a : o)) return null;
-  if (o.type === "factory" && (o.inputOre||0)<60 && w.inventory.ore>0 && activeGoal(w)?.kind!=="ore") return "ore";
+  if (o.type === "factory" && (o.inputOre||0)<factoryInputTarget(o) && deliveryStock(w,"ore")>0 && activeGoal(w)?.kind!=="ore") return "ore";
   if (o.type === "bridge" && !bridgeGeometry(o).complete && w.inventory.wood>0 &&
       workerProject(w,c)?.type==="crossing" && projectAllowed(w,c)) return "wood";
   return null;
@@ -99,29 +132,38 @@ function findSites(w, type, expanding = false) {
     return [];
   }
   const services = w.objects.filter((o) => o.type === type || (type !== "roundabout" && o.type === "dwelling"));
-  const members = w.creatures.filter((c) => !c.carry && c.sickness < 50 && !working(c) && !workerProject(w,c) &&
+  const members = w.creatures.filter((c) => c.sickness < 50 &&
     (!w.directives.members.length || w.directives.members.includes(c.id)));
-  if (!members.length) return [];
+  const builders=members.filter(c=>!c.carry && !working(c) && !workerProject(w,c));
+  if (!builders.length) return [];
+  const builderFor=p=>builders.slice().sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
   // Put new facilities near the least-served residents, spaced out from old ones.
   const demand = new Map(careDemand(w,type).map(c=>[c.id,c.weight]));
   const benefit = p => members.reduce((sum,c)=>sum+(demand.get(c.id)||0)*Math.max(0,1-Math.hypot(p.x-c.x,p.y-c.y)/20),0);
   const workplaces = w.objects.filter(o=>type==="factory" ? o.type==="mine" && o.stock>0 : o.type==="factory");
   const anchors = CARE_BUILDINGS.includes(type)
-    ? members.slice().sort((a,b)=>benefit(b)-benefit(a)).slice(0,6)
+    ? members.slice().sort((a,b)=>benefit(b)-benefit(a)).slice(0,6).map(c=>({...c,builder:builderFor(c)}))
     : workplaces.length
-      ? workplaces.slice(0,3).map(o=>({...o,builder:members.slice().sort((a,b)=>Math.hypot(a.x-o.x,a.y-o.y)-Math.hypot(b.x-o.x,b.y-o.y))[0]}))
-      : members.slice().sort((a,b)=>siteDensity(w,b).residents-siteDensity(w,a).residents).slice(0,3);
+      ? workplaces.slice().sort((a,b)=>{
+          const nearest=p=>Math.min(80,...services.map(s=>Math.hypot(p.x-s.x,p.y-s.y)));
+          return nearest(b)-nearest(a);
+        }).slice(0,4).map(o=>({...o,builder:builderFor(o)}))
+      : members.slice().sort((a,b)=>siteDensity(w,b).residents-siteDensity(w,a).residents).slice(0,3).map(c=>({...c,builder:builderFor(c)}));
+  if(careServices(type).length) for(const camp of outpostCamps(w)) {
+    if(!careServices(type).some(kind=>camp.distances[kind]>18))continue;
+    if(anchors.some(p=>Math.hypot(p.x-camp.x,p.y-camp.y)<10))continue;
+    anchors.push({...camp,builder:builderFor(camp)});
+  }
   if (type === "orchard" && expanding) {
     for (const key of w.community.visited.slice(-12)) {
       const [x,y] = key.split(":").map(Number), p={x:x*8+4,y:y*8+4};
-      const builder = members.slice().sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
+      const builder = builderFor(p);
       if (Math.hypot(builder.x-p.x,builder.y-p.y)<48) anchors.push({...p,builder});
     }
   }
   const buildings=[...w.objects.filter(o=>SETTLEMENT_TYPES.has(o.type)),...workProjects(w).filter(isConstruction)];
-  const food=w.objects.filter(o=>["orchard","dwelling"].includes(o.type));
   const candidates=[];
-  for (const c of anchors) {
+  for (const c of anchors.slice(0,12)) {
     for (let i = 0; i < 24; i++) {
       const angle = i * 2.399963 + w.community.completed, r = 7 + Math.floor(i / 8) * 5;
       const p = { x: Math.round(c.x+Math.cos(angle)*r), y: Math.round(c.y+Math.sin(angle)*r) };
@@ -131,11 +173,11 @@ function findSites(w, type, expanding = false) {
       if (!canPlace(w,type,p) || w.creatures.some((c) => Math.abs(c.x-p.x)<1.5 && Math.abs(c.y-p.y)<1.5)) continue;
       const builder=c.builder||c, density=siteDensity(w,p), served=benefit(p);
       const travel=Math.hypot(builder.x-p.x,builder.y-p.y);
-      const campDistance=food.length?Math.min(...food.map(o=>Math.hypot(o.x-p.x,o.y-p.y))):0;
-      const outpost=type==="orchard" && expanding && campDistance>=18 && campDistance<=38;
+      if(travel>32)continue;
+      const outpost=assessOutpost(w,type,p,travel);
       const pollution=type==="factory" ? members.reduce((s,c)=>s+Math.max(0,1-Math.hypot(c.x-p.x,c.y-p.y)/12),0) : 0;
       candidates.push({...p,builder,benefit:served,density,travel,outpost,
-        score:served*12+density.reward*3-travel*.15+(outpost?20:0)-pollution*3});
+        score:served*12+density.reward*3-travel*.15+(outpost?.worthwhile?Math.min(80,Math.max(0,outpost.netSeconds)/8+outpost.unserved*3):0)-pollution*3});
     }
   }
   candidates.sort((a,b)=>b.score-a.score);
@@ -146,6 +188,7 @@ function findSites(w, type, expanding = false) {
     if (slots.some(s=>Number.isFinite(routeCost(w,p.builder,s))) &&
         serviceSlots(w,{...p,type,level:1}).some(s=>Number.isFinite(routeCost(w,p.builder,s)))) {
       const {builder,...site}=p;
+      site.outpost=assessOutpost(w,type,p,Math.min(...slots.map(s=>routeCost(w,builder,s))),{routed:true});
       sites.push(site);
       if (sites.length===3) break;
     }
@@ -153,6 +196,9 @@ function findSites(w, type, expanding = false) {
   return sites;
 }
 export function settlementChoices(w) {
+  return withRouteCosts(w,()=>availableSettlementChoices(w));
+}
+function availableSettlementChoices(w) {
   if (!independent(w) || workProjects(w).length>=projectLimit(w) || !w.creatures.length ||
       w.objects.length >= LIMITS.objects - 4 || w.directives.pauseWork ||
       w.time-w.community.lastProjectAt < Math.max(1,decisionPace(w.settings).development/3)) return [];
@@ -169,7 +215,27 @@ export function settlementChoices(w) {
     const assigned=active.reduce((n,p)=>n+p.crew.length,0);
     const camps=[], limit=id==="crossing" ? 1 : Math.min(8,Math.ceil(w.creatures.length/40),
       Math.ceil(Math.max(0,demand-assigned)/12));
-    for (const c of workers.slice().sort(workOrder)) {
+    const types=id==="timber"||id==="crossing"?["tree","log"]:["rock","ore"];
+    const demandSites=workProjects(w).filter(p=>isConstruction(p) && !projectFunded(w,p));
+    // Prefer local sources beside outstanding work, not the first creature ID.
+    // Only explored, reachable resources qualify; discovery still happens on foot.
+    const sources=new Map();
+    const candidates=workers.filter(c=>!c.carry && !working(c) && allowedRegion(w,c)).slice().sort(workOrder);
+    const scored=[];
+    for(const c of candidates) {
+      const cell=`${Math.floor(c.x/12)}:${Math.floor(c.y/12)}`;
+      if(!sources.has(cell))sources.set(cell,nearbyObjects(w,Math.floor(c.x/12)*12+6,Math.floor(c.y/12)*12+6,38).filter(o=>types.includes(o.type) &&
+        allowedRegion(w,o) && (o.type==="tree"||o.type==="rock"||o.stock>0)));
+      const nearby=sources.get(cell).filter(o=>Math.hypot(o.x-c.x,o.y-c.y)<=32)
+        .sort((a,b)=>Math.hypot(a.x-c.x,a.y-c.y)-Math.hypot(b.x-c.x,b.y-c.y));
+      const source=nearby.slice(0,3).find(o=>serviceSlots(w,o,c).some(s=>Number.isFinite(routeCost(w,c,s))));
+      const stocked=id==="refine"?w.inventory.ore>0:id==="crossing"&&w.inventory.wood>0;
+      if(!source&&!stocked)continue;
+      const demandDistance=Math.min(48,...demandSites.map(p=>Math.hypot(p.x-c.x,p.y-c.y)));
+      scored.push({c,score:(source?Math.hypot(source.x-c.x,source.y-c.y):0)+demandDistance*.35});
+    }
+    scored.sort((a,b)=>a.score-b.score||workOrder(a.c,b.c));
+    for (const {c} of scored) {
       if(camps.length>=limit) break;
       if(!c.carry && !working(c) && allowedRegion(w,c) &&
           [...active,...camps].every(p=>Math.hypot(p.x-c.x,p.y-c.y)>=18)) camps.push({x:c.x,y:c.y});
@@ -190,31 +256,40 @@ export function settlementChoices(w) {
       const needed = {mine:Math.ceil(w.creatures.length/32),factory:Math.ceil(w.creatures.length/48),
         dwelling:Math.ceil(w.creatures.length/24),theatre:Math.ceil(w.creatures.length/64)}[type];
       if (existing>=needed) continue;
+      if(type==="mine") {
+        const processors=w.objects.filter(o=>o.type==="factory").length+workProjects(w).filter(p=>p.type==="factory").length;
+        // A works processes 3 ore / 2.8 seconds per slot; a mine produces
+        // 3 ore / 3 seconds per slot. Bootstrap one source, then grow the
+        // supply chain together instead of spending the first blocks on mines.
+        const matched=Math.max(1,Math.ceil(processors*(BUILDINGS.factory.capacity*3/2.8)/(BUILDINGS.mine.capacity*3/3)));
+        if(existing>=matched)continue;
+      }
       if (type === "theatre" && w.creatures.length<40) continue;
     } else {
       const status = care[Object.keys(CARE_TYPES).find(k=>CARE_TYPES[k]===type)];
       const strained = status.low > w.creatures.length/4;
       const expansion=type==="orchard" && plan.expanding;
-      if (resourceGoal && !status.urgent && !strained) continue;
-      if ((!status.short && !status.growthShort && !strained && !expansion) || existing>=Math.ceil(w.creatures.length/4)) continue;
+      if (resourceGoal && !status.urgent && !strained && !outpostContext(w).some(c=>careServices(type).includes(c.kind))) continue;
+      if ((!status.short && !status.growthShort && !strained && !expansion && !outpostContext(w).some(c=>careServices(type).includes(c.kind))) || existing>=Math.ceil(w.creatures.length/4)) continue;
     }
     const kind = Object.keys(CARE_TYPES).find(k=>CARE_TYPES[k]===type), status = care[kind];
     const strained = status && status.low>w.creatures.length/4;
     const priority = status ? (!existing && status.unserved ? 100 : strained ? 80 : status.short ? 70 : status.growthShort ? 60 : type==="orchard" && plan.expanding ? 56 : 30) +
-      Math.min(15,status.urgent + status.short/w.creatures.length*10) : ["mine","factory"].includes(type) ? industry?85:55 : 40;
+      Math.min(15,status.urgent + status.short/w.creatures.length*10) : ["mine","factory"].includes(type) ? industry?(type==="factory"?90:85):55 : 40;
     const sites = findSites(w,type,plan.expanding), point=sites[0];
     if (point) choices.push({id:type,...point,sites,cost:buildingMaterials(spec),
-      priority,description:`Build ${spec.name}: ${existing} now${status ? `; ${status.low} low, ${status.short} residents lack nearby capacity, ${status.unserved} out of reach` : ""}; costs ${buildingCost(spec)}. Gather missing timber before construction. ${spec.help}`});
+      priority:Math.max(priority,point.outpost?.worthwhile?78:0),description:`Build ${spec.name}: ${existing} now${status ? `; ${status.low} low, ${status.short} residents lack nearby capacity, ${status.unserved} out of reach` : ""}; costs ${buildingCost(spec)}. ${outpostReason(point.outpost)} Gather missing timber before construction. ${spec.help}`});
   }
   if (!resourceGoal && !w.progress.bridge && w.objects.some(o=>o.type==="bridge")) resource("crossing",24,"Gather timber and carry wood to finish the bridge, opening the other bank.");
   const hasFactory = w.objects.some(o=>o.type==="factory");
   if(industry && hasFactory && !w.objects.some(o=>o.type==="mine" && o.stock>0) && w.inventory.ore<12)
     resource("quarry",Math.max(12,Math.ceil(w.creatures.length/8)),"Supply our stone workshops with real ore while we establish stocked mines.",80);
   if ((!resourceGoal && w.stage>=2 && !hasFactory && w.inventory.blocks<300) || goal?.kind==="blocks" || milestone?.project==="refine")
-    resource("refine",goal?.kind==="blocks" ? goal.target : 300,"Break rocks, collect ore and work it into blocks by hand. Reach the factory unlock without help from the sky.",goal||milestone?100:50);
+    resource("refine",goal?.kind==="blocks" ? goal.target : 300,"Break rocks, collect ore and work it into blocks by hand. Reach the factory unlock without help from the sky.",goal||milestone?100:industry?90:50);
   else if(industry && uncommittedBlocks(w)<150 &&
       w.objects.filter(o=>o.type==="factory").length+workProjects(w).filter(p=>p.type==="factory").length<Math.ceil(w.creatures.length/48))
-    resource("refine",w.inventory.blocks-uncommittedBlocks(w)+300,"Make a building reserve of 300 uncommitted blocks so idle neighborhoods can establish more workplaces.",75);
+    resource("refine",w.inventory.blocks-uncommittedBlocks(w)+300,"Make a building reserve of 300 uncommitted blocks so idle neighborhoods can establish more workplaces.",
+      w.objects.some(o=>o.type==="mine" && o.stock>0) && !hasFactory ? 90 : 75);
   const reserve = timberReserve(w);
   // Crossing/first-block crews already gather their own inputs. A spare pile
   // must not postpone the milestones that unlock the rest of the economy.
@@ -257,7 +332,7 @@ function startProject(w, choice, source) {
   const project = { id: w.community.nextProject++, type: choice.id, x: choice.x, y: choice.y,
     crew, target:Math.max(1,Math.min(1e6,Math.floor(choice.target || 24))), progress: 0, required: 32, started: w.time, source, blocked: "",
     parentGoal:goal?.id||colonyMilestone(w)?.id||industryMilestone(w)?.id||"colony", subgoal:choice.subgoal||choice.id,
-    siteReason:choice.density ? `At ${choice.x}, ${choice.y}; ${choice.density.residents.toFixed(1)} residents / 100 ground units; density reward ${choice.density.reward.toFixed(1)}; ${Math.round(choice.travel)} units from builder.` : "" };
+    siteReason:choice.density ? `${outpostReason(choice.outpost)} At ${choice.x}, ${choice.y}; ${choice.density.residents.toFixed(1)} residents / 100 ground units; density reward ${choice.density.reward.toFixed(1)}; ${Math.round(choice.travel)} units from builder.` : "" };
   addWorkProject(w,project);
   w.community.lastProjectAt = w.time;
   prepareTimber(w);
@@ -297,13 +372,13 @@ function prepareProject(w,p) {
   if (!projectTasks(w,crew[0]).some(t=>["gather","quarry"].includes(t))) return;
   const types = ["quarry","refine"].includes(p.type) ? ["rock","ore"] : ["tree","log"];
   const accessible = (o) => allowedRegion(w,o) && serviceSlots(w,o).some(s=>crew.some(c=>Number.isFinite(routeCost(w,c,s))));
-  const saved = w.objects.filter(o=>types.includes(o.type) && Math.hypot(o.x-p.x,o.y-p.y)<28 && accessible(o));
+  const saved = w.objects.filter(o=>types.includes(o.type) && Math.hypot(o.x-p.x,o.y-p.y)<=32 && accessible(o));
   const short=p.type==="refine" ? refiningShortage(w,p)
     : p.type==="quarry" ? p.target-w.inventory.ore
     : (p.type==="timber"?p.target:p.type==="crossing"?24:projectRequirements(w,p).wood)-w.inventory.wood;
   const sources=Math.min(12,p.crew.length,Math.max(1,Math.ceil(short/(types[0]==="rock"?3:6))));
   if (saved.length>=sources) return;
-  const natural = nearbyObjects(w,p.x,p.y,28).filter(o=>types.includes(o.type) && o.id.startsWith("g:"))
+  const natural = nearbyObjects(w,p.x,p.y,32).filter(o=>types.includes(o.type) && o.id.startsWith("g:") && Math.hypot(o.x-p.x,o.y-p.y)<=32)
     .sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y));
   let count=saved.length;
   for(const o of natural.slice(0,24)) {
@@ -332,6 +407,8 @@ export function settlementDecisionInput(w, choices) {
   const options = Object.fromEntries([...choices.map(c=>[c.key||c.id,
     c.id==="clearance" ? `Clear ${c.obstacle || "obstacle"} to ${c.resume || "resume blocked work"}` : c.density ? `Build ${careServices(c.id).join("/") || BUILDINGS[c.id]?.name || c.id}; ${buildingCost(BUILDINGS[c.id])}; help ${Math.round(c.benefit)}; reward ${Math.round(c.density.reward)}`
       : `${resourceLabel(c)}; ${c.camps?.length||1} local crews`]),["wait",careFirst ? "Postpone building; no new care capacity" : "Postpone building; no progress on construction or resources"]]);
+  for(const c of choices)if(c.outpost?.worthwhile)options[c.key||c.id]+=c.outpost.unserved
+    ? `; support ${c.outpost.workers} remote residents` : `; saves ${Math.round(c.outpost.savedSeconds)} travel seconds`;
   const shortage=Object.entries(care).map(([k,s])=>`${k}: ${s.low} low, ${s.short} short, ${s.urgent} urgent`).join("; ");
   const milestone=!w.progress.bridge && choices.some(c=>c.id==="crossing") ? "Bridge unlocks land and mining." : w.stage>=2 && !w.objects.some(o=>o.type==="factory") ? "Blocks unlock workplaces." : "Grow useful workplaces and neighborhoods.";
   // Keep urgent-care inputs focused. Unrelated unlocks crowd out the immediate
@@ -347,7 +424,7 @@ export function settlementDecisionInput(w, choices) {
 export function settlementContext(w,choices) {
   return {care:careContext(w), plan:developmentPlan(w), timber:timberReserve(w),
     densityRule:{target:DENSITY.target,above:DENSITY.above,below:DENSITY.below,units:"residents per 100 ground units; asymmetric squared penalty"},
-    choices:choices.map(({key,id,x,y,camps,target,cost,priority,description,density,benefit,travel,subgoal,request,blocker})=>({key,id,at:[x,y],camps:camps?.map(p=>[Math.round(p.x),Math.round(p.y)]),target,cost,priority,description,density,benefit,travel,subgoal,request,blocker}))};
+    outposts:outpostContext(w),choices:choices.map(({key,id,x,y,camps,target,cost,priority,description,density,benefit,travel,outpost,subgoal,request,blocker})=>({key,id,at:[x,y],camps:camps?.map(p=>[Math.round(p.x),Math.round(p.y)]),target,cost,priority,description,density,benefit,travel,outpost,subgoal,request,blocker}))};
 }
 // An unserved essential need or widespread low needs temporarily rules out
 // unrelated expansion. The model can choose among useful care buildings (homes
@@ -383,7 +460,9 @@ export function currentSettlementChoice(w,choice) {
     if (!allowedRegion(w,choice) || !siteValid(w,choice.id,choice)) return null;
     const density=siteDensity(w,choice);
     if (density.reward < (current.density?.reward ?? 0)-12) return null;
-    return {...choice,density};
+    const outpost=assessOutpost(w,choice.id,choice,choice.travel||0,{routed:true});
+    if(choice.outpost?.worthwhile && !outpost?.worthwhile)return null;
+    return {...choice,density,outpost};
   }
   if (!allowedRegion(w,choice) || workProjects(w).some(p=>p.type===choice.id &&
       (choice.id==="crossing" || Math.hypot(p.x-choice.x,p.y-choice.y)<18))) return null;

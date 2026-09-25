@@ -55,7 +55,7 @@ import {
 import { updateStory, noteEvidence, assessment } from "./story.js";
 import { SOCIAL } from "./story-content.js";
 import { offerIndependence, visitFrontier, activity, postMessage } from "./community.js";
-import { independent, projectAllowed, prepareTimber, finishSettlement, storedSupply } from "./settlement.js";
+import { independent, projectAllowed, prepareTimber, finishSettlement, storedSupply, deliveryStock, refiningOreReserve, factoryInputTarget } from "./settlement.js";
 import { projectFunded } from "./development.js";
 export { makePlan, applyPlan, capacity };
 export const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -308,8 +308,8 @@ export function stepWorld(w, dt) {
     } else if (c.task === "haul" && c.work >= 1.2) {
       const supply = !c.carry && o && storedSupply(w,c,o);
       if (supply) {
-        const limit = supply==="wood" ? bridgeGeometry(o).required-o.stock : 60-(o.inputOre||0);
-        const amount = Math.min(3,w.inventory[supply],limit);
+        const limit = supply==="wood" ? bridgeGeometry(o).required-o.stock : factoryInputTarget(o)-(o.inputOre||0);
+        const amount = Math.min(3,deliveryStock(w,supply),limit);
         w.inventory[supply]-=amount;
         if (supply==="ore") o.inputOre=(o.inputOre||0)+amount;
         else { c.carry=amount;c.cargoKind="wood";deliver(w,c,o,remember); }
@@ -333,8 +333,8 @@ export function stepWorld(w, dt) {
           o.type === "bone" ? "bones" : o.type === "ore" ? "ore" : "wood";
         const amount = Math.min(o.stock, kind === "bones" ? 4 : 3);
         o.stock -= amount;
-        c.carry += amount;
-        c.cargoKind = kind;
+        if(kind==="ore" && workerProject(w,c)?.type==="refine") w.inventory.ore+=amount;
+        else { c.carry += amount; c.cargoKind = kind; }
         if (!o.stock) o.remove = true;
         finish(w, c);
       } else block(w, c, "The material was already collected.");
@@ -342,7 +342,7 @@ export function stepWorld(w, dt) {
       const n = Math.min(o.stock, 3 * o.level * (o.quality || 1));
       o.stock -= n;
       if (
-        w.objects.some((o) => o.type === "factory") &&
+        w.objects.some((o) => o.type === "factory") && w.inventory.ore>=refiningOreReserve(w) &&
         !w.memory.goals.some((g) => g.kind === "ore" && g.status === "active")
       ) {
         c.carry = n;

@@ -2,6 +2,8 @@
 
 25 September 2026. Follow-up to the report that a large colony appeared mostly idle despite enabled intelligence and accepted independence.
 
+Follow-up: [local resources and outpost travel economics](OUTPOST_PLANNING.md).
+
 ## Reproductions and causes
 
 | Problem | Evidence | Change |
