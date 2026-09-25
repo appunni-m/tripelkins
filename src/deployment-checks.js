@@ -467,6 +467,29 @@ async function assets() {
     origin: location.origin,
   };
 }
+async function resumableDownload() {
+  if (!navigator.locks) throw new DOMException("Web Locks are unavailable; resumable downloads need this browser feature.", "NotSupportedError");
+  const manifest = await (await fetch(new URL("deployment-manifest.json", base), { cache: "no-store" })).json();
+  const asset = manifest.assets.find(a => a.path === "ort/ort-wasm-simd-threaded.wasm");
+  assert(asset, "The runtime fixture is missing from the deployment.");
+  const cacheName = `tripelkins-resume-check-${crypto.randomUUID()}`, url = new URL(asset.path, base).href;
+  const start = () => activeWorker = new Worker(new URL("./download-check.worker.js", import.meta.url), { type: "module" });
+  try {
+    showProgress("Downloading a site runtime; stopping after its first saved checkpoint…");
+    const interrupted = await callWorker(start(), { url, cacheName, interrupt: true });
+    assert(interrupted.interrupted, "The initial download did not stop at a checkpoint.");
+    activeWorker.terminate();
+    showProgress("New worker: resuming the saved file…");
+    const resumed = await callWorker(start(), { url, cacheName });
+    assert(resumed.ranges[0] === `bytes=${interrupted.saved}-`, "The new worker restarted instead of requesting the remaining bytes.");
+    assert(resumed.bytes === asset.bytes && resumed.sha256 === asset.sha256, "Resumed bytes differ from the published file.");
+    activeWorker.terminate();
+    const cached = await callWorker(start(), { url, cacheName, cachedOnly: true });
+    assert(cached.ranges.length === 0 && cached.sha256 === asset.sha256, "The completed file wasn't reusable without network access.");
+    return { checkpointBytes: interrupted.saved, resumedRange: resumed.ranges[0], bytes: resumed.bytes,
+      sha256: resumed.sha256, cachedWithoutNetwork: true, workers: 3 };
+  } finally { await caches.delete(cacheName); }
+}
 async function run(kind, backend, bufferCacheMode) {
   if (running) return;
   running = true;
@@ -482,7 +505,9 @@ async function run(kind, backend, bufferCacheMode) {
       await check("Production assets & audio worklet", assets);
       await check("Browser storage", storage);
     }
-    if (kind === "all") {
+    if (kind === "download") {
+      await check("Interrupted download resumes in a new worker", resumableDownload);
+    } else if (kind === "all") {
       for (const name of ["laya", "whisper"])
         for (const mode of ["webgpu", "wasm"])
           await check(`${name} ${mode}`, () =>
@@ -504,6 +529,7 @@ async function run(kind, backend, bufferCacheMode) {
 }
 $("run-all").onclick = () => run("all");
 $("run-platform").onclick = () => run("platform");
+$("run-download").onclick = () => run("download");
 document
   .querySelectorAll("[data-model]")
   .forEach(

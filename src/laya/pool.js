@@ -42,6 +42,12 @@ export class LayaPool {
     slot.worker.onmessage = ({ data }) => {
       if (!slot.job || data.requestId !== slot.job.id) return;
       if (data.type === "progress") {
+        // A slow connection can stay active for longer than five minutes.
+        // Time out stalled loading, not a download that is still advancing.
+        if (slot.job.loading) {
+          clearTimeout(slot.job.timer);
+          slot.job.timer = setTimeout(slot.job.timeout, 300000);
+        }
         slot.job.onProgress?.(data);
         this.onProgress(data);
         return;
@@ -65,9 +71,10 @@ export class LayaPool {
     if (!slot) return Promise.reject(new Error("All local workers are occupied."));
     return new Promise((resolve, reject) => {
       const id = this.nextId++;
-      const timer = setTimeout(() => this.finish(slot, new Error("Laya took too long. The colony's instincts are still running."), null, true),
+      const timeout = () => this.finish(slot, new Error("Laya took too long. Retry in Options to resume any saved download. The colony's instincts are still running."), null, true);
+      const timer = setTimeout(timeout,
         slot.ready && kind !== "load" ? 45000 : 300000);
-      slot.job = { id, resolve, reject, timer, onProgress };
+      slot.job = { id, resolve, reject, timer, timeout, loading: !slot.ready || kind === "load", onProgress };
       try { slot.worker.postMessage({ requestId: id, kind, ...data }); }
       catch (error) { this.finish(slot, error, null, true); }
     });

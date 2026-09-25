@@ -24,6 +24,8 @@ Open `https://appunni-m.github.io/tripelkins/verify.html`, also linked from Opti
 - Actual Laya load and inference on FP16 WebGPU and single-thread Q8 WASM.
 - Actual Whisper Base English load and transcription: FP32 encoder with FP16 WebGPU or Q8 WASM decoder.
 - Expected model files present in the game's browser caches.
+- **Download resume · ~14 MB** interrupts a runtime file, resumes it in a new
+  worker and checks its SHA-256 against the manifest. See [resumable downloads](MODEL_DOWNLOADS.md).
 
 Speech checks use a tester-supplied local recording of “Hello little friends. Please keep everyone happy and healthy.” Choose a recording you have permission to use, up to 15 seconds and 4 MB. It is decoded at 16 kHz and never uploaded. No speech sample is shipped. Without a file, speech checks are explicitly skipped before any model download. Verification never opens the microphone. Unsupported WebGPU is also reported as skipped, not passed.
 

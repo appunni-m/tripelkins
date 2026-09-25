@@ -79,8 +79,12 @@ function call(kind, data = {}, transfer = []) {
     worker.onmessage = ({ data: result }) => {
       if (!pending || result.id !== pending.id) return;
       if (result.type === "progress") {
+        if (pending.kind === "load") {
+          clearTimeout(pending.timer);
+          pending.timer = setTimeout(pending.timeout, 300000);
+        }
         update({
-          message: `Loading ${VOICE_MODEL.name} · ${result.file} · ${Math.round(result.progress || 0)}%`,
+          message: result.message || `Loading ${VOICE_MODEL.name} · ${result.file} · ${Math.round(result.progress || 0)}%`,
         });
         return;
       }
@@ -96,11 +100,14 @@ function call(kind, data = {}, transfer = []) {
   }
   return new Promise((resolve, reject) => {
     const id = ++jobId;
+    const timeout = () => releaseWorker(kind === "load"
+      ? "Voice setup stopped. Retry in Options to resume any saved download."
+      : "Whisper took too long. Try a shorter recording.");
     const timer = setTimeout(
-      () => releaseWorker("Whisper took too long. Try a shorter recording."),
+      timeout,
       kind === "load" ? 300000 : 90000,
     );
-    pending = { id, kind, timer, resolve, reject };
+    pending = { id, kind, timer, timeout, resolve, reject };
     worker.postMessage({ id, kind, ...data }, transfer);
   });
 }

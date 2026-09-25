@@ -1,16 +1,15 @@
 import { PreTrainedTokenizer } from "@huggingface/transformers";
 import { meterGpuBuffers } from "./gpu-meter.js";
 import { runtimeRoot } from "../runtime-paths.js";
+import { fetchModelFile } from "../model-download.js";
 const MODELS = {
   wasm: {
     base: "https://huggingface.co/nvkudva/laya-web-q8/resolve/main/v1",
     cache: "tripelkins-laya-q8-v1",
-    bytes: 530000000,
   },
   webgpu: {
     base: "https://huggingface.co/inferenceprince/laya-onnx/resolve/main",
     cache: "tripelkins-laya-fp16-v1",
-    bytes: 850000000,
   },
 };
 let ort, tokenizer, config, encoder, head, session, mode, loading;
@@ -19,68 +18,23 @@ const tokens = new Map();
 const progress = (id, data) =>
   self.postMessage({ requestId: id, type: "progress", ...data });
 async function bytes(url, id, cacheName, allowDownload) {
-  let cache;
-  try {
-    cache = await caches.open(cacheName);
-    const hit = await cache.match(url);
-    if (hit) {
-      progress(id, {
-        file: url.split("/").pop(),
-        message: `Reading cached ${url.split("/").pop()}…`,
-      });
-      return new Uint8Array(await hit.arrayBuffer());
-    }
-  } catch {}
-  if (!allowDownload)
-    throw new Error(
-      "Some Laya files are missing. Review the download in Options to enable intelligence. Missing files were not downloaded.",
-    );
-  progress(id, { message: `Downloading ${url.split("/").pop()}…` });
-  const response = await fetch(url, { signal: AbortSignal.timeout(180000) });
-  if (!response.ok)
-    throw new Error(`Model download failed (${response.status}).`);
-  // Stream directly into browser cache first. Avoid a JS chunks array plus a second full-sized assembly.
-  if (cache) {
-    try {
-      let loaded = 0,
-        lastReport = 0;
-      const total = Number(response.headers.get("content-length")) || 0;
-      const metered = response.body
-        ? new Response(
-            response.body.pipeThrough(
-              new TransformStream({
-                transform(chunk, controller) {
-                  loaded += chunk.byteLength;
-                  const now = performance.now();
-                  if (now - lastReport > 250) {
-                    progress(id, { file: url.split("/").pop(), loaded, total });
-                    lastReport = now;
-                  }
-                  controller.enqueue(chunk);
-                },
-              }),
-            ),
-            { headers: response.headers, status: response.status },
-          )
-        : response;
-      await cache.put(url, metered);
-      const stored = await cache.match(url);
-      if (stored) return new Uint8Array(await stored.arrayBuffer());
-    } catch {
-      progress(id, {
-        message: "Model cache unavailable; using this session only.",
-      });
-    }
+  const response = await fetchModelFile(url, {
+    cacheName, allowDownload,
+    onProgress: data => progress(id, {
+      ...data,
+      message: data.message || (data.phase === "cached"
+        ? `Reading cached ${data.file}…`
+        : data.phase === "resume"
+          ? `Resuming ${data.file} from ${Math.floor(data.loaded / 1048576)} MB…`
+          : data.phase === "saving" ? `Saving ${data.file}…` : undefined),
+    }),
+  });
+  if (!response.ok) {
+    if (!allowDownload)
+      throw new Error("Some Laya files are missing. Review the download in Options to resume intelligence setup. Missing files were not downloaded.");
+    throw new Error(`Model download failed (${response.status}). Retry in Options to resume.`);
   }
-  // Retrying a consumed response could silently double the approved transfer.
-  if (response.bodyUsed)
-    throw new Error(
-      "The download could not be cached. Free browser storage, then review the download again in Options.",
-    );
-  const usable = response;
-  if (!usable.ok)
-    throw new Error("Model could not be loaded after cache failure.");
-  return new Uint8Array(await usable.arrayBuffer());
+  return new Uint8Array(await response.arrayBuffer());
 }
 async function load(id, backend, allowDownload = false, diagnostics = {}) {
   if (tokenizer && mode === backend && (session || (encoder && head))) return;
@@ -119,19 +73,6 @@ async function load(id, backend, allowDownload = false, diagnostics = {}) {
     if (mode === "webgpu" && diagnostics.measureMemory) {
       if (diagnostics.bufferCacheMode === "bucket") bufferCacheMode = "bucket";
     }
-    const estimate = await navigator.storage?.estimate?.();
-    const existing = await caches.open(model.cache);
-    const hasWeights = (await existing.keys()).some((r) =>
-      r.url.endsWith(".data"),
-    );
-    if (
-      !hasWeights &&
-      estimate?.quota &&
-      estimate.quota - estimate.usage < model.bytes * 1.2 + 32 * 1048576
-    )
-      throw new Error(
-        "Not enough browser storage for this model. Export your world, then free space or use OpenRouter.",
-      );
     const json = async (path) =>
       JSON.parse(
         new TextDecoder().decode(

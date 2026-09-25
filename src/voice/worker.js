@@ -1,6 +1,7 @@
 import { env, pipeline } from "@huggingface/transformers";
-import { VOICE_MODEL, voiceBackend, isVoiceFile } from "./model.js";
+import { VOICE_MODEL, voiceBackend } from "./model.js";
 import { runtimeRoot } from "../runtime-paths.js";
+import { fetchModelFile } from "../model-download.js";
 
 env.allowLocalModels = false;
 env.useBrowserCache = true;
@@ -11,14 +12,20 @@ env.experimental_useCrossOriginStorage = false;
 // model files during a background wake or an inference retry.
 let allowDownload = false;
 let cacheMiss = false;
-env.fetch = (url, options) => {
-  if (!allowDownload) {
-    cacheMiss = true;
-    // Missing optional configurations must remain optional. Transformers treats
-    // this as a local miss; required files fail without any network transfer.
-    return Promise.resolve(new Response(null, { status: 404 }));
-  }
-  return fetch(url, options);
+let downloadId;
+env.fetch = async (url, options) => {
+  const response = await fetchModelFile(url, {
+    cacheName: env.cacheKey, allowDownload, requestInit: options,
+    onProgress: data => self.postMessage({
+      id: downloadId, type: "progress", ...data,
+      progress: data.total ? data.loaded / data.total * 100 : 0,
+      message: data.message || (data.phase === "resume"
+        ? `Resuming ${data.file} from ${Math.floor(data.loaded / 1048576)} MB…`
+        : data.phase === "saving" ? `Saving ${data.file}…` : undefined),
+    }),
+  });
+  if (!allowDownload && response.status === 404) cacheMiss = true;
+  return response;
 };
 const wasm = env.backends.onnx.wasm;
 wasm.numThreads = 1;
@@ -43,24 +50,7 @@ self.onmessage = ({ data }) => {
         const config = voiceBackend(backend);
         allowDownload = data.allowDownload === true;
         cacheMiss = false;
-        const estimate = await navigator.storage?.estimate?.();
-        const cached = await caches.open(env.cacheKey);
-        const names = (await cached.keys()).map((entry) => entry.url);
-        const missing = config.files.filter(
-          (file) => !names.some((url) => isVoiceFile(url, file.name)),
-        );
-        // Reserve space for missing weights/support files and the saved world.
-        const downloadMB = missing.length
-          ? missing.reduce((sum, file) => sum + file.megabytes, 0) + 44
-          : 0;
-        if (
-          estimate?.quota &&
-          estimate.quota - (estimate.usage || 0) <
-            32 * 1048576 + downloadMB * 1000000
-        )
-          throw new Error(
-            "Not enough browser storage for voice and saved worlds. Free space or keep using typed messages.",
-          );
+        downloadId = id;
         if (transcriber && loadedBackend !== backend) {
           await transcriber.dispose();
           transcriber = null;

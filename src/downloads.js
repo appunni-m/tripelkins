@@ -14,4 +14,4 @@ export const DOWNLOADS = {
 };
 
 export const DOWNLOAD_NOTICE =
-  "Uses internet data and browser storage. Metered data charges may apply. Inference runs on your device with no model API fee. Downloads are cached for later visits; clearing browser data, storage eviction, or changing model versions or runtimes can require another download. Existing cached files are reused.";
+  "Uses internet data and browser storage. Metered data charges may apply. Inference runs on your device with no model API fee. Interrupted downloads resume from saved 4 MB checkpoints when the host and browser support it; retry setup in Options. Completed files are reused. Finishing a file temporarily needs space for both its checkpoints and the complete file. Clearing browser data, storage eviction, or a changed model file can require another download.";
