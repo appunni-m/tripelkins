@@ -417,7 +417,7 @@ button img {
   display: grid;
   place-items: center;
   flex: 0 0 31px;
-  padding: 3px;
+  padding: 0;
   border-radius: 50%;
   color: #655e49;
 }
