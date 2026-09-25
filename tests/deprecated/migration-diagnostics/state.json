@@ -1,0 +1,36 @@
+{
+  "schema": "tripelkins/state-parity@1",
+  "dictionaryIndices": [
+    -20,
+    -1,
+    0,
+    1,
+    123,
+    16383,
+    16384,
+    999999
+  ],
+  "eventCount": 180,
+  "messageCount": 100,
+  "names": [
+    "  Bea   Boo ",
+    "é",
+    "؀Kit‍",
+    "🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈🐈",
+    "猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫猫",
+    "",
+    "A\nB"
+  ],
+  "replyInputs": [
+    "hello",
+    "hey Bea",
+    "how much wood",
+    "how many tripelkins",
+    "what do you remember",
+    "work",
+    "food",
+    "other"
+  ],
+  "storySteps": 20,
+  "timelineFrames": 135
+}

@@ -88,8 +88,10 @@ test("a delayed project is rejected when the player has already fixed the shorta
   const original=globalThis.fetch;
   try {
     const w=settlementWorld("bath");w.settings.provider="jev";brainStatus.ready=true;
-    let resolve;globalThis.fetch=()=>new Promise(r=>resolve=r);
+    let resolve,started;const requested=new Promise(r=>started=r);
+    globalThis.fetch=()=>{started();return new Promise(r=>resolve=r);};
     const pending=decideSettlement(w,"fixture-only");
+    await requested;
     for(const [x,y] of [[20,16],[24,16],[28,16]])addObject(w,"bath",x,y);
     resolve({ok:true,json:async()=>({answers:{decision:{type:"choice",choice:"bath"}}})});
     assert.equal(await pending,null);

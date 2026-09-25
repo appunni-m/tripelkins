@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node scripts/copy-ort.mjs && node scripts/prepare-notices.mjs && vite --host 0.0.0.0",
-    "build": "node scripts/copy-ort.mjs && node scripts/prepare-notices.mjs && vite build && node scripts/deployment-manifest.mjs",
+    "dev": "node scripts/build-engine.mjs && node scripts/copy-ort.mjs && node scripts/prepare-notices.mjs && vite --host 0.0.0.0",
+    "build": "node scripts/build-engine.mjs && node scripts/copy-ort.mjs && node scripts/prepare-notices.mjs && vite build && node scripts/deployment-manifest.mjs",
     "verify:pages": "node scripts/verify-pages.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test tests/*.test.mjs",
@@ -15,7 +15,9 @@
     "benchmark:soak": "node --expose-gc scripts/soak-colony.mjs",
     "benchmark:storage": "node --expose-gc scripts/stress-storage.mjs",
     "verify:community": "node scripts/verify-community.mjs",
-    "verify:development": "node scripts/verify-development.mjs"
+    "verify:development": "node scripts/verify-development.mjs",
+    "build:engine": "node scripts/build-engine.mjs",
+    "verify:engine": "node scripts/migration/verify-engine.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.0",

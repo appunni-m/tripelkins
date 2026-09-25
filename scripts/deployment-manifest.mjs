@@ -23,7 +23,9 @@ async function walk(directory) {
   return files.sort();
 }
 const files = await walk("");
-const required = ["index.html", "verify.html", "credits.html", "licenses/dependencies.txt"];
+if (!files.some(path=>/^assets\/tripelkins_engine_bg-[^/]+\.wasm$/.test(path)))
+  throw new Error("Missing colony simulation WASM binary.");
+const required = ["engine-verify.html", "index.html", "verify.html", "credits.html", "licenses/dependencies.txt", "licenses/rust-dependencies.txt"];
 for (const [directory, suffixes] of [
   ["ort", ["", ".jsep", ".asyncify"]],
   ["ort-whisper", ["", ".asyncify"]],

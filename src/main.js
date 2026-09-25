@@ -1,8 +1,10 @@
 import { isExplored } from "./game/discovery.js";
 import { openingMarkup, playOpening } from "./opening-story.js";
 import { GrowthBudget } from "./growth-budget.js";
-import { developmentPlan } from "./game/development-plan.js";
-import { meteorImpact, meteorTargetError } from "./game/destruction.js";
+import { EngineClient } from "./engine/client.js";
+import { rustPlanner } from "./engine/planner.js";
+import { createStorageClient } from "./engine/storage-client.js";
+import { meteorTargetError } from "./game/destruction.js";
 import { meteorSound } from "./meteor-sound.js";
 import { scenario } from "./game/scenarios.js";
 import { toolSignature as toolsKey, htmlIfChanged } from "./ui-budget.js";
@@ -12,9 +14,8 @@ import { DECISION_SPEEDS, decisionPace, decisionEvent, decisionDue, intelligence
 import { intelligenceControls, updateIntelligenceControls } from "./intelligence-options.js";
 import { backgroundBudget } from "./background-budget.js";
 import { JEV_MODEL } from "./providers/jev.js";
-import { renameCreature } from "./game/identity.js";
+
 import {
-  assessment,
   archiveEntries,
 } from "./game/story.js";
 import { bridgeGeometry } from "./game/geometry.js";
@@ -24,27 +25,7 @@ import { WorldView } from "./world.js";
 import { ColonyLife } from "./colony-life.js";
 import { orbitSummary, orbitDetails } from "./orbit-ui.js";
 import { awakenCreatureVoice, stopCreatureVoice } from "./creature-voice.js";
-import {
-  createWorld,
-  migrateWorld,
-  remember,
-  addCreature,
-  random,
-} from "./game/state.js";
-import { colonyHealth } from "./game/health.js";
 import { naturalObject } from "./game/map.js";
-import {
-  stepWorld,
-  connectSurvivor,
-  relocate,
-  withdrawMaterial,
-  supplyBridge,
-  interact,
-  choose,
-  applyPlan,
-  upgrade,
-  makePlan,
-} from "./game/simulation.js";
 import {
   BUILDINGS,
   buildingMaterials,
@@ -59,21 +40,6 @@ import {
   LIMITS,
 } from "./game/catalog.js";
 import { iconUrl } from "./game/art.js";
-import { buildContext } from "./game/context.js";
-import {
-  loadWorld,
-  checkpointWorld,
-  saveWorld,
-  replaceWorld,
-  listRecoveryWorlds,
-  listHistoryMoments,
-  recoverMoment,
-  downloadSave,
-  importSaveFile,
-  estimateStorage,
-  persistStorage,
-  saveHealth,
-} from "./persistence.js";
 import {
   loadLaya,
   resolveLayaBackend,
@@ -82,6 +48,7 @@ import {
   stopBrain,
   brainStatus,
   configureBrain,
+  configurePlanner,
   canDecide,
   checkOpenRouter,
   clearModelCache,
@@ -90,17 +57,14 @@ import guide from "../docs/GAME_GUIDE.md?raw";
 import architecture from "../docs/ARCHITECTURE.md?raw";
 import { createConversation } from "./conversation-ui.js";
 import { createCommunityUI } from "./community-ui.js";
-import { activity, postMessage } from "./game/community.js";
-import { independent, startSettlement } from "./game/settlement.js";
+
+import { independent } from "./game/settlement.js";
 import { resolveVoiceBackend, disposeVoice } from "./voice.js";
 import { VOICE_MODEL } from "./voice/model.js";
 import { DOWNLOADS, DOWNLOAD_NOTICE } from "./downloads.js";
 import {
   activeGoal,
   goalTitle,
-  inspectGoal,
-  changeGoal,
-  goalPolicy,
 } from "./game/goals.js";
 const $ = (id) => document.getElementById(id),
   esc = (value) =>
@@ -135,10 +99,8 @@ let world,
   token = "",
   view,
   last = performance.now(),
-  accumulator = 0,
   sceneTime = 0,
   lastUi = 0,
-  lastSave = 0,
   lastDraw = -Infinity,
   lastAI = -Infinity,
   lastSettlement = -Infinity,
@@ -158,21 +120,34 @@ let world,
   prologuePlayer;
 const previewScene = new URLSearchParams(location.search).get("preview");
 const disposable = ["opening", "prologue", "bridge", "bridge-stock", "industry"].includes(previewScene);
+const saveHealth = {status:"Opening your colony…",error:null,conflict:false,historyBytes:0};
+let storageBlocked = false;
+const engine = new EngineClient({
+  onHealth: health => {Object.assign(saveHealth,health);if(health.conflict)storageBlocked=true;},
+  onFailure: error => {storageBlocked=true;if(world)world.ui.paused=true;toast(error.message);},
+});
+const {saveWorld,checkpointWorld,replaceWorld,listRecoveryWorlds,listHistoryMoments,
+  recoverMoment,downloadSave,importSaveFile,estimateStorage,persistStorage}=createStorageClient(engine);
 try {
-  world = disposable
-    ? scenario(previewScene === "prologue" ? "opening" : previewScene)
-    : (await loadWorld()) || createWorld();
-  if (disposable)
-    saveHealth.status = "Preview · your saved colony is untouched";
-} catch {
-  world = createWorld();
-  saveHealth.status =
-    "Could not read the saved world. Export before reloading.";
+  world = await engine.initialize({preview:disposable,
+    ...(disposable?{world:scenario(previewScene === "prologue" ? "opening" : previewScene)}:{})});
+} catch (error) {
+  $("modal-content").innerHTML=`<h2 id="dialog-title">Your colony couldn’t open</h2><p>Your saved world has not been replaced. Reload to try again.</p><details><summary>Details</summary><p>${esc(error.message)}</p></details><button class="primary" id="retry-engine">Reload game</button>`;
+  $("modal").showModal();
+  listen($("retry-engine"),"click",()=>location.reload());
+  engine.dispose();
+  throw error;
 }
-let storageBlocked = !!saveHealth.error;
+if(disposable)saveHealth.status="Preview · your saved colony is untouched";
+storageBlocked=!!saveHealth.error;
+configurePlanner(rustPlanner(engine));
+const emptyGoalState={progress:0,value:0,step:"Considering our next steps…",blocker:null,milestones:[]};
+const inspectGoal=(_world,objective)=>engine.views?.goalStates?.[objective.id] || emptyGoalState;
+const colonyHealth=()=>engine.views?.health || {lowest:{fed:null,clean:null,amused:null},atRisk:0,critical:0,message:""};
 configureBrain(world.settings);
 const life = new ColonyLife();
 const conversation = createConversation({
+  engine,
   getWorld: () => world,
   getToken: () => token,
   openOptions: () => options("controls"),
@@ -207,13 +182,14 @@ function toast(text) {
   toastTimer = setTimeout(() => ($("toast").hidden = true), 5000);
 }
 function speak(text) {
-  if (text) postMessage(world,{ text });
+  if (text) engine.command("community.postMessage",{message:{text}}).catch(error=>toast(error.message));
 }
 function intelligenceReady() {
   return brainStatus.ready && !brainStatus.error &&
     (world.settings.provider === "laya" ? world.settings.localEnabled : !!token);
 }
 const communityUI = createCommunityUI({
+  engine,
   getWorld:()=>world, ready:intelligenceReady, modal, closeModal, save, listen,
   openIntelligence:()=>options("intelligence"),
   onConsent:()=>{ lastSettlement = -Infinity;lastAI = -Infinity; },
@@ -279,7 +255,6 @@ function modal(title, eyebrow, body, type = "other") {
   conversation.close();
   if (type !== "recovery") recoveryEntries = [];
   dialogType = type;
-  accumulator = 0;
   $("toast").hidden = true;
   $("speech").hidden = true;
   $("voice-subtitles").hidden = true;
@@ -287,6 +262,7 @@ function modal(title, eyebrow, body, type = "other") {
     `<div class="modal-inner ${type === "options" ? "game-options" : ""}"><div class="modal-header"><div><div class="eyebrow">${esc(eyebrow)}</div><h2 id="dialog-title">${esc(title)}</h2></div><button data-action="close" aria-label="Close dialog">${uiIcon("close")}</button></div>${body}</div>`;
   $("modal").setAttribute("aria-labelledby", "dialog-title");
   if (!$("modal").open) $("modal").showModal();
+  engine.updatePresentation({paused:true,ui:world.ui,settings:world.settings});
   renderUi();
 }
 function closeModal() {
@@ -302,7 +278,6 @@ function closeModal() {
   recoveryEntries = [];
   dialogType = "";
   last = performance.now();
-  accumulator = 0;
   renderUi();
 }
 function providerFields() {
@@ -524,8 +499,9 @@ async function switchWorld(next, message, source = next, origin = null) {
       loadModel();
   } catch (error) {
     changingWorld = false;
-    showOptionsNotice(`Your current world is still here. ${error.message}`);
-    toast("The world could not be saved. Your current colony has been kept.");
+    if(engine.failed){showOptionsNotice(error.message);toast(error.message);}
+    else{showOptionsNotice(`Your current world is still here. ${error.message}`);
+      toast("The world could not be saved. Your current colony has been kept.");}
   }
 }
 async function recoveryMenu(legacyOnly = false) {
@@ -627,8 +603,11 @@ async function historyMenu() {
       );
   }
 }
-function goalsModal() {
-  const plan=developmentPlan(world);
+async function goalsModal() {
+  const current=world;
+  const plan=await engine.query("development.plan");
+  if(current!==world)return;
+  engine.views=await engine.query("planning.ui");
   const entries = [...world.memory.goals].sort((a, b) => {
     const order = {
       active: 0,
@@ -714,10 +693,10 @@ function choiceDialog(kind, entity) {
     "choice",
   );
 }
-function ending() {
+async function ending() {
   const entries = world.story.assessments.length
     ? world.story.assessments
-    : assessment(world);
+    : await engine.query("story.assessment");
   modal(
     "Our journey together",
     "COLONY JOURNAL",
@@ -889,7 +868,7 @@ async function runAI(fresh = false) {
   }
   const current = world;
   try {
-    const result = await decide(fresh ? migrateWorld(world) : world, token, {
+    const result = await decide(fresh ? await engine.query("state.migrateWorld",{raw:world}) : world, token, {
       fresh,
     });
     if (!result || current !== world) {
@@ -910,54 +889,20 @@ async function runAI(fresh = false) {
       lastSettlement = -Infinity;
       return;
     }
-    if (applyPlan(world, result.plan)) {
-      const counts = result.plan.assignments.reduce((all,a)=>{all[a.task]=(all[a.task]||0)+1;return all;},{});
-      activity(world,"schedule",`${result.policy === "care" ? "Care comes first" : "Chose our next group schedule"}.`,result.source,
-        Object.entries(counts).map(([task,n])=>`${n} ${TASK_NAMES[task] || task}`).join(" · "));
-
-      world.memory.lastPlan = {
-        policy: result.policy,
-        source: result.source,
-        tick: Math.floor(world.time),
-        goalId: result.goalId || null,
-      };
-      const objective = activeGoal(world);
-      if (
-        objective &&
-        result.goalId === objective.id &&
-        result.source !== "Cached AI policy"
-      ) {
-        objective.reviews.push({
-          tick: Math.floor(world.time),
-          policy: result.policy,
-          source: result.source,
-          reason: String(
-            result.note || inspectGoal(world, objective).step,
-          ).slice(0, 240),
-        });
-        objective.reviews = objective.reviews.slice(-8);
-      }
-      if (result.source !== "Cached AI policy")
-        remember(
-          world,
-          "plan",
-          `${result.source} chose ${result.policy}: ${result.plan.assignments.length} individual assignments.`,
-        );
-    }
+    await engine.command("planning.commitDecision",{result});
   } catch (error) {
     if (fresh) showAdvancedNotice(error.message);
   }
 }
 async function runSettlement() {
   const current = world;
+  try {
   const result = await decideSettlement(current,token);
   if (!result || current !== world || world.ui.paused || $("modal").open || document.hidden ||
       !independent(world) || world.commandRevision !== result.revision) return;
-  if (result.choice) {
-    if (startSettlement(world,result.choice,result.source)) { lastAI = -Infinity;save(); }
-  } else {
-    world.community.lastProjectAt = world.time;
-    activity(world,"construction","We will keep caring and scouting before building.",result.source);
+  if(await engine.command("settlement.commitDecision",{result})){lastAI=-Infinity;save();}
+  } catch (error) {
+    if (current === world) showAdvancedNotice(error.message);
   }
 }
 
@@ -1017,7 +962,7 @@ async function loadModel({
 view = new WorldView(
   $("world"),
   () => world,
-  (p, entity) => {
+  async (p, entity) => {
     if (world.ui.paused || $("modal").open) return;
     if (!isExplored(world,p)) { toast("Let the colony explore this ground first."); return; }
     if (!world.progress.hatched && entity?.type === "lander")
@@ -1026,45 +971,42 @@ view = new WorldView(
       const error=meteorTargetError(world,p.x,p.y);
       if(error) {toast(error);return;}
       const current=world;
-      const launched=view.launchMeteor(p,sceneTime,()=>{
+      const launched=view.launchMeteor(p,sceneTime,async ()=>{
         if(current!==world)return;
-        const result=meteorImpact(current,p.x,p.y);
+        const result=await engine.command("simulation.meteorImpact",{x:p.x,y:p.y});
         if(result.message)speak(result.message);
         if(result.sound)sound(result.sound);
-        applyPlan(current,makePlan(current,current.memory.lastPlan?.policy || "balanced"));
+        await engine.command("planning.reschedule",{policy:current.memory.lastPlan?.policy || "balanced"});
         renderUi();save();
       });
       if(launched)sound("meteor-fall");
       else toast("Let the sky settle for a moment.");
       return;
     }
-    const result = interact(world, world.ui.tool, p.x, p.y, entity);
+    const result = await engine.command("simulation.interact",{tool:world.ui.tool,x:p.x,y:p.y,entity:entity?.id || null});
     if (world.ui.tool === "inspect") life.touch(world, entity, sceneTime);
     if (result.choice) choiceDialog(result.choice, result.entity);
     else {
       if (result.message) speak(result.message);
       if (result.sound) {
         sound(result.sound);
-        applyPlan(
-          world,
-          makePlan(world, world.memory.lastPlan?.policy || "balanced"),
-        );
+        await engine.command("planning.reschedule",{policy:world.memory.lastPlan?.policy || "balanced"});
       }
     }
     renderUi();
     save();
   },
-  (creature, target, point) => {
+  async (creature, target, point) => {
     if (world.ui.paused || $("modal").open) return;
     if (!isExplored(world,point)) { toast("Let the colony explore this ground first."); return; }
     if (creature.type === "rock") {
-      const error = relocate(world, creature, point);
+      const error = await engine.command("simulation.relocate",{id:creature.id,point});
       if (error) toast(error);
       save();
       return;
     }
     if (world.stage !== 3 || target?.type !== "hole") return;
-    if (!connectSurvivor(world, creature.id)) return;
+    if (!await engine.command("simulation.connectSurvivor",{id:creature.id})) return;
     if (world.stage === 4) {
       ending();
     } else {
@@ -1150,8 +1092,8 @@ async function action(name) {
     return;
   }
   if (name === "bridge-supply") {
-    toast(supplyBridge(world,world.ui.selected));
-    applyPlan(world,makePlan(world,goalPolicy(world)));
+    toast(await engine.command("simulation.supplyBridge",{id:world.ui.selected}));
+    await engine.command("planning.reschedule");
     lastAI = -Infinity;
     renderUi();
     save();
@@ -1176,13 +1118,7 @@ async function action(name) {
   if (name === "favorite") {
     const c = world.creatures.find((c) => c.id === world.ui.selected);
     if (c) {
-      c.favorite = !c.favorite;
-      remember(
-        world,
-        "favorite",
-        `${c.name} ${c.favorite ? "pinned" : "unpinned"}.`,
-        c.id,
-      );
+      await engine.command("identity.favorite",{id:c.id});
       renderUi();
       save();
     }
@@ -1194,7 +1130,7 @@ async function action(name) {
     const current = world, c = world.creatures.find((c) => c.id === form.dataset.creatureId);
     if (!c) { $("rename-error").textContent = "This Tripelkin is no longer here."; return; }
     const input = $("creature-name");
-    const result = renameCreature(world, c, input.value);
+    const result = await engine.command("identity.renameCreature",{id:c.id,input:input.value});
     if (result.error) {
       $("rename-error").textContent = result.error;
       input.setAttribute("aria-invalid", "true");
@@ -1202,7 +1138,6 @@ async function action(name) {
       return;
     }
     input.removeAttribute("aria-invalid");
-    if (result.old !== result.name) remember(world, "rename", `${result.old} is now ${result.name}.`, c.id);
     form.dataset.saving = "true";
     const button = form.querySelector('[type="submit"]');
     input.disabled = true;
@@ -1226,22 +1161,7 @@ async function action(name) {
   if (name.startsWith("recover:") || name.startsWith("rescue:")) {
     const entry = recoveryEntries[Number(name.split(":")[1])];
     if (entry?.world) {
-      const next = migrateWorld(entry.world);
-      if (name.startsWith("rescue:")) {
-        for (const creature of next.creatures) {
-          for (const key of ["fed", "clean", "amused"])
-            creature[key] = Math.max(70, creature[key]);
-          creature.deadTime = 0;
-          creature.target = null;
-          creature.task = "idle";
-          creature.work = 0;
-        }
-        remember(
-          next,
-          "recovery",
-          "You restored this world with fresh food, a wash and time to play.",
-        );
-      }
+      const next = await engine.query("state.recoverSnapshot",{raw:entry.world,rescue:name.startsWith("rescue:")});
       await switchWorld(
         next,
         "Earlier world restored. Check their needs, then press P to continue.",
@@ -1387,7 +1307,7 @@ async function action(name) {
       else await runAI(true);
       break;
     case "context": {
-      const ctx = buildContext(world);
+      const ctx = await engine.query("planning.buildContext",{includePlans:true});
       modal(
         "What the colony remembers.",
         "LIVE AI CONTEXT",
@@ -1397,7 +1317,7 @@ async function action(name) {
       break;
     }
     case "export":
-      downloadSave(world);
+      await downloadSave(world);
       break;
     case "import":
       $("import-file").click();
@@ -1423,7 +1343,7 @@ async function action(name) {
           origin: { branch: point.branch, moment: point.id },
           world: restored,
           savedAt: point.at,
-          health: colonyHealth(restored),
+          health: await engine.query("state.colonyHealth",{world:restored}),
           facilities: restored.objects
             .filter((o) =>
               ["orchard", "bath", "roundabout", "dwelling", "theatre"].includes(
@@ -1449,7 +1369,7 @@ async function action(name) {
       );
       break;
     case "new-confirm": {
-      const next = createWorld();
+      const next = await engine.query("state.createWorld",{empty:false,seed:crypto.getRandomValues(new Uint32Array(1))[0]});
       next.settings = { ...world.settings };
       await switchWorld(next, "A new little life. Press P when you’re ready.");
       break;
@@ -1465,10 +1385,7 @@ async function action(name) {
       break;
     case "upgrade":
       toast(
-        upgrade(
-          world,
-          world.objects.find((o) => o.id === world.ui.selected),
-        ),
+        await engine.command("simulation.upgrade",{id:world.ui.selected}),
       );
       save();
       break;
@@ -1477,7 +1394,7 @@ async function action(name) {
 listen(document, "click", async (e) => {
   const material = e.target.closest("[data-material]");
   if (material && !world.ui.paused && !$("modal").open) {
-    if (world.ui.held || withdrawMaterial(world, material.dataset.material)) {
+    if (world.ui.held || await engine.command("simulation.withdrawMaterial",{kind:material.dataset.material})) {
       world.ui.tool = "grabber";
       toast("Tap clear ground to place it.");
       renderUi();
@@ -1491,18 +1408,8 @@ listen(document, "click", async (e) => {
   }
   const goalButton = e.target.closest("[data-goal-action]");
   if (goalButton) {
-    const changed = changeGoal(
-      world,
-      goalButton.dataset.goalId,
-      goalButton.dataset.goalAction,
-    );
-    if (changed) {
-      remember(
-        world,
-        "goal-change",
-        `${goalTitle(changed)}: ${changed.status}.`,
-      );
-      applyPlan(world, makePlan(world, goalPolicy(world)));
+    const changed=await engine.command("goals.change",{id:goalButton.dataset.goalId,action:goalButton.dataset.goalAction});
+    if(changed){
       lastAI = -Infinity;
       lastSettlement = -Infinity;
       save();
@@ -1547,12 +1454,7 @@ listen(document, "click", async (e) => {
       }
     }
     speak(
-      choose(
-        world,
-        choice.dataset.choice,
-        choice.dataset.answer,
-        choice.dataset.entity,
-      ),
+      await engine.command("simulation.choose",{kind:choice.dataset.choice,answer:choice.dataset.answer,entity:choice.dataset.entity}),
     );
     closeModal();
     sound("birth");
@@ -1677,12 +1579,12 @@ const modelBudget = backgroundBudget({
 listen(document, "visibilitychange", () => {
   modelBudget.hidden(document.hidden);
   if (document.hidden) {
+    engine.updatePresentation({paused:true,ui:world.ui,settings:world.settings});
     stopCreatureVoice();
     conversation.close();
     save();
   }
   last = performance.now();
-  accumulator = 0;
 });
 listen(window, "pagehide", () => {
   conversation.close();
@@ -1702,17 +1604,10 @@ function frame(now) {
     document.hidden ||
     $("modal").open ||
     world.ui.paused;
-  world.runtime = { ...(world.runtime || {}), intelligenceAvailable: intelligenceReady() };
   if (growthBudget.world !== world) growthBudget.reset(world, now);
-  world.runtime.growth = growthBudget.state;
-  if (!paused) {
-    sceneTime += delta * 1000;
-    accumulator += delta;
-    while (accumulator >= 0.1) {
-      stepWorld(world, 0.1);
-      accumulator -= 0.1;
-    }
-  } else accumulator = 0;
+  engine.updatePresentation({paused,ui:world.ui,settings:world.settings,
+    intelligenceAvailable:intelligenceReady(),growth:growthBudget.state});
+  if(!paused)sceneTime+=delta*1000;
   // Simulation remains at 10 Hz. Pixel-art presentation needs at most 30 Hz,
   // independent of a 60/120/144 Hz monitor. Paused frames are retained.
   let rendered = false;
@@ -1729,10 +1624,6 @@ function frame(now) {
     renderUi();
     if (!paused) showStory();
     lastUi = now;
-  }
-  if (now - lastSave > 5000) {
-    save(false);
-    lastSave = now;
   }
   const developmentEvent=decisionEvent(world,"development"), scheduleEvent=decisionEvent(world,"schedule");
   if (!paused && !conversation.listening && decisionDue(world.settings,"development",world.time-lastSettlement,developmentEvent!==lastSettlementEvent) && independent(world) && canDecide("development")) {
@@ -1783,4 +1674,5 @@ if (import.meta.hot)
     communityUI.dispose();
     conversation.dispose();
     view.dispose();
+    engine.dispose();
   });

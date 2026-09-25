@@ -1,0 +1,124 @@
+{
+  "schema": "tripelkins/state-edges@1",
+  "names": ["Pip Meadow", "Pip River", "Pip Cloud", "Poppy Stone", "A.B Blossom"],
+  "listeners": [
+    {"text":"Pip Meadow, come here", "selected":null},
+    {"text":"Pip, help us", "selected":null},
+    {"text":"Pip, help us", "selected":"c2"},
+    {"text":"Pip Meadow and Pip River", "selected":"c1"},
+    {"text":"Pip Meadow and Pip River", "selected":"missing"},
+    {"text":"Poppy, hello", "selected":null},
+    {"text":"Pippin is a different word", "selected":null},
+    {"text":"_Pip and Pippy", "selected":null},
+    {"text":"A.B, hello", "selected":null},
+    {"text":"Hello, everyone", "selected":"c4"},
+    {"text":"Hello, everyone", "selected":"missing"}
+  ],
+  "identities": [
+    {"ordinal":0,"parent":true,"collision":true},
+    {"ordinal":16384,"parent":true,"collision":false},
+    {"ordinal":32768,"parent":false,"collision":true}
+  ],
+  "encounters": [
+    {"kind":"greeting","other":null,"repeat":1},
+    {"kind":"play","other":"c2","repeat":12},
+    {"kind":"loss","other":"c2","repeat":23},
+    {"kind":"work","other":"c3","repeat":1},
+    {"kind":"play","other":"c4","repeat":1},
+    {"kind":"play","other":"c5","repeat":1},
+    {"kind":"greeting","other":"c6","repeat":1},
+    {"kind":"work","other":"c3","repeat":1}
+  ],
+  "numericInputs": ["0x2a","0b10101","0o17","0x","0b102","  0x10  ","-0x10",["0o7"]],
+  "healthNeeds": [[0,5,15],[25,0,80],[80,80,0],[100,100,100]],
+  "conversationTerminations": ["cancel","fail","cancel","fail"],
+  "completionRevisions": [
+    {"name":"missing"},
+    {"name":"null","expectedCommandRevision":null},
+    {"name":"string","expectedCommandRevision":"4"},
+    {"name":"stale","expectedCommandRevision":3},
+    {"name":"future","expectedCommandRevision":5}
+  ],
+  "roundTripCommands": [
+    {"id":"wire-stop","text":"Pause work for everyone","goal":null,"source":"Instruction guard","reply":"We will hold that work. Eating, washing and play will continue."},
+    {"id":"wire-resume","text":"Resume work and collect 40 wood","goal":{"kind":"wood","target":40},"source":"Laya","reply":"We will gather timber."}
+  ],
+  "storyAnswers": [
+    {"id":"incident-hunger","response":"I will help"},
+    {"id":"thought-care","response":"We can choose together"},
+    {"id":"incident-dirt","response":"Not now"}
+  ],
+  "overflowCount": 2051,
+  "saveCases": [
+    {
+      "name":"active colony journal, access requests and settlement density",
+      "patch": {
+        "time":120,
+        "nextId":8,
+        "ui":{"selected":"c2","held":{"type":"ore","stock":"7.5","id":"o900"}},
+        "directives":{"members":["c1","missing","c2"],"region":{"x":-40,"y":51},"careFloor":65,"avoidPollution":true},
+        "memory":{
+          "recent":[{"id":80,"tick":90,"at":"2000-01-01T00:00:00.000Z","kind":"build","message":"The outpost is ready","entity":"c2"},null,{"kind":42}],
+          "choices":["wood",0,true,null,{"resource":"ore"}],
+          "jobs":[{"task":"mine","unit":"c2","target":"o903","tick":100},{"task":"invalid","unit":"c1"},null],
+          "conversations":[{"text":"Gather ore","reply":"We need a clear path","source":"Laya","tick":90,"listener":"c2"},{"text":42,"reply":"Rejected malformed record"},null],
+          "goals":[{"id":"g900","kind":"wood","target":48,"status":"active","command":"Build a reserve","createdAt":1,"reviews":[]}],
+          "lastPlan":{"policy":"build","source":"Jev","tick":100,"goalId":"g900"}
+        },
+        "groups":[{"id":"gatherers","role":"mine","project":"local stone","revision":2,"members":["c1","c2","missing"],"outcomes":["path blocked",0,false,{"step":"clear"}]}],
+        "decisions":[{"tick":105,"goal":"Ore reserve","source":"Jev","model":"hosted","candidate":"mine","facts":"Stone is nearby","expected":"Keep a reserve","observed":"Tree blocks access","rejection":"Need clearance","baseline":4,"completed":2}],
+        "community":{
+          "consent":"accepted",
+          "visited":["0:0","-1:2","2:-1","-9999999999:9999999999","0:0","10000000000:0","+2:0","1:2:3","-:0",42],
+          "access":[
+            {"id":5,"key":"ore-route","target":"o903","point":{"x":28,"y":19},"unit":"c2","task":"mine","project":7,"label":"Nearby quarry","reason":"A tree blocks our route","created":30,"lastSeen":110,"status":"clearing","blocker":"o905","crew":["c1"],"source":"Laya","notified":true},
+            {"id":6,"key":"food-route","target":null,"point":{"x":25,"y":22},"unit":"missing","task":"eat","project":null,"label":"Food","reason":"Find a route","created":-1,"lastSeen":999,"status":"unknown","blocker":null,"crew":["missing"],"source":"Instincts"},
+            {"task":"not-a-task","point":{"x":0,"y":0}},null
+          ],
+          "plan":{"parent":"g900","title":"An outpost beyond the river","expanding":true,"density":{"crowded":3.7,"areas":[{"x":24,"y":24,"residents":12,"buildings":4},{"x":-20,"y":30,"residents":-4,"buildings":9000}]},"children":[{"id":"wood","kind":"wood","title":"Gather timber","remaining":12,"status":"working"},{"id":"care","kind":"bath","title":"Care close to work","remaining":1,"status":"urgent"},{"id":"path","kind":"clearance","title":"Clear a route","remaining":-1,"status":"unknown"}]},
+          "inbox":[{"id":21,"story":"incident-hunger","title":"Food","text":"Could we grow a garden?"},{"id":22,"story":"thought-care","title":"A question","text":"Who chooses?"}]
+        },
+        "story":{"responses":[{"id":"incident-hunger","response":"I will help","tick":80},{"id":"not-a-story","response":"ignored"}],"promises":[{"request":"orchard","status":"pending","tick":80,"before":0}]},
+        "pollution":[{"source":"o904","x":20,"y":20,"radius":4,"amount":15}],
+        "settings":{"provider":"jev","backend":"wasm","voiceBackend":"webgpu","localEnabled":true,"voiceEnabled":true,"token":"must-not-survive"}
+      },
+      "creaturePatches":[
+        {"relationships":[{"id":"c2","affinity":20,"last":50},{"id":"c3","affinity":-15,"last":40},{"id":"c4","last":30}],"blocked":[{"target":"o905","until":150,"revision":2}],"cargoKind":"ore","carry":3},
+        {"target":"o901","task":"eat","job":null},
+        {"target":"o906","task":"work","job":null}
+      ],
+      "objects":[
+        {"id":"o901","type":"orchard","x":30,"y":30,"stock":6},
+        {"id":"o902","type":"dwelling","x":16,"y":18,"level":2},
+        {"id":"o903","type":"node","x":28,"y":19,"stock":40},
+        {"id":"o904","type":"factory","x":32,"y":17},
+        {"id":"o905","type":"tree","x":26,"y":20,"stock":6},
+        {"id":"o906","type":"flowers","x":20,"y":31}
+      ]
+    },
+    {
+      "name":"custom bridge cargo and older geometry repair",
+      "patch":{"schema":3,"progress":{"pollution":45,"tnt":true,"bridge":false},"cohort":7},
+      "creaturePatches":[{"x":18,"y":18,"target":"o911","task":"haul","job":null},{"x":21,"y":18,"target":"o912","task":"work","job":null}],
+      "objects":[
+        {"id":"o910","type":"tree","x":18,"y":18},
+        {"id":"o911","type":"bridge","x":42,"y":25,"bridge":{"a":{"x":38,"y":24},"b":{"x":46,"y":24},"width":3,"required":36,"delivered":{"wood":11,"bones":2},"complete":false}},
+        {"id":"o912","type":"factory","x":21,"y":18},
+        {"id":"o913","type":"factory","x":32,"y":28},
+        {"id":"o914","type":"monolith","x":55,"y":24},
+        {"id":"o915","type":"dwelling","x":13,"y":22,"level":1}
+      ]
+    },
+    {
+      "name":"completed bridge without explicit geometry and filtered entity identifiers",
+      "patch":{"schema":2,"progress":{"bridge":true},"settings":{"provider":"unrecognized"}},
+      "creaturePatches":[{"id":"c2"},{"id":"c2"},{"id":"not-a-creature"}],
+      "objects":[
+        {"id":"o920","type":"bridge","x":42,"y":25},
+        {"id":"o920","type":"rock","x":20,"y":20},
+        {"id":"bad","type":"tree","x":21,"y":20},
+        {"id":"o921","type":"unknown","x":22,"y":20}
+      ]
+    }
+  ]
+}

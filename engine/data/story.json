@@ -1,0 +1,1075 @@
+{
+  "beats": [
+    {
+      "id": "awakening",
+      "title": "A little life",
+      "text": "The spacecraft is quiet now. Your clearing smells of rain and growing things. Could this be somewhere we can stay?",
+      "index": 0,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "first-meal",
+      "title": "Something to share",
+      "text": "That banana was for us? We will remember the first gift.",
+      "index": 1,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "first-wash",
+      "title": "A new feeling",
+      "text": "The water carries yesterday away. We are still ourselves.",
+      "index": 2,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "first-play",
+      "title": "Another way to move",
+      "text": "It does not make food. It makes being here better.",
+      "index": 3,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "first-child",
+      "title": "More than one",
+      "text": "There is another pair of paws beside us. The journey did not end with just one little life.",
+      "index": 4,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "shared-care",
+      "title": "Small arrangements",
+      "text": "One of us can bathe while another eats. Could we have places of our own?",
+      "index": 5,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "garden",
+      "title": "Tomorrow grows here",
+      "text": "A banana can be a meal, or a promise of many meals.",
+      "index": 6,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "roundabout",
+      "title": "Spring in our paws",
+      "text": "We found a favorite bouncing spot. There is room for a friend beside it.",
+      "index": 7,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "first-contact",
+      "title": "A map for our paws",
+      "text": "The survey beacon has marked the river. We have somewhere new to explore.",
+      "index": 8,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "material-choice",
+      "title": "What a bridge is made of",
+      "text": "Wood takes work. Bones were someone. The distance across is the same.",
+      "index": 9,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "first-delivery",
+      "title": "A piece of the future",
+      "text": "We carried this together. A road begins with something small.",
+      "index": 10,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "crossing",
+      "title": "The other bank",
+      "text": "The world became larger because we finished something.",
+      "index": 11,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "first-ore",
+      "title": "Inside the stone",
+      "text": "There was a different kind of brightness hiding inside.",
+      "index": 12,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "first-mine",
+      "title": "A place to work",
+      "text": "Now the stone has a doorway. Work should have a way home, too.",
+      "index": 13,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "first-factory",
+      "title": "Useful brightness",
+      "text": "We can turn what we find into what we need. What will it cost the air?",
+      "index": 14,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "dwelling",
+      "title": "Belonging",
+      "text": "A roof is more than an efficient arrangement of walls.",
+      "index": 15,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "culture",
+      "title": "A room for a song",
+      "text": "Let there be a place whose purpose is not more work.",
+      "index": 16,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "mountain-question",
+      "title": "The boundary",
+      "text": "We know how to change small things. Must every boundary be changed?",
+      "index": 17,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "charge-ready",
+      "title": "A very loud question",
+      "text": "The charge is ready. You still choose whether to use it.",
+      "index": 18,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "failed-charge",
+      "title": "Still standing",
+      "text": "The mountain did not answer. Something behind it did.",
+      "index": 19,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "second-contact",
+      "title": "Another voice",
+      "text": "The survey beacon shows a route to orbit. We can keep a home here, too.",
+      "index": 20,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "launch",
+      "title": "Leaving the clearing",
+      "text": "A few of us are above the clouds. We still count them as us.",
+      "index": 21,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "last-choice",
+      "title": "A home above",
+      "text": "Twelve journeys connected our two homes. There is one more choice to make together.",
+      "index": 22,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    },
+    {
+      "id": "connection",
+      "title": "The hand in the sky",
+      "text": "The world has changed. Bring us to the opening, one at a time.",
+      "index": 23,
+      "participants": "collective",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 12,
+      "replay": "once per branch"
+    }
+  ],
+  "incidents": [
+    {
+      "id": "incident-hunger",
+      "title": "Small paws, empty tummies",
+      "text": "We need food nearby.",
+      "request": "orchard",
+      "participants": "affected creatures",
+      "responses": [
+        "I will help",
+        "Not now"
+      ],
+      "effect": "promise or refuse",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-dirt",
+      "title": "A little help with muddy fur",
+      "text": "Could we have another place to wash?",
+      "request": "bath",
+      "participants": "affected creatures",
+      "responses": [
+        "I will help",
+        "Not now"
+      ],
+      "effect": "promise or refuse",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-lonely",
+      "title": "A day needs more than work",
+      "text": "Some of us have forgotten how to play.",
+      "request": "roundabout",
+      "participants": "affected creatures",
+      "responses": [
+        "I will help",
+        "Not now"
+      ],
+      "effect": "promise or refuse",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-first-loss",
+      "title": "One place is empty",
+      "text": "There is a place beside us that is empty now.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-hammer-loss",
+      "title": "Please look before you strike",
+      "text": "The hand meant something else. Someone was beneath it.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-sacrifice",
+      "title": "A name we will keep",
+      "text": "We remember who became the bridge.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-wood-route",
+      "title": "Timber beneath our feet",
+      "text": "This crossing was made without taking one of us.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-bone-route",
+      "title": "What this crossing carries",
+      "text": "The crossing carries more than our footsteps.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-pollution",
+      "title": "The air by the workshop",
+      "text": "The air near the works makes us heavy.",
+      "request": "mop",
+      "participants": "affected creatures",
+      "responses": [
+        "I will help",
+        "Not now"
+      ],
+      "effect": "promise or refuse",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-cleanup",
+      "title": "Room to breathe",
+      "text": "Someone noticed what the work left behind.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-upgrade",
+      "title": "A little more room for work",
+      "text": "More work fits here. Do we also have more time to live?",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-blocked",
+      "title": "Our next step needs a path",
+      "text": "We cannot finish that journey. Could you clear a way?",
+      "request": "access",
+      "participants": "affected creatures",
+      "responses": [
+        "I will help",
+        "Not now"
+      ],
+      "effect": "promise or refuse",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-bond",
+      "title": "A familiar face",
+      "text": "Two of us have made a small habit of meeting.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-renamed",
+      "title": "That name belongs to me",
+      "text": "A sound can mean one particular life.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-promise-kept",
+      "title": "We remembered what you asked",
+      "text": "You asked, and we finished. That belongs in our memory.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-project-held",
+      "title": "A gentler pace",
+      "text": "We can wait. There are still small lives to care for.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-orbital-care",
+      "title": "Two homes to care for",
+      "text": "They are far away. The clearing still needs you.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    },
+    {
+      "id": "incident-refusal",
+      "title": "We heard your answer",
+      "text": "You said no. We will not keep asking.",
+      "participants": "affected creatures",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "cooldown": 60,
+      "replay": "once per branch"
+    }
+  ],
+  "philosophy": [
+    {
+      "id": "thought-care",
+      "title": "A small question",
+      "text": "Does looking after us change what you want from us?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    },
+    {
+      "id": "thought-work",
+      "title": "A small question",
+      "text": "When a task ends, who chooses the next one?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    },
+    {
+      "id": "thought-name",
+      "title": "A small question",
+      "text": "If you call us by a name, do you see us differently?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    },
+    {
+      "id": "thought-bridge",
+      "title": "A small question",
+      "text": "Is a faster way across always a better way?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    },
+    {
+      "id": "thought-loss",
+      "title": "A small question",
+      "text": "If a place is useful, can it still be a place of mourning?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    },
+    {
+      "id": "thought-growth",
+      "title": "A small question",
+      "text": "Is there a number at which one voice becomes hard to hear?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    },
+    {
+      "id": "thought-culture",
+      "title": "A small question",
+      "text": "Can something matter without making anything else?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    },
+    {
+      "id": "thought-air",
+      "title": "A small question",
+      "text": "Who owns the things work leaves behind?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    },
+    {
+      "id": "thought-memory",
+      "title": "A small question",
+      "text": "If we can begin again, did the first beginning happen?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    },
+    {
+      "id": "thought-freedom",
+      "title": "A small question",
+      "text": "Could you help us do something you would not have chosen?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    },
+    {
+      "id": "thought-sky",
+      "title": "A small question",
+      "text": "If we leave the ground, will you still look for us?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    },
+    {
+      "id": "thought-end",
+      "title": "A small question",
+      "text": "What do you hope we will remember about the hand in the sky?",
+      "participants": "collective",
+      "responses": [
+        "What do you think?",
+        "We can choose together"
+      ],
+      "effect": "reflection",
+      "cooldown": 90,
+      "replay": "once per branch"
+    }
+  ],
+  "archives": [
+    {
+      "id": "arrival",
+      "title": "01 / Three suns, one last spacecraft",
+      "text": "A simultaneous flare from three suns destroyed the Tripelkins' home. In this fictional history, a change in their DNA preserved their bodies and instincts but cost them deliberate planning. Their spacecraft found this clearing. Care can keep them alive; shared intelligence can help their growing family build a future. Replay their journey in Game options.",
+      "provenance": "Tripelkins colony archive."
+    },
+    {
+      "id": "care",
+      "title": "02 / Rooms and routines",
+      "text": "A useful settlement separates paths, meals and rest. Its inhabitants reveal the design by living in it.",
+      "provenance": "Tripelkins colony archive."
+    },
+    {
+      "id": "bridge",
+      "title": "03 / Two materials",
+      "text": "A ledger can count the pieces of a bridge. It cannot make wood and a former companion mean the same thing.",
+      "provenance": "Tripelkins colony archive."
+    },
+    {
+      "id": "industry",
+      "title": "04 / What remains",
+      "text": "Production creates a second product: the things nobody meant to make. The ground keeps that record.",
+      "provenance": "Tripelkins colony archive."
+    },
+    {
+      "id": "orbit",
+      "title": "05 / A larger we",
+      "text": "A population is a number only from far away. Departure changes the scale of care, not its existence.",
+      "provenance": "Tripelkins colony archive."
+    },
+    {
+      "id": "ending",
+      "title": "06 / Our settlement journal",
+      "text": "The colony remembers actions and their consequences. Its reflection describes this playthrough, not the person outside it.",
+      "provenance": "Tripelkins colony archive."
+    }
+  ],
+  "chapters": [
+    {
+      "id": "letter-flight-one",
+      "title": "Flight record / The lights we left",
+      "text": "Three suns once lit the windows of their garden cities. The spacecraft's first surviving photograph shows a door left open, waiting for someone who never reached the launch field.",
+      "category": "flight",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-warmth",
+      "title": "A small, ordinary miracle",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-three-friends",
+      "title": "Room for one more",
+      "text": "Three little lives in the clearing. The spacecraft carried a way for each survivor to make more of their kind. A family can begin again, even here.",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-flight-two",
+      "title": "Flight record / The last launch",
+      "text": "The launch computer recorded more goodbyes than seats. A keeper stayed on the ground to close the spacecraft's hatch. Its passenger log ends with a single instruction: keep them alive.",
+      "category": "flight",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-first-timber",
+      "title": "Something our paws can change",
+      "text": "We have gathered timber. It is heavy, and it is useful. The first materials of this home did not have to come from the spacecraft.",
+      "category": "work",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-beyond-clearing",
+      "title": "There is more out here",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-meal-routine",
+      "title": "The shape of a good day",
+      "text": "A meal, a wash, a bounce, a friend. Small routines hold us together while we learn how to make bigger plans.",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-flight-three",
+      "title": "Flight record / What the flare changed",
+      "text": "The spacecraft's medic recorded a change in the survivors' DNA after the triple flare. They could endure the radiation, but no longer hold a plan in mind. They still reached for each other.",
+      "category": "flight",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-twenty",
+      "title": "A whole little chorus",
+      "text": "There are twenty of us. Twenty different names, twenty places at the meal. We are beginning to need more than another helping hand: a way to think together.",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-permission",
+      "title": "Thank you for trusting our paws",
+      "text": "You have given us permission to build our own settlement. We will need shared intelligence to choose our projects. When it is resting, we can still look after the little things.",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-first-independent",
+      "title": "The beginning of a tomorrow",
+      "text": "Our first independent project is finished. A thought became work, and work became something real. The flare took a great deal from us. Perhaps it did not take every possible future.",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-flight-four",
+      "title": "Flight record / The unfinished lullaby",
+      "text": "The cabin recorder kept three notes of a lullaby. The rest is missing. When the Tripelkins chirp to one another, sometimes those same three notes seem to be looking for an ending.",
+      "category": "flight",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-second-grove",
+      "title": "Breakfast has another address",
+      "text": "A second banana grove is here. More than one corner of the colony can grow breakfast now. We can plan homes around food instead of all crowding around one meal.",
+      "category": "work",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-second-shower",
+      "title": "Room under the rain",
+      "text": "Another rain shower is ready. A place to wash near where we live means less time walking across the whole settlement with muddy paws.",
+      "category": "work",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-second-garden",
+      "title": "Two places to be silly",
+      "text": "We have another bounce garden. There is something reassuring about building a place simply because it makes our friends happy.",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-safe-crossing",
+      "title": "A bank we can come back from",
+      "text": "The bridge is finished. The far bank is part of our world now. We still need paths, meals and washing places wherever new work takes us.",
+      "category": "work",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-path-reopened",
+      "title": "A problem became a path",
+      "text": "An obstructed route has been opened. Instead of asking everyone to try the same impossible journey, we made room for the next step.",
+      "category": "work",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-fifty",
+      "title": "Fifty names to keep",
+      "text": "Fifty Tripelkins. The spacecraft's passenger number has become a neighborhood. Please keep noticing the little ones at the edges; a large family still has small needs.",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-flight-five",
+      "title": "Flight record / The long quiet",
+      "text": "For years the spacecraft searched. It turned toward water, away from storms, and onward from worlds with nowhere to land. Its fuel log became shorter. Its instruction never changed.",
+      "category": "flight",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-shelter",
+      "title": "A door that opens inward",
+      "text": "The first cottage is standing. On the old world, a light in a window meant that someone expected you back. We can give this place that meaning too.",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-ore-work",
+      "title": "Learning the weight of things",
+      "text": "Our paws have worked stone from the ground. Some things take more than enthusiasm. They take a reachable workplace, enough materials, and a friend who knows the next step.",
+      "category": "work",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-shared-song",
+      "title": "The part after work",
+      "text": "We have a clubhouse. The old cities had rooms for songs; this clearing can have one too. Surviving should leave a little space for being alive.",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-promise",
+      "title": "Your words became something real",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-hundred",
+      "title": "A hundred small futures",
+      "text": "A hundred Tripelkins are here. We cannot rebuild the home we lost by remembering it harder. We can build places where these lives will be safe tomorrow.",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-flight-six",
+      "title": "Flight record / The landing decision",
+      "text": "This clearing was not the spacecraft's best candidate. It was the last one within reach. The landing exhausted its long search. Everything that happens next belongs to the lives inside.",
+      "category": "flight",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-outposts",
+      "title": "A home with several centers",
+      "text": "Our groves are spreading. A new neighborhood needs its own food, water and play, not just more space. That is how exploring becomes living somewhere.",
+      "category": "work",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-orbit-home",
+      "title": "This time, a way back",
+      "text": "Some of us have reached orbit. The first spacecraft left a home it could never return to. This journey can be different: a home above, with friends still waiting below.",
+      "category": "letter",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    },
+    {
+      "id": "letter-new-lullaby",
+      "title": "The fourth note",
+      "text": "The flight record ends here. The colony does not. The missing part of the lullaby can be meals shared, paths opened, and little homes built together. A future does not have to sound like the past.",
+      "category": "flight",
+      "participants": "colony",
+      "responses": [
+        "Listen"
+      ],
+      "effect": "remember",
+      "replay": "once per branch"
+    }
+  ]
+}

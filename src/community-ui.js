@@ -1,14 +1,13 @@
 import { workProjects } from "./game/work-projects.js";
 import { brainStatus } from "./brain.js";
-import { collectStoryMessages, storyEntry, answerStory } from "./game/story.js";
-import { nextNotice, setIndependence } from "./game/community.js";
+import { storyEntry } from "./game/story.js";
 import { projectName, projectStatus, projectPercent } from "./game/development.js";
 import { htmlIfChanged } from "./ui-budget.js";
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
 const stamp = (tick) => `${Math.floor(tick/60)}:${String(Math.floor(tick%60)).padStart(2,"0")}`;
-export function createCommunityUI({ getWorld, ready, modal, closeModal, save, openIntelligence, onConsent, listen }) {
-  let timer, wasReady = false, inboxFilter = "all";
+export function createCommunityUI({ engine, getWorld, ready, modal, closeModal, save, openIntelligence, onConsent, listen }) {
+  let timer, wasReady = false, inboxFilter = "all", updatePending = false;
   const categories = {flight:"Flight records",letter:"Colony letters",milestone:"Milestones",work:"Work & discoveries",help:"Requests"};
   function independenceText() {
     return ready()
@@ -18,11 +17,10 @@ export function createCommunityUI({ getWorld, ready, modal, closeModal, save, op
   function consentButtons() {
     return `${ready() ? '<button class="primary" data-independence="yes">Let them grow independently</button>' : '<button class="primary" data-community-enable>Enable intelligence</button>'}<button class="secondary" data-independence="no">I’ll guide you for now</button>`;
   }
-  function inbox() {
+  async function inbox() {
     const w = getWorld();
-    collectStoryMessages(w);
-    for (const m of w.community.inbox) { m.read = true; m.notified = true; }
-    w.revision++;
+    await engine.command("community.openInbox");
+    if (getWorld() !== w) return;
     $("colony-notice").hidden = true;
     const entries = w.community.inbox.slice().reverse().filter(m=>inboxFilter==="all" || m.category===inboxFilter).map((m) => {
       const story = m.story && storyEntry(m.story);
@@ -41,17 +39,20 @@ export function createCommunityUI({ getWorld, ready, modal, closeModal, save, op
   }
   function update(status, notify = false) {
     const w = getWorld();
-    collectStoryMessages(w);
-    if (ready() && !wasReady && w.community.consent === "offered") {
-      const invitation = w.community.inbox.find((m) => m.key === "independence");
-      if (invitation?.read) {
-        invitation.key = "independence-ready";
-        invitation.title = "Now we can think together";
-        invitation.read = false; invitation.notified = false;
-        w.revision++;
-      }
-    }
-    wasReady = ready();
+    const isReady = ready();
+    const becameReady = isReady && !wasReady;
+    const shouldNotify = notify && !$("modal").open &&
+      w.time - w.community.lastNoticeAt >= 50 && w.community.inbox.some(m => !m.read && !m.notified);
+    if (!updatePending && (w.story.active || w.story.queue.length || becameReady || shouldNotify)) {
+      updatePending = true;
+      engine.command("community.update", {becameReady,notify:notify && !$("modal").open})
+        .then(message => {
+          if (getWorld() !== w) return;
+          wasReady = isReady;
+          if (message && !$("modal").open) showNotice(message);
+        }).catch(error => { $("thought-status").textContent = error.message; })
+        .finally(() => { updatePending = false; });
+    } else if (!updatePending) wasReady = isReady;
     const unread = w.community.inbox.filter((m)=>!m.read).length;
     $("inbox-count").textContent = unread || "";
     $("inbox-count").hidden = !unread;
@@ -69,21 +70,18 @@ export function createCommunityUI({ getWorld, ready, modal, closeModal, save, op
       const entries = w.community.activity.slice(-12).reverse().map((a)=>`<li><small>${stamp(a.tick)} · ${esc(a.source)}</small><p>${esc(a.text)}</p>${a.detail ? `<span>${esc(a.detail)}</span>`:""}</li>`).join("");
       htmlIfChanged($("thought-content"),`<p class="thought-current">${esc(now || "The clearing is quiet.")}</p><small>${w.metrics.completed} tasks completed in this world · ${w.community.explored} areas scouted</small>${projects.map(project=>`<p class="thought-project">${esc(projectName(project))} · ${projectPercent(w,project)}% · ${project.crew.length} workers at ${Math.round(project.x)}, ${Math.round(project.y)}<br>${esc(!ready() ? "Waiting for intelligence to reconnect." : !w.settings.autonomy ? "Colony initiative is paused in Options." : project.blocked || projectStatus(w,project))}</p>`).join("")}${initiative}<p class="thought-explainer">${status.kind === "off" || status.kind === "unavailable" ? 'Instincts are keeping them alive. <button data-community-enable>Enable intelligence</button> to let them choose plans.' : !w.settings.autonomy ? "Colony initiative is paused in Options. You can still talk to them." : brainStatus.activeRequests ? "Considering a decision right now…" : "They think when there is a useful choice. Movement and care continue between decisions."}</p>${thinking ? `<p class="thought-explainer">${esc(thinking)}</p>`:""}<ol>${entries || '<li>No decisions recorded yet.</li>'}</ol>`);
     }
-    if (notify && !$("modal").open) {
-      const message = nextNotice(w);
-      if (message) {
-        $("colony-notice-title").textContent = message.title;
-        $("colony-notice-text").textContent = message.action === "independence" ? independenceText() : message.text;
-        $("colony-notice").hidden = false;
-        clearTimeout(timer);
-        timer = setTimeout(()=>$("colony-notice").hidden=true,5000);
-      }
-    }
+  }
+  function showNotice(message) {
+    $("colony-notice-title").textContent = message.title;
+    $("colony-notice-text").textContent = message.action === "independence" ? independenceText() : message.text;
+    $("colony-notice").hidden = false;
+    clearTimeout(timer);
+    timer = setTimeout(()=>$("colony-notice").hidden=true,5000);
   }
   listen($("inbox-button"),"click",()=>{inboxFilter="all";inbox();});
   listen($("colony-notice-close"),"click",()=>$("colony-notice").hidden=true);
   listen($("colony-notice-read"),"click",inbox);
-  listen(document,"click",(event)=>{
+  listen(document,"click",async (event)=>{
     const filter = event.target.closest("[data-inbox-filter]");
     if (filter && (filter.dataset.inboxFilter==="all" || Object.hasOwn(categories,filter.dataset.inboxFilter))) {
       inboxFilter=filter.dataset.inboxFilter; inbox();
@@ -94,16 +92,15 @@ export function createCommunityUI({ getWorld, ready, modal, closeModal, save, op
       const yes = consent.dataset.independence === "yes";
       if (yes && !ready()) { openIntelligence(); return; }
       const w = getWorld();
-      if (!setIndependence(w,yes)) return;
+      if (!await engine.command("community.setIndependence", {accepted:yes}) || getWorld() !== w) return;
       if (yes) w.settings.autonomy = true;
       onConsent(); save(); closeModal();
     }
     const answer = event.target.closest("[data-inbox-story]");
     if (answer) {
-      const w = getWorld();w.story.active=answer.dataset.inboxStory;
-      answerStory(w,answer.dataset.inboxAnswer);
-      const message = w.community.inbox.find((m)=>m.story===answer.dataset.inboxStory);
-      if (message) { message.story=null;message.read=true;message.responseRequired=false; }
+      const w = getWorld();
+      await engine.command("community.answerStory", {id:answer.dataset.inboxStory,response:answer.dataset.inboxAnswer});
+      if (getWorld() !== w) return;
       save();inbox();
     }
   });

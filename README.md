@@ -6,6 +6,12 @@ A browser colony game about nurturing cheerful little creatures, watching them m
 
 ## Run locally
 
+Install Node.js 24 and Rust via rustup. The repository pins the Rust toolchain and WASM target. Install the WASM packaging tool once:
+
+```sh
+cargo install wasm-pack --version 0.15.0 --locked
+```
+
 ```sh
 npm ci
 npm run dev
@@ -15,11 +21,12 @@ Open `http://localhost:5173/tripelkins/`.
 
 ```sh
 npm test
+npm run verify:engine
 npm run build
 npm run preview
 ```
 
-The game runs entirely in the browser. Three.js renders the world; Vite builds the static site. The dev/build commands prepare the installed ONNX runtime files automatically.
+The game runs entirely in the browser. Rust/WASM workers own simulation and planning; Three.js renders the world. Vite builds the static site. The dev/build commands compile the engine when its source changes and prepare the installed ONNX runtime files automatically. No server or cross-origin isolation headers are required.
 
 ## Play
 
@@ -58,14 +65,34 @@ Export from Options for a portable backup. World-file compatibility is preserved
 
 | Area | Files |
 | --- | --- |
-| Rules, multiplication and physical work | `src/game/simulation.js`, `catalog.js`, `jobs.js` |
-| Paths, collision and blocked work | `src/game/navigation.js`, `geometry.js`, `access.js` |
-| Procedural map and fog | `src/game/map.js`, `discovery.js`, `src/fog.js` |
-| Group decisions and lasting goals | `src/brain.js`, `src/game/context.js`, `goals.js` |
+| Rules, multiplication and physical work | `engine/src/simulation.rs`, `resources.rs`, `jobs.rs` |
+| Paths, collision and blocked work | `engine/src/navigation.rs`, `geometry.rs`, `access.rs` |
+| Procedural map and fog | `engine/src/terrain.rs`, `discovery.rs`, `src/fog.js` |
+| Group decisions and lasting goals | `src/brain.js`, `engine/src/context.rs`, `goals.rs` |
 | Local inference and hosted provider | `src/laya/`, `src/providers/jev.js` |
 | Sprites, animations and sound | `src/game/art.js`, `src/world.js`, `src/colony-life.js`, `src/creature-voice.js` |
 | Voice and conversation | `src/voice/`, `src/voice.js`, `src/conversation-ui.js` |
-| Save, history and recovery | `src/persistence.js`, `src/game/save-schema.js`, `timeline.js` |
+| Save, history and recovery | `src/engine/`, `src/persistence.js`, `engine/src/save.rs`, `timeline.rs` |
+
+The JavaScript rules remain as the pinned migration reference and for existing diagnostics. The live game uses the Rust engine. See [migration architecture and verification](docs/RUST_ENGINE_MIGRATION.md).
+
+### Engine verification
+
+`npm run verify:engine` builds native Rust and the shipped WASM, audits the complete public API inventory and compares both against the pinned JavaScript implementation. `npm test` covers the browser adapters, worker queues, restore fencing and existing game regressions.
+
+Open `/tripelkins/engine-verify.html` for the actual worker/rendering workload at 25, 300 and 600 residents, including pause and restore checks. The older `performance.html` and `benchmark:*` commands are retained JavaScript reference workloads.
+
+Native source coverage and matched operation benchmarks are separate, more expensive checks:
+
+```sh
+rustup component add llvm-tools
+node scripts/migration/contracts/coverage.mjs
+node scripts/migration/contracts/benchmark.mjs
+node scripts/migration/contracts/aggregate.mjs
+node scripts/migration/contracts/docs.mjs
+```
+
+Coverage includes shared engine support and public bindings. The native CLI test harness is excluded; WASM source coverage is not claimed. Evidence from a dirty working tree is diagnostic until rerun from a clean commit.
 
 ## Deployment
 

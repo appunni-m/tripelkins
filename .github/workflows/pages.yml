@@ -19,13 +19,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
       - uses: actions/configure-pages@v6.0.0
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: 24
           cache: npm
+      - name: Install Rust WASM build tools
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal --target wasm32-unknown-unknown
+          cargo install wasm-pack --version 0.15.0 --locked
       - run: npm ci
       - run: npm test
+      - run: npm run verify:engine
       - run: npm run build
       - uses: actions/upload-pages-artifact@v5.0.0
         with:
@@ -44,10 +51,16 @@ jobs:
     needs: deploy
     steps:
       - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: 24
           cache: npm
+      - name: Install Rust WASM build tools
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal --target wasm32-unknown-unknown
+          cargo install wasm-pack --version 0.15.0 --locked
       - run: npm ci
       - run: npm test
       - run: npm run build

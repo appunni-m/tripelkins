@@ -646,10 +646,12 @@ test("Jev results from an abandoned world are discarded; failures use a valid lo
   const { decisionWorld } = await import("../src/game/evaluation.js");
   const original = globalThis.fetch;
   try {
-    let release, requestSignal;
+    let release, requestSignal, started;
+    const requested=new Promise(resolve=>started=resolve);
     const waiting = new Promise((resolve) => (release = resolve));
     globalThis.fetch = async (_url, init) => {
       requestSignal = init.signal;
+      started();
       await waiting;
       return {
         ok: true,
@@ -662,6 +664,7 @@ test("Jev results from an abandoned world are discarded; failures use a valid lo
     w.settings.provider = "jev";
     brainStatus.ready = true;
     const pending = decide(w, "test-only");
+    await requested;
     stopBrain("Restored another branch");
     release();
     assert.equal(await pending, null);

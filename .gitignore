@@ -5,3 +5,10 @@ public/ort-whisper/
 public/licenses/dependencies.txt
 .DS_Store
 *.log
+engine/target/
+engine/pkg/
+artifacts/migration/
+*.profraw
+*.profdata
+
+/public/licenses/rust-dependencies.txt

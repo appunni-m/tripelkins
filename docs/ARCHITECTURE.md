@@ -1,5 +1,15 @@
 # Tripelkins systems
 
+## Runtime engine
+
+The live game now uses the [Rust/WASM engine](RUST_ENGINE_MIGRATION.md).
+Simulation, planning, goals, story, save validation and history algorithms live in
+`engine/src/`. `src/engine/worker.js` owns the world and browser storage adapter;
+`query-worker.js` runs read-only Rust planning on snapshots. Rendering, input,
+audio and provider transport remain browser adapters. The JavaScript rule files
+listed in older subsystem notes below remain the migration reference.
+
+
 Tripelkins is a static browser application built with Three.js and Vite. No game server is required.
 
 ## Simulation and presentation

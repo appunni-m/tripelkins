@@ -9,7 +9,7 @@ function removeBundledRuntimeCopies() {
     async closeBundle() {
       const assetsDir = "dist/assets";
       const emitted = (await readdir(assetsDir)).filter((name) =>
-        name.endsWith(".wasm"),
+        name.startsWith("ort-") && name.endsWith(".wasm"),
       );
       for (const name of emitted)
         await rm(join(assetsDir, name), { force: true });
@@ -43,6 +43,7 @@ export default defineConfig({
         verification: "verify.html",
         review: "review.html",
         performance: "performance.html",
+        engine: "engine-verify.html",
       },
     },
   },

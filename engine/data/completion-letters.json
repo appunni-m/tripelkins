@@ -1,0 +1,34 @@
+{
+  "orchard": [
+    "Breakfast can grow here. Now we need to tend it and keep a clear way to the fruit.",
+    "A little patch of tomorrow's meals. It feels good to make something that can keep feeding us.",
+    "Another place for hungry paws to find a meal. Our clearing can grow around it."
+  ],
+  "bath": [
+    "A rain shower, built with our own paws. There is somewhere nearby to wash the work off.",
+    "We made room for clean fur and muddy adventures. In that order. Or perhaps the other way round.",
+    "Water here, work over there. We are learning that a short walk can make a whole day easier."
+  ],
+  "roundabout": [
+    "We built somewhere to bounce. No further justification appears to be necessary.",
+    "A place for tired paws to remember they are also excellent jumping paws.",
+    "The important work of being ridiculous can now begin here."
+  ],
+  "dwelling": [
+    "A roof, a door, and a place in this world that expects us back.",
+    "We cannot bring the old windows back. We can put warmth behind this one.",
+    "A cottage is ready. The clearing is beginning to feel less like a stop along the way."
+  ],
+  "theatre": [
+    "A room for company, and whatever comes after the three notes we remember.",
+    "We built a clubhouse. Some things are worth making because they bring us together."
+  ],
+  "mine": [
+    "The mine is ready. A clear entrance and care nearby will help our workers keep going.",
+    "We have a workplace in the stone. We will still need meals and rest above it."
+  ],
+  "factory": [
+    "The stone workshop is ready. Ore needs to reach it before it can make useful blocks.",
+    "A workshop for the next things we want to build. Keeping its paths clear will matter."
+  ]
+}

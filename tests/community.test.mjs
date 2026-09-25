@@ -106,8 +106,9 @@ test('Jev receives bounded, consented construction options; late revoked results
     assert.equal(result.choice.id,'orchard');assert.equal(body.state.independence.consent,'accepted');
     assert.ok(body.questions.decision.criteria.orchard);assert.ok(body.questions.decision.criteria.wait);
     assert.equal(w.community.project,null,'inference cannot mutate the paused/live world before applying');
-    let resolve;globalThis.fetch=()=>new Promise(r=>resolve=r);
-    const late=decideSettlement(w,'test-only-token');setIndependence(w,false);
+    let resolve,started;const requested=new Promise(r=>started=r);
+    globalThis.fetch=()=>{started();return new Promise(r=>resolve=r);};
+    const late=decideSettlement(w,'test-only-token');await requested;setIndependence(w,false);
     resolve({ok:true,json:async()=>({answers:{decision:{type:'choice',choice:'orchard'}}})});
     assert.equal(await late,null);
   } finally {globalThis.fetch=originalFetch;stopBrain();}

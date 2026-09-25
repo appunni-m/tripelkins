@@ -1,0 +1,4059 @@
+{
+  "schema": "tripelkins/spatial-parity@1",
+  "cases": [
+    {
+      "id": "terrain-18492",
+      "world": {
+        "map": {
+          "version": 1,
+          "seed": 18492,
+          "revision": 0,
+          "cleared": {}
+        },
+        "navRevision": 0,
+        "stage": 2,
+        "progress": {
+          "bridge": false
+        },
+        "objects": [],
+        "creatures": [],
+        "community": {
+          "project": null,
+          "projects": []
+        },
+        "discovery": {
+          "version": 1,
+          "cell": 4,
+          "revision": 0,
+          "regions": {}
+        }
+      },
+      "steps": [
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 18492,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 18492,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 18492,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 18492,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 18492,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": -7,
+            "cy": -5
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 18492,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 18492,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 18492,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 18492,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 18492,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": -1,
+            "cy": -1
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 18492,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 18492,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 18492,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 18492,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 18492,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 0,
+            "cy": 0
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 18492,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 18492,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 18492,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 18492,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 18492,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 1,
+            "cy": 1
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 18492,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 18492,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 18492,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 18492,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 18492,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 2,
+            "cy": 1
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 18492,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 18492,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 18492,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 18492,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 18492,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 5,
+            "cy": 5
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 18492,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 18492,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 18492,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 18492,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 18492,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 250,
+            "cy": -213
+          }
+        }
+      ]
+    },
+    {
+      "id": "terrain-0",
+      "world": {
+        "map": {
+          "version": 1,
+          "seed": 0,
+          "revision": 0,
+          "cleared": {}
+        },
+        "navRevision": 0,
+        "stage": 2,
+        "progress": {
+          "bridge": false
+        },
+        "objects": [],
+        "creatures": [],
+        "community": {
+          "project": null,
+          "projects": []
+        },
+        "discovery": {
+          "version": 1,
+          "cell": 4,
+          "revision": 0,
+          "regions": {}
+        }
+      },
+      "steps": [
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 0,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 0,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 0,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 0,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 0,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": -7,
+            "cy": -5
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 0,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 0,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 0,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 0,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 0,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": -1,
+            "cy": -1
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 0,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 0,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 0,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 0,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 0,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 0,
+            "cy": 0
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 0,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 0,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 0,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 0,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 0,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 1,
+            "cy": 1
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 0,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 0,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 0,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 0,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 0,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 2,
+            "cy": 1
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 0,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 0,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 0,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 0,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 0,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 5,
+            "cy": 5
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 0,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 0,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 0,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 0,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 0,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 250,
+            "cy": -213
+          }
+        }
+      ]
+    },
+    {
+      "id": "terrain-4294967295",
+      "world": {
+        "map": {
+          "version": 1,
+          "seed": 4294967295,
+          "revision": 0,
+          "cleared": {}
+        },
+        "navRevision": 0,
+        "stage": 2,
+        "progress": {
+          "bridge": false
+        },
+        "objects": [],
+        "creatures": [],
+        "community": {
+          "project": null,
+          "projects": []
+        },
+        "discovery": {
+          "version": 1,
+          "cell": 4,
+          "revision": 0,
+          "regions": {}
+        }
+      },
+      "steps": [
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 4294967295,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 4294967295,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 4294967295,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 4294967295,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 4294967295,
+            "x": -100,
+            "y": -80,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": -7,
+            "cy": -5
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 4294967295,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 4294967295,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 4294967295,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 4294967295,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 4294967295,
+            "x": -1,
+            "y": -1,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": -1,
+            "cy": -1
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 4294967295,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 4294967295,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 4294967295,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 4294967295,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 4294967295,
+            "x": 0,
+            "y": 0,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 0,
+            "cy": 0
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 4294967295,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 4294967295,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 4294967295,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 4294967295,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 4294967295,
+            "x": 24,
+            "y": 24,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 1,
+            "cy": 1
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 4294967295,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 4294967295,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 4294967295,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 4294967295,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 4294967295,
+            "x": 42,
+            "y": 25,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 2,
+            "cy": 1
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 4294967295,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 4294967295,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 4294967295,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 4294967295,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 4294967295,
+            "x": 80,
+            "y": 90,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 5,
+            "cy": 5
+          }
+        },
+        {
+          "operation": "terrain.isGround",
+          "input": {
+            "seed": 4294967295,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.isWater",
+          "input": {
+            "seed": 4294967295,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.biome",
+          "input": {
+            "seed": 4294967295,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.riverLeft",
+          "input": {
+            "seed": 4294967295,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.hash",
+          "input": {
+            "seed": 4294967295,
+            "x": 4000,
+            "y": -3400,
+            "salt": 7
+          }
+        },
+        {
+          "operation": "terrain.chunkObjects",
+          "input": {
+            "cx": 250,
+            "cy": -213
+          }
+        }
+      ]
+    },
+    {
+      "id": "geometry-clear",
+      "world": {
+        "map": {
+          "version": 1,
+          "seed": 18492,
+          "revision": 0,
+          "cleared": {}
+        },
+        "navRevision": 0,
+        "stage": 2,
+        "progress": {
+          "bridge": false
+        },
+        "objects": [],
+        "creatures": [],
+        "community": {
+          "project": null,
+          "projects": []
+        },
+        "discovery": {
+          "version": 1,
+          "cell": 4,
+          "revision": 0,
+          "regions": {}
+        }
+      },
+      "steps": [
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 12,
+            "y": 12
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 16,
+            "y": 16
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 42,
+            "y": 25
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": -24,
+            "y": -12
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "orchard",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "bath",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "bridge",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "factory",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "theatre",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "rock",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "discovery.summary",
+          "input": {}
+        },
+        {
+          "operation": "snapshot",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "geometry-obstructed",
+      "world": {
+        "map": {
+          "version": 1,
+          "seed": 18492,
+          "revision": 0,
+          "cleared": {}
+        },
+        "navRevision": 0,
+        "stage": 2,
+        "progress": {
+          "bridge": false
+        },
+        "objects": [
+          {
+            "id": "r1",
+            "type": "rock",
+            "x": 16,
+            "y": 16,
+            "stock": 0,
+            "level": 1
+          },
+          {
+            "id": "r2",
+            "type": "tree",
+            "x": 17,
+            "y": 16,
+            "stock": 0,
+            "level": 1
+          }
+        ],
+        "creatures": [],
+        "community": {
+          "project": null,
+          "projects": []
+        },
+        "discovery": {
+          "version": 1,
+          "cell": 4,
+          "revision": 0,
+          "regions": {}
+        }
+      },
+      "steps": [
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 12,
+            "y": 12
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 16,
+            "y": 16
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 42,
+            "y": 25
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": -24,
+            "y": -12
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "orchard",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "bath",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "bridge",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "factory",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "theatre",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "rock",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "discovery.summary",
+          "input": {}
+        },
+        {
+          "operation": "snapshot",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "geometry-bridge",
+      "world": {
+        "map": {
+          "version": 1,
+          "seed": 18492,
+          "revision": 0,
+          "cleared": {}
+        },
+        "navRevision": 0,
+        "stage": 2,
+        "progress": {
+          "bridge": true
+        },
+        "objects": [
+          {
+            "id": "b1",
+            "type": "bridge",
+            "x": 42,
+            "y": 25,
+            "stock": 24,
+            "level": 1
+          }
+        ],
+        "creatures": [],
+        "community": {
+          "project": null,
+          "projects": []
+        },
+        "discovery": {
+          "version": 1,
+          "cell": 4,
+          "revision": 0,
+          "regions": {}
+        }
+      },
+      "steps": [
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 12,
+            "y": 12
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 16,
+            "y": 16
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 42,
+            "y": 25
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": -24,
+            "y": -12
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "orchard",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "bath",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "bridge",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "factory",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "theatre",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "rock",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "discovery.summary",
+          "input": {}
+        },
+        {
+          "operation": "snapshot",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "geometry-construction",
+      "world": {
+        "map": {
+          "version": 1,
+          "seed": 18492,
+          "revision": 0,
+          "cleared": {}
+        },
+        "navRevision": 0,
+        "stage": 2,
+        "progress": {
+          "bridge": false
+        },
+        "objects": [],
+        "creatures": [],
+        "community": {
+          "project": {
+            "id": "p1",
+            "type": "factory",
+            "x": 12,
+            "y": 15
+          },
+          "projects": []
+        },
+        "discovery": {
+          "version": 1,
+          "cell": 4,
+          "revision": 0,
+          "regions": {}
+        }
+      },
+      "steps": [
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 12,
+              "y": 12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 12,
+              "y": 12
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 12,
+            "y": 12
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 16,
+              "y": 16
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 16,
+              "y": 16
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 16,
+            "y": 16
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": 42,
+              "y": 25
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": 42,
+              "y": 25
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": 42,
+            "y": 25
+          }
+        },
+        {
+          "operation": "geometry.clearPosition",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            }
+          }
+        },
+        {
+          "operation": "geometry.canPlace",
+          "input": {
+            "type": "orchard",
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "ignoreCreatures": false
+          }
+        },
+        {
+          "operation": "geometry.freePosition",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "radius": 6
+          }
+        },
+        {
+          "operation": "geometry.sweptMove",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "dx": 3.1,
+            "dy": 1.7
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 19,
+              "y": 18
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": 50,
+              "y": 25
+            }
+          }
+        },
+        {
+          "operation": "navigation.routeCost",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "navigation.waypoint",
+          "input": {
+            "from": {
+              "x": -24,
+              "y": -12
+            },
+            "to": {
+              "x": -20,
+              "y": -14
+            }
+          }
+        },
+        {
+          "operation": "discovery.reveal",
+          "input": {
+            "point": {
+              "x": -24,
+              "y": -12
+            },
+            "radius": 10
+          }
+        },
+        {
+          "operation": "discovery.isExplored",
+          "input": {
+            "x": -24,
+            "y": -12
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "orchard",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "bath",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "bridge",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "factory",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "theatre",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "geometry.serviceSlots",
+          "input": {
+            "object": {
+              "id": "service",
+              "type": "rock",
+              "x": 15,
+              "y": 17,
+              "stock": 0,
+              "level": 1
+            },
+            "from": {
+              "x": 12,
+              "y": 12
+            }
+          }
+        },
+        {
+          "operation": "discovery.summary",
+          "input": {}
+        },
+        {
+          "operation": "snapshot",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "terrain-public-neighborhood-and-changed-regions",
+      "world": {
+        "map": {
+          "version": 1,
+          "seed": 18492,
+          "revision": 0,
+          "cleared": {}
+        },
+        "navRevision": 0,
+        "stage": 2,
+        "progress": {
+          "bridge": false
+        },
+        "objects": [
+          {
+            "id": "o1",
+            "type": "tree",
+            "x": 24,
+            "y": 24,
+            "level": 1
+          },
+          {
+            "id": "o2",
+            "type": "rock",
+            "x": 26,
+            "y": 28,
+            "level": 1
+          }
+        ],
+        "creatures": [],
+        "community": {
+          "project": null,
+          "projects": []
+        },
+        "discovery": {
+          "version": 1,
+          "cell": 4,
+          "revision": 0,
+          "regions": {}
+        }
+      },
+      "steps": [
+        {
+          "operation": "terrain.nearbyObjects",
+          "input": {
+            "x": 24,
+            "y": 24,
+            "radius": 6
+          }
+        },
+        {
+          "operation": "terrain.nearbyObjects",
+          "input": {
+            "x": -30,
+            "y": -35,
+            "radius": 12
+          }
+        },
+        {
+          "operation": "terrain.normalize",
+          "input": {
+            "map": {
+              "version": 1,
+              "seed": 18492,
+              "revision": 3,
+              "cleared": {
+                "-2:4": 65535,
+                "0:1": 1,
+                "1:1": 0
+              }
+            },
+            "required": true
+          }
+        },
+        {
+          "operation": "terrain.normalize",
+          "input": {
+            "map": {
+              "version": 1,
+              "seed": 18492,
+              "revision": 3,
+              "cleared": {
+                "+2:4": 1
+              }
+            },
+            "required": true
+          }
+        },
+        {
+          "operation": "terrain.normalize",
+          "input": {
+            "map": {
+              "version": 1,
+              "seed": 18492,
+              "revision": 3,
+              "cleared": {
+                "2:4": 65536
+              }
+            },
+            "required": true
+          }
+        }
+      ]
+    }
+  ]
+}

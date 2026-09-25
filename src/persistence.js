@@ -1,8 +1,16 @@
-import { migrateWorld } from "./game/state.js";
-import { colonyHealth } from "./game/health.js";
-import { interruptCommands } from "./game/memory.js";
-import { appendTimeline, readMoment, historySize } from "./game/timeline.js";
+import { migrateWorld as referenceMigrateWorld } from "./game/state.js";
+import { colonyHealth as referenceColonyHealth } from "./game/health.js";
+import { interruptCommands as referenceInterruptCommands } from "./game/memory.js";
+import { appendTimeline as referenceAppendTimeline, readMoment as referenceReadMoment, historySize as referenceHistorySize } from "./game/timeline.js";
 import { VOICE_CACHES } from "./voice/model.js";
+// The production worker supplies Rust codecs/history operations. The default
+// implementation is retained for the independent JavaScript reference checks.
+let migrateWorld=referenceMigrateWorld, colonyHealth=referenceColonyHealth,
+  interruptCommands=referenceInterruptCommands, appendTimeline=referenceAppendTimeline,
+  readMoment=referenceReadMoment, historySize=referenceHistorySize;
+export function configurePersistence(adapter) {
+  ({migrateWorld,colonyHealth,interruptCommands,appendTimeline,readMoment,historySize}=adapter);
+}
 const DB_NAME = "tripelkins-local-index";
 let connection,
   pending,

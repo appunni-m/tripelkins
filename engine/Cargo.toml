@@ -1,0 +1,25 @@
+[package]
+name = "tripelkins-engine"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+wasm-bindgen = "0.2"
+unicode-segmentation = "1"
+unicode-normalization = "0.1"
+regex = "1"
+ryu-js = "1.0.3"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+
+[lints.rust]
+unsafe_code = "forbid"

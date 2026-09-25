@@ -1,0 +1,396 @@
+{
+  "schema": "migration-parity/benchmark-input@1",
+  "workloads": [
+    {
+      "workload_id": "game.context.buildContext.expanded-300-benchmark",
+      "covers": [
+        "game.context.buildContext.expanded-colony"
+      ],
+      "subjects": [
+        {
+          "kind": "oracle",
+          "id": "javascript-reference"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-native"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-wasm"
+        }
+      ],
+      "input": {
+        "kind": "parity_case",
+        "case_id": "game.context.buildContext.expanded-300"
+      },
+      "measurement": {
+        "boundary": "observed_steps",
+        "step_ids": [
+          "observe"
+        ],
+        "metrics": [
+          "latency"
+        ],
+        "warmup_iterations": 1,
+        "measurement_iterations": 1,
+        "samples": 5,
+        "concurrency": 1,
+        "cache_state": "cold",
+        "correctness_gate": "source_target_match"
+      }
+    },
+    {
+      "workload_id": "game.decisions.feasiblePlans.expanded-300-benchmark",
+      "covers": [
+        "game.decisions.feasiblePlans.expanded-colony"
+      ],
+      "subjects": [
+        {
+          "kind": "oracle",
+          "id": "javascript-reference"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-native"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-wasm"
+        }
+      ],
+      "input": {
+        "kind": "parity_case",
+        "case_id": "game.decisions.feasiblePlans.expanded-300"
+      },
+      "measurement": {
+        "boundary": "observed_steps",
+        "step_ids": [
+          "observe"
+        ],
+        "metrics": [
+          "latency"
+        ],
+        "warmup_iterations": 1,
+        "measurement_iterations": 1,
+        "samples": 5,
+        "concurrency": 1,
+        "cache_state": "cold",
+        "correctness_gate": "source_target_match"
+      }
+    },
+    {
+      "workload_id": "game.jobs.makePlan.expanded-300-benchmark",
+      "covers": [
+        "game.jobs.makePlan.expanded-colony"
+      ],
+      "subjects": [
+        {
+          "kind": "oracle",
+          "id": "javascript-reference"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-native"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-wasm"
+        }
+      ],
+      "input": {
+        "kind": "parity_case",
+        "case_id": "game.jobs.makePlan.expanded-300"
+      },
+      "measurement": {
+        "boundary": "observed_steps",
+        "step_ids": [
+          "observe"
+        ],
+        "metrics": [
+          "latency"
+        ],
+        "warmup_iterations": 1,
+        "measurement_iterations": 1,
+        "samples": 5,
+        "concurrency": 1,
+        "cache_state": "cold",
+        "correctness_gate": "source_target_match"
+      }
+    },
+    {
+      "workload_id": "game.navigation.routeCost.expanded-300-benchmark",
+      "covers": [
+        "game.navigation.routeCost.expanded-colony"
+      ],
+      "subjects": [
+        {
+          "kind": "oracle",
+          "id": "javascript-reference"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-native"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-wasm"
+        }
+      ],
+      "input": {
+        "kind": "parity_case",
+        "case_id": "game.navigation.routeCost.expanded-300"
+      },
+      "measurement": {
+        "boundary": "observed_steps",
+        "step_ids": [
+          "observe"
+        ],
+        "metrics": [
+          "latency"
+        ],
+        "warmup_iterations": 1,
+        "measurement_iterations": 1,
+        "samples": 5,
+        "concurrency": 1,
+        "cache_state": "cold",
+        "correctness_gate": "source_target_match"
+      }
+    },
+    {
+      "workload_id": "game.navigation.waypoint.expanded-300-benchmark",
+      "covers": [
+        "game.navigation.waypoint.expanded-colony"
+      ],
+      "subjects": [
+        {
+          "kind": "oracle",
+          "id": "javascript-reference"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-native"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-wasm"
+        }
+      ],
+      "input": {
+        "kind": "parity_case",
+        "case_id": "game.navigation.waypoint.expanded-300"
+      },
+      "measurement": {
+        "boundary": "observed_steps",
+        "step_ids": [
+          "observe"
+        ],
+        "metrics": [
+          "latency"
+        ],
+        "warmup_iterations": 1,
+        "measurement_iterations": 1,
+        "samples": 5,
+        "concurrency": 1,
+        "cache_state": "cold",
+        "correctness_gate": "source_target_match"
+      }
+    },
+    {
+      "workload_id": "game.outposts.outpostCamps.expanded-300-benchmark",
+      "covers": [
+        "game.outposts.outpostCamps.expanded-colony"
+      ],
+      "subjects": [
+        {
+          "kind": "oracle",
+          "id": "javascript-reference"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-native"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-wasm"
+        }
+      ],
+      "input": {
+        "kind": "parity_case",
+        "case_id": "game.outposts.outpostCamps.expanded-300"
+      },
+      "measurement": {
+        "boundary": "observed_steps",
+        "step_ids": [
+          "observe"
+        ],
+        "metrics": [
+          "latency"
+        ],
+        "warmup_iterations": 1,
+        "measurement_iterations": 1,
+        "samples": 5,
+        "concurrency": 1,
+        "cache_state": "cold",
+        "correctness_gate": "source_target_match"
+      }
+    },
+    {
+      "workload_id": "game.settlement.settlementChoices.expanded-300-benchmark",
+      "covers": [
+        "game.settlement.settlementChoices.expanded-colony"
+      ],
+      "subjects": [
+        {
+          "kind": "oracle",
+          "id": "javascript-reference"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-native"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-wasm"
+        }
+      ],
+      "input": {
+        "kind": "parity_case",
+        "case_id": "game.settlement.settlementChoices.expanded-300"
+      },
+      "measurement": {
+        "boundary": "observed_steps",
+        "step_ids": [
+          "observe"
+        ],
+        "metrics": [
+          "latency"
+        ],
+        "warmup_iterations": 1,
+        "measurement_iterations": 1,
+        "samples": 5,
+        "concurrency": 1,
+        "cache_state": "cold",
+        "correctness_gate": "source_target_match"
+      }
+    },
+    {
+      "workload_id": "game.settlement.settlementDecisionChoices.expanded-300-benchmark",
+      "covers": [
+        "game.settlement.settlementDecisionChoices.expanded-colony"
+      ],
+      "subjects": [
+        {
+          "kind": "oracle",
+          "id": "javascript-reference"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-native"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-wasm"
+        }
+      ],
+      "input": {
+        "kind": "parity_case",
+        "case_id": "game.settlement.settlementDecisionChoices.expanded-300"
+      },
+      "measurement": {
+        "boundary": "observed_steps",
+        "step_ids": [
+          "observe"
+        ],
+        "metrics": [
+          "latency"
+        ],
+        "warmup_iterations": 1,
+        "measurement_iterations": 1,
+        "samples": 5,
+        "concurrency": 1,
+        "cache_state": "cold",
+        "correctness_gate": "source_target_match"
+      }
+    },
+    {
+      "workload_id": "game.simulation.stepWorld.expanded-300-benchmark",
+      "covers": [
+        "game.simulation.stepWorld.expanded-colony"
+      ],
+      "subjects": [
+        {
+          "kind": "oracle",
+          "id": "javascript-reference"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-native"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-wasm"
+        }
+      ],
+      "input": {
+        "kind": "parity_case",
+        "case_id": "game.simulation.stepWorld.expanded-300"
+      },
+      "measurement": {
+        "boundary": "observed_steps",
+        "step_ids": [
+          "observe"
+        ],
+        "metrics": [
+          "latency"
+        ],
+        "warmup_iterations": 1,
+        "measurement_iterations": 1,
+        "samples": 5,
+        "concurrency": 1,
+        "cache_state": "cold",
+        "correctness_gate": "source_target_match"
+      }
+    },
+    {
+      "workload_id": "game.timeline.appendTimeline.expanded-300-benchmark",
+      "covers": [
+        "game.timeline.appendTimeline.expanded-colony"
+      ],
+      "subjects": [
+        {
+          "kind": "oracle",
+          "id": "javascript-reference"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-native"
+        },
+        {
+          "kind": "target_profile",
+          "id": "rust-wasm"
+        }
+      ],
+      "input": {
+        "kind": "parity_case",
+        "case_id": "game.timeline.appendTimeline.expanded-300"
+      },
+      "measurement": {
+        "boundary": "observed_steps",
+        "step_ids": [
+          "observe"
+        ],
+        "metrics": [
+          "latency"
+        ],
+        "warmup_iterations": 1,
+        "measurement_iterations": 1,
+        "samples": 5,
+        "concurrency": 1,
+        "cache_state": "cold",
+        "correctness_gate": "source_target_match"
+      }
+    }
+  ],
+  "suites": []
+}

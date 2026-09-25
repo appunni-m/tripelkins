@@ -7,7 +7,7 @@ The workflow runs on pushes to `main` and can also be dispatched manually.
 ## Deployment checks
 
 1. `npm ci` installs the committed lockfile.
-2. `npm run build` copies each ONNX runtime's matching loaders and binaries, builds both pages, removes unused duplicate binaries, and writes a SHA-256 deployment manifest. Missing runtime files, invalid WASM binaries, escaped HTML base paths and oversized output fail the build.
+2. `npm run build` compiles the locked Rust engine to WASM, generates software notices, copies each ONNX runtime's matching loaders and binaries, builds the game and verification pages, removes unused duplicate ONNX binaries, and writes a SHA-256 deployment manifest. Missing runtime files, invalid WASM binaries, escaped HTML base paths and oversized output fail the build.
 3. GitHub uploads and deploys `dist`.
 4. The verification job downloads every published manifest asset, checks JavaScript/WASM MIME types, and compares file lengths and SHA-256 hashes against a build of the same commit. It waits briefly for CDN propagation before checking.
 
@@ -36,12 +36,14 @@ Model checks use the production workers without substitutes. Checks run sequenti
 
 OpenRouter/Jev requests require a player-supplied key. Test connection and an actual message separately in Options → Advanced; the verification page never collects keys or sends paid API calls. A microphone API being available does not prove permission, real microphone capture or recognition quality on every device. Those require an explicit recording check on each target device.
 
+The `/tripelkins/engine-verify.html` page runs disposable 25/300/600-resident Rust worker checks, including rendering, pause, restore and concurrent context preparation. It does not download models or overwrite a saved colony.
+
 ## Hosting details
 
 - Vite emits relative URLs, so the same build works at `/tripelkins/` and at the root of a custom domain, including workers and AudioWorklet files.
 - In development, workers resolve ONNX files from Vite's public root. Built workers resolve them above their `assets/` directory. A shared resolver preserves the trailing slash required for dynamic module loading.
 - Model weights come from Hugging Face with browser CORS. Runtime binaries come from this Pages site.
-- One WASM thread avoids requiring cross-origin isolation headers on GitHub Pages.
+- Each Rust/WASM instance runs without shared memory: an authoritative simulation worker and a bounded read-only planning worker. Model inference retains its existing workers. No cross-origin isolation headers are required.
 - HTTPS permits WebGPU, IndexedDB, CacheStorage and microphone APIs where supported by the browser.
 - The game and verification page have no server, secret or backend dependency.
 - `localhost` and GitHub Pages have different storage origins. Existing local worlds must be exported and imported to move them to the public site. Model caches are also downloaded separately for each origin.

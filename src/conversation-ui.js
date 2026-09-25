@@ -1,18 +1,5 @@
-import { parseConstraints, commitConstraints } from "./game/commands.js";
 import { converse, brainStatus } from "./brain.js";
-import { applyPlan, makePlan } from "./game/simulation.js";
-import { remember } from "./game/state.js";
-import { postMessage, activity } from "./game/community.js";
 import { createTalkGesture } from "./talk-gesture.js";
-import { beginCommand } from "./game/memory.js";
-import {
-  addGoal,
-  advanceGoals,
-  activeGoal,
-  goalTitle,
-  inspectGoal,
-  goalPolicy,
-} from "./game/goals.js";
 import {
   voiceStatus,
   connectVoice,
@@ -35,6 +22,7 @@ const editing = (event) =>
   event.target.closest?.("input, textarea, select, [contenteditable=true]");
 
 export function createConversation({
+  engine,
   getWorld,
   getToken,
   openOptions,
@@ -226,20 +214,18 @@ export function createConversation({
     const current = new AbortController(),
       w = getWorld();
     controller = current;
-    const reference = parseConstraints(w, text, target);
-    target = reference.listener || target;
-    const command = beginCommand(w, text, channel, target);
-    remember(w, "command", text, target);
+    const commandId = crypto.randomUUID();
     const cancel = () => {
-      if (command.status === "pending") {
-        command.status = "cancelled";
-        if (getWorld() === w) save();
-      }
+      if (getWorld() === w) engine.command("conversation.cancel", {id:commandId})
+        .then(() => getWorld() === w && save()).catch(() => {});
     };
     current.signal.addEventListener("abort", cancel, { once: true });
     caption("you", text);
     render();
     try {
+      const begun = await engine.command("conversation.begin", {id:commandId,text,channel,target});
+      target = begun.target || target;
+      if (current.signal.aborted || getWorld() !== w) return;
       if ((await save()) === false)
         throw new Error(
           "Your words could not be saved. Check Saved worlds in Options.",
@@ -253,59 +239,13 @@ export function createConversation({
         current.signal,
       );
       if (current.signal.aborted || getWorld() !== w) return;
-      if (answer.constraints) commitConstraints(w, answer.constraints);
-      let mood = "reply";
+      const completed = await engine.command("conversation.complete", {id:commandId,text,target,answer,expectedCommandRevision:answer.revision});
+      if (current.signal.aborted || getWorld() !== w || completed.discarded) return;
+      const mood = completed.mood;
+      answer.reply = completed.reply;
       brainStatus.error = null;
-      if (answer.goal) {
-        const objective = addGoal(w, answer.goal, text, answer.source);
-        command.goalId = objective.id;
-        for (const finished of advanceGoals(w))
-          remember(
-            w,
-            "goal-complete",
-            `We reached our goal: ${goalTitle(finished)}.`,
-          );
-        const state = inspectGoal(w, objective);
-        answer.reply =
-          objective.status === "completed"
-            ? `We have already reached that goal: ${goalTitle(objective)}.`
-            : `${objective.status === "queued" ? "We’ll remember this for next" : objective.status === "paused" ? "This goal is saved and paused" : "We’ll keep working toward this"}: ${goalTitle(objective)}. ${state.blocker || state.step}`;
-        remember(w, "goal", `We agreed on a goal: ${goalTitle(objective)}.`);
-        const focus = activeGoal(w);
-        if (focus?.id === objective.id) {
-          w.memory.lastPlan = {
-            policy: state.policy,
-            source: "Goal planner",
-            tick: Math.floor(w.time),
-            goalId: focus.id,
-          };
-          applyPlan(w, makePlan(w, goalPolicy(w)));
-        }
-        mood = state.blocker ? "blocked" : "goal";
-        onGoal?.();
-      }
-      command.status = "completed";
-      command.reply = answer.reply.slice(0, 500);
-      command.source = answer.source;
-      w.memory.conversations.push({
-        text,
-        reply: answer.reply.slice(0, 500),
-        source: answer.source,
-        tick: Math.floor(w.time),
-        listener: w.creatures.some((c) => c.id === target) ? target : null,
-      });
-      w.memory.conversations = w.memory.conversations.slice(-24);
-      remember(
-        w,
-        "conversation",
-        `You said: ${text.slice(0, 180)}`,
-        target || null,
-      );
+      if (completed.goalId) onGoal?.();
       caption("colony", answer.reply);
-      postMessage(w, { title: "A word with the colony", text: `You: ${text}\nThe colony: ${answer.reply}` });
-      const message = w.community.inbox.at(-1);
-      if (message) message.notified = true;
-      activity(w, "conversation", "Heard your words", answer.source, answer.reply);
       const quiet = w.ui.paused || document.hidden || $("modal").open;
       const phrase = singReply(answer.reply, w.population, mood, {
         muted: w.ui.muted || quiet,
@@ -315,8 +255,8 @@ export function createConversation({
       save();
     } catch (error) {
       if (!current.signal.aborted && getWorld() === w) {
-        command.status = "failed";
-        command.reply = "The colony could not reply. You can try again.";
+        await engine.command("conversation.fail", {id:commandId}).catch(() => {});
+        if (getWorld() !== w) return;
         save();
         conversationError = error.message;
         if (!/shorter message/i.test(error.message)) {
