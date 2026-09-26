@@ -96,6 +96,15 @@ const toolTray = createToolTray($("tool-tray"), $("tool-list"), $("tools-previou
 function listen(target, kind, callback, options = {}) {
   target.addEventListener(kind, callback, { ...options, signal: appEvents.signal });
 }
+const gameFooter = document.querySelector(".game-footer");
+const updateGameFooterSize = () => {
+  const height = Math.ceil(gameFooter.getBoundingClientRect().height);
+  $("game").style.setProperty("--game-footer-height", `${height}px`);
+};
+if (typeof ResizeObserver !== "undefined")
+  new ResizeObserver(updateGameFooterSize).observe(gameFooter);
+listen(window, "resize", updateGameFooterSize, { passive: true });
+updateGameFooterSize();
 let world,
   token = "",
   view,

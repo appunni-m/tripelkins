@@ -2401,3 +2401,375 @@ dialog {
   line-height: 1.55;
 }
 .important-choice .button-row button { min-height: 44px; }
+
+/* Keep phone panels inside the space left between the HUD and control shelf. */
+@media (max-width: 700px) and (orientation: portrait) {
+  #game {
+    --phone-inspector-top: max(162px, calc(env(safe-area-inset-top, 0px) + 154px));
+  }
+
+  .hud {
+    align-items: center;
+    gap: 6px;
+    z-index: 2;
+  }
+
+  .resources,
+  .inspector,
+  .game-footer {
+    z-index: 2;
+  }
+
+  #pause-label {
+    z-index: 1;
+    font-size: clamp(22px, 7vw, 32px);
+    letter-spacing: clamp(2px, 0.9vw, 5px);
+    white-space: nowrap;
+  }
+
+  .population {
+    width: clamp(60px, 17.5vw, 70px);
+    height: clamp(60px, 17.5vw, 70px);
+  }
+
+  .population img {
+    width: clamp(20px, 6vw, 24px);
+    height: clamp(20px, 6vw, 24px);
+  }
+
+  .population span {
+    font-size: clamp(15px, 4.5vw, 18px);
+    line-height: 1.05;
+  }
+
+  .goal {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+
+  .goal > span:last-child {
+    min-width: 0;
+  }
+
+  .goal b {
+    display: block;
+    overflow: hidden;
+    font-size: clamp(11px, 3.6vw, 14px);
+    line-height: 1.05;
+    letter-spacing: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .goal small {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .inspector {
+    top: var(--phone-inspector-top);
+    max-height: max(
+      96px,
+      calc(
+        100dvh - var(--game-footer-height, 280px) - var(--phone-inspector-top) - 12px -
+          env(safe-area-inset-bottom, 0px)
+      )
+    );
+  }
+
+  .game-footer {
+    bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    gap: clamp(2px, 0.8dvh, 6px);
+  }
+
+  .thought-log {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(
+      var(--game-footer-height, 280px) + 8px + env(safe-area-inset-bottom, 0px)
+    );
+    width: min(260px, calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+    max-width: calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+    margin: 0;
+  }
+
+  .thought-log summary {
+    min-height: 44px;
+  }
+
+  #thought-content {
+    max-height: min(27dvh, 220px);
+  }
+
+  .world-controls {
+    width: 100%;
+    max-width: 100%;
+    gap: 4px;
+  }
+
+  .toolbox {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  #tabs button {
+    min-width: 0;
+    flex: 1 1 0;
+    padding-right: clamp(8px, 3vw, 14px);
+    padding-left: clamp(8px, 3vw, 14px);
+  }
+
+  .tool-tray {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+  }
+
+  .options-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .options-nav button {
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 2px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .tool {
+    height: clamp(68px, 9dvh, 84px);
+    grid-template-rows: 14px minmax(24px, 1fr) 20px;
+  }
+
+  .tool img {
+    width: clamp(24px, 7vw, 34px);
+    height: clamp(24px, 7vw, 34px);
+  }
+
+  .tool-hint {
+    display: none;
+  }
+
+  .voice-subtitles {
+    bottom: calc(var(--game-footer-height, 280px) + 58px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .voice-live {
+    bottom: calc(var(--game-footer-height, 280px) + 12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .chat-composer {
+    bottom: calc(var(--game-footer-height, 280px) + 12px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 700px) and (max-height: 720px) and (orientation: portrait) {
+  .thought-log {
+    width: 44px;
+    max-width: 44px;
+  }
+
+  .thought-log[open] {
+    width: min(260px, calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+    max-width: calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  }
+
+  .thought-log:not([open]) summary {
+    display: grid;
+    min-height: 44px;
+    padding: 0;
+    place-items: center;
+    list-style: none;
+  }
+
+  .thought-log:not([open]) summary::marker {
+    content: "";
+  }
+
+  .thought-log:not([open]) summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .thought-log:not([open]) summary #thought-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .thought-log:not([open]) summary small {
+    display: none;
+  }
+
+  .thought-log:not([open]) summary::after {
+    content: "LOG";
+    color: #6f6846;
+    font: 800 7px/1 "Barlow Condensed", sans-serif;
+    letter-spacing: 0.5px;
+  }
+}
+
+@media (max-width: 370px) and (orientation: portrait) {
+  .goal {
+    padding: 5px 6px;
+    gap: 4px;
+  }
+
+  .tool-list {
+    --tool-columns: 3;
+    grid-auto-columns: calc((100% - 12px) / 3);
+  }
+}
+
+/* A short landscape viewport needs a side-by-side shelf on touch and desktop. */
+@media (max-width: 1000px) and (max-height: 520px) and (orientation: landscape) {
+  #game {
+    --phone-inspector-top: max(78px, calc(env(safe-area-inset-top, 0px) + 66px));
+  }
+
+  .hud {
+    top: max(8px, env(safe-area-inset-top, 0px));
+    right: max(12px, env(safe-area-inset-right, 0px));
+    left: max(12px, env(safe-area-inset-left, 0px));
+    align-items: center;
+    gap: 8px;
+    z-index: 2;
+  }
+
+  .resources,
+  .inspector,
+  .game-footer {
+    z-index: 2;
+  }
+
+  #pause-label {
+    z-index: 1;
+    font-size: clamp(20px, 4vw, 28px);
+    letter-spacing: clamp(2px, 0.6vw, 4px);
+    white-space: nowrap;
+  }
+
+  .population {
+    width: 56px;
+    height: 56px;
+  }
+
+  .population img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .population span {
+    font-size: 15px;
+    line-height: 1.05;
+  }
+
+  .goal {
+    min-width: 0;
+    max-width: min(320px, 48vw);
+    margin: 0;
+    padding: 4px 7px;
+    flex: 0 1 320px;
+  }
+
+  .goal b {
+    font-size: 13px;
+  }
+
+  .goal small {
+    font-size: 9px;
+  }
+
+  .resources {
+    top: max(68px, calc(env(safe-area-inset-top, 0px) + 58px));
+    left: max(12px, env(safe-area-inset-left, 0px));
+    max-width: min(230px, 34vw);
+  }
+
+  .resource {
+    min-height: 36px;
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+
+  .resource img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .inspector {
+    top: var(--phone-inspector-top);
+    width: min(220px, 32vw);
+    max-height: max(
+      96px,
+      calc(
+        100dvh - var(--game-footer-height, 190px) - var(--phone-inspector-top) - 10px -
+          env(safe-area-inset-bottom, 0px)
+      )
+    );
+  }
+
+  .game-footer {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    left: max(12px, env(safe-area-inset-left, 0px));
+    right: max(12px, env(safe-area-inset-right, 0px));
+    gap: 8px;
+  }
+
+  .world-controls {
+    width: auto;
+    max-width: min(315px, 42vw);
+  }
+
+  .toolbox {
+    width: min(390px, 50vw);
+  }
+
+  .tool-list {
+    --tool-columns: 3;
+    grid-auto-columns: calc((100% - 12px) / 3);
+  }
+
+  .tool {
+    height: clamp(64px, 19dvh, 76px);
+    grid-template-rows: 14px minmax(24px, 1fr) 20px;
+  }
+
+  .tool img {
+    width: 30px;
+    height: 30px;
+  }
+
+  .tool-hint {
+    display: none;
+  }
+
+  .thought-log {
+    position: fixed;
+    right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: calc(
+      var(--game-footer-height, 190px) + 8px + env(safe-area-inset-bottom, 0px)
+    );
+    width: min(250px, 34vw);
+  }
+
+  .thought-log #thought-content {
+    max-height: 24dvh;
+  }
+
+  .voice-subtitles {
+    bottom: calc(var(--game-footer-height, 190px) + 58px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .voice-live,
+  .chat-composer {
+    bottom: calc(var(--game-footer-height, 190px) + 12px + env(safe-area-inset-bottom, 0px));
+  }
+}
