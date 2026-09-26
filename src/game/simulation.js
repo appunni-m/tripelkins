@@ -5,7 +5,7 @@ import { NEED_DECAY, USEFUL_TASKS } from "./work-balance.js";
 import { requestAccess, reviewAccess, clearanceTask } from "./access.js";
 import { bridgeProject } from "./bridge-project.js";
 import { meteorImpact } from "./destruction.js";
-import { canEnterBridge } from "./traffic.js";
+import { canEnterBridge, bridgeWaitingPoint } from "./traffic.js";
 import { BUILDINGS, TOOLS, LIMITS, unlocked, displayName, buildingCost } from "./catalog.js";
 import {
   addCreature,
@@ -122,6 +122,17 @@ function travel(w, c, dt) {
     return true;
   }
   if (!canEnterBridge(w, c, job.point)) {
+    const holding = bridgeWaitingPoint(w, c);
+    if (holding) {
+      const dx = holding.x - c.x,
+        dy = holding.y - c.y,
+        d = Math.hypot(dx, dy);
+      if (d > 0.15) {
+        const stride = Math.min(1.65 * dt, d);
+        const moved = steerMove(w, c, (dx / d) * stride, (dy / d) * stride);
+        if (moved > 0.01) c.heading = Math.atan2(dy, dx);
+      }
+    }
     job.state = "queued";
     job.lastProgress = w.time;
     job.progressAt = w.time;

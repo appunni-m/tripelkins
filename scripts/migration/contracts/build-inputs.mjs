@@ -32,7 +32,7 @@ const defaultFor=(surface,op,param,w)=>{
  if(k==='type')return 'orchard';if(k==='tool')return 'inspect';if(k==='answer')return 'yes';if(k==='accepted')return true;
  if(k==='options'||k.startsWith('options'))return surface==='game.community'?{text:'We found room to grow.',key:'arrival'}:surface==='game.access'?{target:rock.id,point:{x:27,y:28},unit:w.creatures[0].id,task:'quarry'}:surface==='game.outposts'?{workers:12,miners:5,stock:20,oldDistance:35,newDistance:6,kind:'food',wood:10,blocks:0,builderDistance:12}:{};
  if(k==='id')return surface==='game.story'?'arrival':surface==='game.timeline'?'base1':surface==='game.goals'?'g1':w.creatures[0].id;
- if(k==='entity'&&op==='interact')return w.creatures[0];if(k==='objects')return w.objects;
+ if(k==='entity'&&op==='interact')return w.creatures[0];if(k==='entity'&&surface==='game.simulation'&&op==='choose')return {id:w.creatures[0].id};if(k==='objects')return w.objects;
  if(k==='entity'||k==='listener'||k==='selected'||k==='other'||k==='unit')return w.creatures[0].id;
  if(k==='text'||k==='message'||k==='value'||k==='command')return surface==='game.context-budget'?{food:'Banana',count:25}:k==='value'&&['game.map','game.density'].includes(surface)?12.5:'Please gather wood';
  if(k==='intent')return 'hello';if(k==='channel')return 'text';if(k==='detail')return 'Nearby work';if(k==='response')return 'yes';if(k==='title')return 'A shared beginning';
@@ -64,6 +64,7 @@ function makeCase(surface,operation,name,w,overrides={}){
 const presentation=new Set(['game.geometry.project','game.geometry.unproject','game.map.terrainChunk']);
 const unsupportedInput=new Set(['game.navigation.withRouteCosts','game.navigation-grid.copyOccupancy','game.context-budget.packHostedContext']);
 for(const s of manifest.surfaces)for(const o of s.operations){if(presentation.has(`${s.id}.${o.id}`)||unsupportedInput.has(`${s.id}.${o.id}`))continue;makeCase(s.id,o.id,'representative',world);}
+makeCase('game.decisions','selectPlan','precomputed-initial',world,{policy:'balanced',source:'Coverage',model:'contract',initial:[{id:'balanced',assignments:[],effects:{care:0,commitment:0,material:0,production:0,discovery:0,space:0,maintenance:0,travel:0}}]});
 const fixtures=JSON.parse(readFileSync(join(ROOT,'engine/tests/simulation-inputs.json'))).cases;
 for(const item of fixtures){const f={...item,...item.steps[0]};let [module,member]=f.operation.split('.');let args={...f.input};const w=f.world;let surface=`game.${module}`;let operation=member;
  const creature=id=>w.creatures.find(c=>c.id===id);const object=id=>w.objects.find(o=>o.id===id);const any=id=>creature(id)||object(id)||id;
@@ -117,6 +118,18 @@ for(const variant of ['caller-on-deck','other-on-deck','same-bank','far-from-ent
  const w=structuredClone(bridgeWorld),c=w.creatures[0],bridge=w.objects.find(o=>o.id===narrow.id);let destination={x:48,y:25};
  if(variant==='caller-on-deck')c.x=42;if(variant==='other-on-deck')w.creatures[1].x=42;if(variant==='same-bank')destination={x:35,y:25};if(variant==='far-from-entry')c.x=32;if(variant==='incomplete')bridge.bridge.complete=false;if(variant==='wide')bridge.bridge.width=2.4;
  makeCase('game.traffic','canEnterBridge',variant,w,{c,destination});
+}
+const queueWorld=source.createWorld({empty:true});queueWorld.progress.hatched=true;queueWorld.stage=2;queueWorld.runtime={lastSchedule:100,intelligenceAvailable:true,growth:{held:true}};queueWorld.community.consent='accepted';queueWorld.progress.bridge=true;
+source.addObject(queueWorld,'bridge',42,25,{stock:24,bridge:{a:{x:38.7,y:25},b:{x:45.3,y:25},width:1.2,complete:true,required:24,delivered:{wood:24,bones:0}}});
+for(const [index,position]of [[42,25],[46,25],[46.8,25]].entries()){
+ const c=source.addCreature(queueWorld,position[0],position[1]);c.fed=c.clean=c.amused=85;c.growth=0;c.task='explore';c.target=null;c.work=0;
+ c.job={state:'travelling',point:{x:index===0?50:32,y:25},started:0,lastProgress:0,progressAt:0,bestDistance:index===0?8:14,expected:60};
+}
+makeCase('game.traffic','canEnterBridge','travelers-clear-approach-queue',queueWorld,{c:queueWorld.creatures[1],destination:{x:32,y:25}});{
+ const item=cases.at(-1),data=JSON.stringify(queueWorld),w={kind:'asset',asset_id:'traffic_queue_world'};item.assets.push({id:'traffic_queue_world',kind:'inline',encoding:'utf8',data,sha256:sha(data),media_type:'application/json'});item.steps=[];item.observations=[];
+ for(let i=0;i<45;i++)item.steps.push({step_id:`queue-step-${i}`,surface:'game.simulation',operation:'stepWorld',receiver:null,arguments:{w,dt:literal(.1)}});
+ for(const [id,index]of [['east-first-admitted',1],['east-second-admitted',2]])item.steps.push({step_id:id,surface:'game.traffic',operation:'canEnterBridge',receiver:null,arguments:{w,c:literal(queueWorld.creatures[index]),destination:literal({x:32,y:25})}});
+ item.observations=item.steps.map(step=>step.step_id);item.covers=[...new Set(item.steps.map(step=>`${step.surface}.${step.operation}.contract`))];
 }
 // Rich authored context exercises bounded histories, group jobs, access blockers,
 // density rounding, optional omission, and the selected-object sample order.
