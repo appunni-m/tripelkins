@@ -3,9 +3,11 @@ import wasmUrl from '../../engine/pkg/tripelkins_engine_bg.wasm?url';
 import * as storage from '../persistence.js';
 import { BackgroundSchedule } from './background-schedule.js';
 
+const versionedWasmUrl=new URL(wasmUrl,import.meta.url);
+versionedWasmUrl.searchParams.set('worker',new URL(import.meta.url).pathname.split('/').pop()||'dev');
 let engine, generation=0, awaitingGeneration=null, paused=true, initialized=false, preview=false,
   framePending=false, tickQueued=false, lastSaveAt=0, lastViewAt=-Infinity, views=null, tail=Promise.resolve();
-const initializedWasm=init({module_or_path:wasmUrl});
+const initializedWasm=init({module_or_path:versionedWasmUrl.href});
 const scheduler = new BackgroundSchedule({
   enqueue:operation=>{tail=tail.then(operation).catch(error=>scheduler.fail(error));},
   snapshot:()=>engine.snapshot(),

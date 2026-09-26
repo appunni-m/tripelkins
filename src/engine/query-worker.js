@@ -2,7 +2,9 @@
 // Every request owns a snapshot; this worker can never commit colony changes.
 import init, {Engine} from '../../engine/pkg/tripelkins_engine.js';
 import wasmUrl from '../../engine/pkg/tripelkins_engine_bg.wasm?url';
-const ready=init({module_or_path:wasmUrl});
+const versionedWasmUrl=new URL(wasmUrl,import.meta.url);
+versionedWasmUrl.searchParams.set('worker',new URL(import.meta.url).pathname.split('/').pop()||'dev');
+const ready=init({module_or_path:versionedWasmUrl.href});
 let tail=Promise.resolve();
 self.onmessage=({data})=>{
   tail=tail.then(async()=>{
