@@ -34,6 +34,14 @@ jobs:
       - run: npm test
       - run: npm run verify:engine
       - run: npm run build
+      - name: Prepare Brotli upload for Cloudflare Pages
+        run: node scripts/prepare-cloudflare-pages.mjs dist cloudflare-pages-brotli
+      - uses: actions/upload-artifact@v4.6.2
+        with:
+          name: cloudflare-pages-brotli
+          path: cloudflare-pages-brotli
+          if-no-files-found: error
+          retention-days: 14
       - uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: dist
