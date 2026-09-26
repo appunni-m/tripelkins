@@ -13,6 +13,7 @@ import {
 } from "../src/game/simulation.js";
 import { BUILDINGS, unlocked } from "../src/game/catalog.js";
 import { canPlace, freePosition, ASSETS } from "../src/game/geometry.js";
+import { setIndependence } from "../src/game/community.js";
 const resume = process.argv.indexOf("--resume");
 const w =
   resume >= 0
@@ -20,6 +21,7 @@ const w =
     : createWorld();
 w.map.seed = 18492;
 w.ui.paused = false;
+w.runtime = { ...(w.runtime || {}), intelligenceAvailable: true };
 const events = [],
   counts = { banana: 0, cloth: 0, cricketball: 0, chop: 0, build: 0, hammer: 0 };
 const report = (message) => {
@@ -98,6 +100,10 @@ function build(type, max) {
 let prior = "";
 for (let tick = 0; w.time < 2400 && w.stage < 3; tick++) {
   if (tick % 50 === 0) {
+    if (w.community.consent === "offered") {
+      setIndependence(w, true);
+      report("Independence accepted");
+    }
     if (!w.progress.hatched) {
       const lander = w.objects.find((o) => o.type === "lander");
       interact(w, "inspect", lander.x, lander.y, lander);

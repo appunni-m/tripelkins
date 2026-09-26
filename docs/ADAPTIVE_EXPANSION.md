@@ -27,7 +27,7 @@ Scouts compare multiple rings up to 52 units from nearby food outposts, includin
 
 New orchards can be planned near recently scouted ground, 18–38 units from existing food. Each new food outpost extends the next scouting range. Expansion remains physical: scouts walk, crews gather wood, and builders work at reachable entrances. No camera movement reveals fog.
 
-Routine care now starts at 72%. The 65% replication threshold and 50-second growth period remain. Urgent care still interrupts work. A new expansion schedule is available to Jev/Laya and to a healthy colony with an explicit growth goal.
+Routine care now starts at 72%. Residents need all needs above 65% to grow. Early colonies use an approximately five-second healthy growth period and stop early expansion at 21 named residents; the period returns to 180 seconds once twenty residents live on the ground. Density, urgent care and device headroom still affect birth timing. Urgent care interrupts work. A new expansion schedule is available to Jev/Laya and to a healthy colony with an explicit growth goal.
 
 ## Density cost
 

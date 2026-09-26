@@ -825,13 +825,13 @@ impl Engine {
                     1.
                 } else {
                     (count as f64
-                    / match kind {
-                        "mine" => 32.,
-                        "factory" => 48.,
-                        "dwelling" => 24.,
-                        _ => 64.,
-                    })
-                .ceil()
+                        / match kind {
+                            "mine" => 32.,
+                            "factory" => 48.,
+                            "dwelling" => 24.,
+                            _ => 64.,
+                        })
+                    .ceil()
                 };
                 if existing as f64 >= needed {
                     continue;

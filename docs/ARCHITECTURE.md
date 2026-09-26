@@ -8,11 +8,14 @@ server. [Documentation index](README.md) · [Contributor guide](../CONTRIBUTING.
 
 The main thread sends commands to the simulation worker. That worker advances
 needs, movement, jobs, resources, growth and story on a fixed 100 ms simulation
-step. It sends bounded snapshots back for rendering. A separate Rust/WASM worker
-calculates model choices and context from snapshots. A dedicated snapshot
-scheduler calculates the automatic two-second crew plan and development summary;
-it has at most one request in flight. These searches no longer occupy a movement
-tick or wait behind model-context requests. All three workers execute Rust/WASM.
+step. Compact presentation frames go to the renderer at that cadence; full world
+snapshots and autosaves share a five-second interval. Commands and changes to
+the set of named residents can publish a full state immediately. A separate
+Rust/WASM worker calculates model choices and context from snapshots. A
+dedicated snapshot scheduler calculates the automatic two-second crew plan and
+development summary; it has at most one request in flight. These searches no
+longer occupy a movement tick or wait behind model-context requests. All three
+workers execute Rust/WASM.
 
 The live scheduler rechecks map and command revisions, population, resources,
 targets and service reservations before committing a proposal. Proposals older

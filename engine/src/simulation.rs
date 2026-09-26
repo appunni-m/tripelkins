@@ -9,6 +9,68 @@ use crate::{
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PresentationCreature<'a> {
+    id: &'a Value,
+    name: &'a Value,
+    x: &'a Value,
+    y: &'a Value,
+    heading: &'a Value,
+    task: &'a Value,
+    target: &'a Value,
+    job: &'a Value,
+    work: &'a Value,
+    fed: &'a Value,
+    clean: &'a Value,
+    amused: &'a Value,
+    sickness: &'a Value,
+    growth: &'a Value,
+    carry: &'a Value,
+    cargo_kind: &'a Value,
+    gesture: &'a Value,
+    favorite: &'a Value,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PresentationMemory<'a> {
+    goals: &'a Value,
+    activity: &'a Value,
+    totals: &'a Value,
+    last_plan: &'a Value,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PresentationFrame<'a> {
+    time: &'a Value,
+    population: &'a Value,
+    cohort: &'a Value,
+    orbital: &'a Value,
+    district: &'a Value,
+    stage: &'a Value,
+    progress: &'a Value,
+    inventory: &'a Value,
+    objects: &'a Value,
+    creatures: Vec<PresentationCreature<'a>>,
+    map: &'a Value,
+    groups: &'a Value,
+    community: &'a Value,
+    story: &'a Value,
+    evidence: &'a Value,
+    directives: &'a Value,
+    runtime: &'a Value,
+    metrics: &'a Value,
+    pollution: &'a Value,
+    nav_revision: &'a Value,
+    command_revision: &'a Value,
+    revision: &'a Value,
+    memory: PresentationMemory<'a>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    discovery: Option<&'a Value>,
+}
+
 #[derive(Default)]
 pub(crate) struct Runtime {
     paths: HashMap<String, TravelPath>,
@@ -162,6 +224,70 @@ pub(crate) fn building_cost(spec: &Value) -> String {
     }
 }
 impl Engine {
+    pub(crate) fn presentation_frame_json(
+        &self,
+        known_discovery_revision: f64,
+    ) -> Result<String, serde_json::Error> {
+        let w = &self.world;
+        let creatures = list(w, "creatures")
+            .iter()
+            .map(|c| PresentationCreature {
+                id: &c["id"],
+                name: &c["name"],
+                x: &c["x"],
+                y: &c["y"],
+                heading: &c["heading"],
+                task: &c["task"],
+                target: &c["target"],
+                job: &c["job"],
+                work: &c["work"],
+                fed: &c["fed"],
+                clean: &c["clean"],
+                amused: &c["amused"],
+                sickness: &c["sickness"],
+                growth: &c["growth"],
+                carry: &c["carry"],
+                cargo_kind: &c["cargoKind"],
+                gesture: &c["gesture"],
+                favorite: &c["favorite"],
+            })
+            .collect();
+        let discovery_revision = num(&self.world["discovery"], "revision");
+        let memory = &w["memory"];
+        let frame = PresentationFrame {
+            time: &w["time"],
+            population: &w["population"],
+            cohort: &w["cohort"],
+            orbital: &w["orbital"],
+            district: &w["district"],
+            stage: &w["stage"],
+            progress: &w["progress"],
+            inventory: &w["inventory"],
+            objects: &w["objects"],
+            creatures,
+            map: &w["map"],
+            groups: &w["groups"],
+            community: &w["community"],
+            story: &w["story"],
+            evidence: &w["evidence"],
+            directives: &w["directives"],
+            runtime: &w["runtime"],
+            metrics: &w["metrics"],
+            pollution: &w["pollution"],
+            nav_revision: &w["navRevision"],
+            command_revision: &w["commandRevision"],
+            revision: &w["revision"],
+            memory: PresentationMemory {
+                goals: &memory["goals"],
+                activity: &memory["activity"],
+                totals: &memory["totals"],
+                last_plan: &memory["lastPlan"],
+            },
+            discovery: (discovery_revision != known_discovery_revision).then_some(&w["discovery"]),
+        };
+        serde_json::to_string(&frame)
+    }
+
     pub(crate) fn reachable(&mut self, c: &Value, o: &Value) -> bool {
         let from = Point::read(c);
         self.service_slots(o, Some(from)).iter().any(|p| {
@@ -397,8 +523,14 @@ impl Engine {
                 let distance = Point { x: 0., y: 0. }.distance(delta);
                 if distance > 0.15 {
                     let stride = (1.65 * dt).min(distance);
-                    let moved = self.steer_move(c, delta.x / distance * stride, delta.y / distance * stride);
-                    if moved > 0.01 { c["heading"] = json!(delta.y.atan2(delta.x)); }
+                    let moved = self.steer_move(
+                        c,
+                        delta.x / distance * stride,
+                        delta.y / distance * stride,
+                    );
+                    if moved > 0.01 {
+                        c["heading"] = json!(delta.y.atan2(delta.x));
+                    }
                 }
             }
             c["job"]["state"] = json!("queued");
@@ -546,22 +678,26 @@ impl Engine {
         }
         let mut deaths = Vec::new();
         let mut births = Vec::new();
-        let growth_seconds = if list(&self.world, "creatures").len() < 20 {
-            75.
+        let creature_count = list(&self.world, "creatures").len();
+        let early_growth = creature_count < 20;
+        let growth_seconds = if early_growth { 5. } else { 180. };
+        let requested_growth_limit = self.world["runtime"]["growth"]["limit"]
+            .as_f64()
+            .unwrap_or(2048.)
+            .floor()
+            .clamp(0., 2048.) as usize;
+        let growth_limit = if early_growth {
+            requested_growth_limit.min(21)
         } else {
-            180.
+            requested_growth_limit
         };
-        let ids: Vec<_> = list(&self.world, "creatures")
-            .iter()
-            .map(|c| text(c, "id").to_string())
-            .collect();
-        for id in ids {
-            let Some(mut c) = list(&self.world, "creatures")
-                .iter()
-                .find(|c| text(c, "id") == id)
-                .cloned()
-            else {
-                continue;
+        // The resident vector is stable throughout this pass. Iterate by its
+        // index so each worker update does not rescan the whole colony to find
+        // the same resident again when it is written back.
+        let mut index = 0;
+        while index < list(&self.world, "creatures").len() {
+            let Some(mut c) = list(&self.world, "creatures").get(index).cloned() else {
+                break;
             };
             if num(&c, "carry") > 0.
                 && !list(&self.world, "objects").iter().any(|o| {
@@ -603,7 +739,8 @@ impl Engine {
                     "neglect"
                 };
                 deaths.push((c.clone(), cause));
-                self.put_creature(c);
+                self.world["creatures"][index] = c;
+                index += 1;
                 continue;
             }
             c["growth"] = json!(if minimum(&c) > 65. && num(&c, "sickness") < 25. {
@@ -618,20 +755,41 @@ impl Engine {
                 && num(&self.world, "population") < 1e15
                 && list(&self.world, "creatures").len() < 2048
                 && !flag(&self.world["runtime"]["growth"], "held")
-                && (list(&self.world, "creatures").len() as f64)
-                    < self.world["runtime"]["growth"]["limit"]
-                        .as_f64()
-                        .unwrap_or(2048.)
+                && list(&self.world, "creatures").len() < growth_limit
             {
-                births.push(id.clone());
+                births.push(text(&c, "id").to_string());
             }
             self.process_creature_job(&mut c, dt);
-            self.put_creature(c);
+            // Launching removes the current resident and shifts the next one
+            // into this slot. Keep the index in place so every remaining
+            // resident is processed once, and never write the launched
+            // resident back into the shifted vector.
+            if list(&self.world, "creatures")
+                .get(index)
+                .is_some_and(|current| same_id(&current["id"], &c["id"]))
+            {
+                self.world["creatures"][index] = c;
+                index += 1;
+            }
         }
         for (c, cause) in deaths {
             self.die(&[c], cause, "world");
         }
-        for id in births {
+        let mut births = births.into_iter();
+        while let Some(id) = births.next() {
+            if list(&self.world, "creatures").len() >= growth_limit {
+                if early_growth {
+                    for waiting in std::iter::once(id).chain(births) {
+                        if let Some(index) = list(&self.world, "creatures")
+                            .iter()
+                            .position(|c| text(c, "id") == waiting)
+                        {
+                            self.world["creatures"][index]["growth"] = json!(0);
+                        }
+                    }
+                }
+                break;
+            }
             let Some(mut parent) = list(&self.world, "creatures")
                 .iter()
                 .find(|c| text(c, "id") == id)
@@ -2054,6 +2212,12 @@ impl Engine {
                 "Build a sky launcher. Grow an orbital home."
             ]);
         }
+        if flag(progress, "bridge") && !flag(progress, "monolith") {
+            return json!([
+                "VISIT THE SURVEY BEACON",
+                "Choose what we should do with what we found."
+            ]);
+        }
         if population >= 4. && !flag(progress, "bridge") {
             let detail = if let Some(p) = self.bridge_project(None) {
                 format!(
@@ -2161,17 +2325,22 @@ impl Engine {
             "simulation.interact" => {
                 let revision = num(&self.world, "commandRevision");
                 let mut result = self.interact(
-                    text(input, "tool"), num(input, "x"), num(input, "y"), entity,
+                    text(input, "tool"),
+                    num(input, "x"),
+                    num(input, "y"),
+                    entity,
                 );
                 // The live command tells presentation whether construction really
                 // happened; failed placement must not play the success sound.
                 if text(input, "tool").starts_with("build:") {
                     let placed = num(&self.world, "commandRevision") > revision;
                     result["placed"] = json!(placed);
-                    if !placed { result.as_object_mut().unwrap().remove("sound"); }
+                    if !placed {
+                        result.as_object_mut().unwrap().remove("sound");
+                    }
                 }
                 result
-            },
+            }
             "simulation.choose" => {
                 json!(self.choose(text(input, "kind"), text(input, "answer"), entity))
             }

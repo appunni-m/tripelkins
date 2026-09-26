@@ -24,6 +24,19 @@ test('engine frames keep world identity and locally controlled presentation',asy
   assert.equal(client.world,initial);assert.equal(client.world.time,2);assert.equal(client.world.creatures[0].x,2);assert.equal(client.world.ui.x,91);assert.equal(client.world.settings.provider,'openrouter');assert.equal(worker.sent.at(-1).kind,'ack');
 });
 
+test('compact presentation frames update motion while preserving resident identity data',async t=>{
+  const {client,worker,initialize}=harness(t);await initialize();
+  Object.assign(client.world.creatures[0],{name:'Pip',traits:{curiosity:.7},encounters:[{kind:'arrival'}],x:1,task:'rest'});
+  client.world.discovery={revision:4,cells:{'1:1':15}};
+  const resident=client.world.creatures[0];
+  worker.emit({kind:'frame',frame:{time:2,creatures:[{id:'c1',x:9,task:'gather'}]}});
+  assert.equal(client.world.creatures[0],resident);
+  assert.equal(resident.name,'Pip');assert.deepEqual(resident.traits,{curiosity:.7});
+  assert.deepEqual(resident.encounters,[{kind:'arrival'}]);assert.equal(resident.x,9);assert.equal(resident.task,'gather');
+  assert.deepEqual(client.world.discovery,{revision:4,cells:{'1:1':15}});
+  assert.equal(client.world.time,2);assert.equal(worker.sent.at(-1).kind,'ack');
+});
+
 test('presentation backpressure keeps only the latest unsent camera state',async t=>{
   const {client,worker,initialize}=harness(t);await initialize();const count=worker.sent.length;
   for(const x of [1,2,3])client.updatePresentation({paused:false,ui:{x},settings:{provider:'laya'}});

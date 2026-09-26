@@ -32,6 +32,7 @@ export function scaleFixture(population) {
   applyPlan(w, makePlan(w));
   Object.assign(w.ui, { x: 40, y: 24, zoom: 0.55, selected: null });
   w.ui.paused = false;
+  w.runtime = { ...w.runtime, growth: { ...w.runtime?.growth, limit: 192 } };
   return w;
 }
 

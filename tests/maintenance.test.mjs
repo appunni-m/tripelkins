@@ -6,8 +6,9 @@ import { pollute, maintainFactory } from "../src/game/resources.js";
 
 function works() {
   const w=createWorld({empty:true});w.stage=2;w.progress.hatched=true;
-  const factory=addObject(w,"factory",20,20,{inputOre:3});
+  const factory=addObject(w,"factory",20,20);
   const c=addCreature(w,16,20);c.fed=c.clean=c.amused=90;
+  w.runtime={growth:{held:true}};
   pollute(w,factory,80);
   return {w,c,factory};
 }

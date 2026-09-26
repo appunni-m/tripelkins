@@ -58,6 +58,10 @@ impl Engine {
     pub fn snapshot(&self) -> String {
         self.world.to_string()
     }
+    pub fn frame(&self, known_discovery_revision: f64) -> Result<String, JsValue> {
+        self.presentation_frame_json(known_discovery_revision)
+            .map_err(|error| JsValue::from_str(&error.to_string()))
+    }
     pub fn dispatch(&mut self, operation: &str, input: &str) -> Result<String, JsValue> {
         self.call_json(operation, input)
             .map_err(|e| JsValue::from_str(&e))

@@ -3652,6 +3652,54 @@
       ]
     },
     {
+      "case_id": "game.development.nextIndustryBuilding.representative",
+      "surface": "game.development",
+      "operation": "nextIndustryBuilding",
+      "covers": [
+        "game.development.nextIndustryBuilding.contract"
+      ],
+      "target_profiles": [
+        "rust-native",
+        "rust-wasm"
+      ],
+      "assets": [
+        {
+          "id": "clock",
+          "kind": "builtin",
+          "name": "runtime.clock:2000-01-01T00:00:00.000Z:monotonic:0"
+        },
+        {
+          "id": "entropy",
+          "kind": "builtin",
+          "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
+        },
+        {
+          "id": "stimulus_48d92503346d",
+          "kind": "ref",
+          "path": "48d92503346d32410cd5c2b27971b079f7558fcdf63b719db0f8321a0eaea241.json",
+          "sha256": "e2dda812c979070da7d0290052dd5c2a5e92ecd6d4744ff71a9c35de16ae4802",
+          "media_type": "application/json"
+        }
+      ],
+      "steps": [
+        {
+          "step_id": "observe",
+          "surface": "game.development",
+          "operation": "nextIndustryBuilding",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "stimulus_48d92503346d"
+            }
+          }
+        }
+      ],
+      "observations": [
+        "observe"
+      ]
+    },
+    {
       "case_id": "game.development.projectFunded.representative",
       "surface": "game.development",
       "operation": "projectFunded",
@@ -26658,10 +26706,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_ac7975e046c9",
+          "id": "stimulus_a4ceec1c302f",
           "kind": "ref",
-          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
-          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
+          "path": "a4ceec1c302fca46f323628eea09ded58a8a0818e1b2656638425bab09134fe8.json",
+          "sha256": "4639b338988f3aed5c5b8ede38b960967ccdbe049a5a6c207e4949c6481a4b47",
           "media_type": "application/json"
         }
       ],
@@ -26674,7 +26722,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_ac7975e046c9"
+              "asset_id": "stimulus_a4ceec1c302f"
             },
             "budget": {
               "kind": "literal",
@@ -26710,10 +26758,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_ac7975e046c9",
+          "id": "stimulus_a4ceec1c302f",
           "kind": "ref",
-          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
-          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
+          "path": "a4ceec1c302fca46f323628eea09ded58a8a0818e1b2656638425bab09134fe8.json",
+          "sha256": "4639b338988f3aed5c5b8ede38b960967ccdbe049a5a6c207e4949c6481a4b47",
           "media_type": "application/json"
         }
       ],
@@ -26726,7 +26774,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_ac7975e046c9"
+              "asset_id": "stimulus_a4ceec1c302f"
             },
             "budget": {
               "kind": "literal",
@@ -26762,10 +26810,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_ac7975e046c9",
+          "id": "stimulus_a4ceec1c302f",
           "kind": "ref",
-          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
-          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
+          "path": "a4ceec1c302fca46f323628eea09ded58a8a0818e1b2656638425bab09134fe8.json",
+          "sha256": "4639b338988f3aed5c5b8ede38b960967ccdbe049a5a6c207e4949c6481a4b47",
           "media_type": "application/json"
         }
       ],
@@ -26778,7 +26826,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_ac7975e046c9"
+              "asset_id": "stimulus_a4ceec1c302f"
             },
             "budget": {
               "kind": "literal",
@@ -26814,10 +26862,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_ac7975e046c9",
+          "id": "stimulus_a4ceec1c302f",
           "kind": "ref",
-          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
-          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
+          "path": "a4ceec1c302fca46f323628eea09ded58a8a0818e1b2656638425bab09134fe8.json",
+          "sha256": "4639b338988f3aed5c5b8ede38b960967ccdbe049a5a6c207e4949c6481a4b47",
           "media_type": "application/json"
         }
       ],
@@ -26830,7 +26878,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_ac7975e046c9"
+              "asset_id": "stimulus_a4ceec1c302f"
             },
             "budget": {
               "kind": "literal",
@@ -26866,10 +26914,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_ac7975e046c9",
+          "id": "stimulus_a4ceec1c302f",
           "kind": "ref",
-          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
-          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
+          "path": "a4ceec1c302fca46f323628eea09ded58a8a0818e1b2656638425bab09134fe8.json",
+          "sha256": "4639b338988f3aed5c5b8ede38b960967ccdbe049a5a6c207e4949c6481a4b47",
           "media_type": "application/json"
         }
       ],
@@ -26882,7 +26930,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_ac7975e046c9"
+              "asset_id": "stimulus_a4ceec1c302f"
             },
             "budget": {
               "kind": "literal",
@@ -26918,10 +26966,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_ac7975e046c9",
+          "id": "stimulus_a4ceec1c302f",
           "kind": "ref",
-          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
-          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
+          "path": "a4ceec1c302fca46f323628eea09ded58a8a0818e1b2656638425bab09134fe8.json",
+          "sha256": "4639b338988f3aed5c5b8ede38b960967ccdbe049a5a6c207e4949c6481a4b47",
           "media_type": "application/json"
         }
       ],
@@ -26934,7 +26982,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_ac7975e046c9"
+              "asset_id": "stimulus_a4ceec1c302f"
             },
             "budget": {
               "kind": "literal",
@@ -26970,10 +27018,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_ac7975e046c9",
+          "id": "stimulus_a4ceec1c302f",
           "kind": "ref",
-          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
-          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
+          "path": "a4ceec1c302fca46f323628eea09ded58a8a0818e1b2656638425bab09134fe8.json",
+          "sha256": "4639b338988f3aed5c5b8ede38b960967ccdbe049a5a6c207e4949c6481a4b47",
           "media_type": "application/json"
         }
       ],
@@ -26986,7 +27034,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_ac7975e046c9"
+              "asset_id": "stimulus_a4ceec1c302f"
             },
             "budget": {
               "kind": "literal",
@@ -27022,10 +27070,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_ac7975e046c9",
+          "id": "stimulus_a4ceec1c302f",
           "kind": "ref",
-          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
-          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
+          "path": "a4ceec1c302fca46f323628eea09ded58a8a0818e1b2656638425bab09134fe8.json",
+          "sha256": "4639b338988f3aed5c5b8ede38b960967ccdbe049a5a6c207e4949c6481a4b47",
           "media_type": "application/json"
         }
       ],
@@ -27038,7 +27086,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_ac7975e046c9"
+              "asset_id": "stimulus_a4ceec1c302f"
             },
             "budget": {
               "kind": "literal",
@@ -27074,10 +27122,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_ac7975e046c9",
+          "id": "stimulus_a4ceec1c302f",
           "kind": "ref",
-          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
-          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
+          "path": "a4ceec1c302fca46f323628eea09ded58a8a0818e1b2656638425bab09134fe8.json",
+          "sha256": "4639b338988f3aed5c5b8ede38b960967ccdbe049a5a6c207e4949c6481a4b47",
           "media_type": "application/json"
         }
       ],
@@ -27090,7 +27138,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_ac7975e046c9"
+              "asset_id": "stimulus_a4ceec1c302f"
             },
             "budget": {
               "kind": "literal",
@@ -30218,10 +30266,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_26c7dfb39e07",
+          "id": "stimulus_40c323b7be42",
           "kind": "ref",
-          "path": "26c7dfb39e073d60c898549a3cdea6e7edc3b55648ecd1b5811bb64681075ee1.json",
-          "sha256": "fa560eed1538543c5cea5daf3235d243da2dd8006ab21c7df1122c4488b86aa9",
+          "path": "40c323b7be42dd33f4334823bd31b23a87d5565a4a274e6694e76027c6a33de9.json",
+          "sha256": "897953d5c4d398e18649f5c038a6526bec3f50ab996e226e8342d721327345a2",
           "media_type": "application/json"
         }
       ],
@@ -30234,7 +30282,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_26c7dfb39e07"
+              "asset_id": "stimulus_40c323b7be42"
             },
             "budget": {
               "kind": "literal",
@@ -30270,10 +30318,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_26c7dfb39e07",
+          "id": "stimulus_40c323b7be42",
           "kind": "ref",
-          "path": "26c7dfb39e073d60c898549a3cdea6e7edc3b55648ecd1b5811bb64681075ee1.json",
-          "sha256": "fa560eed1538543c5cea5daf3235d243da2dd8006ab21c7df1122c4488b86aa9",
+          "path": "40c323b7be42dd33f4334823bd31b23a87d5565a4a274e6694e76027c6a33de9.json",
+          "sha256": "897953d5c4d398e18649f5c038a6526bec3f50ab996e226e8342d721327345a2",
           "media_type": "application/json"
         }
       ],
@@ -30286,7 +30334,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_26c7dfb39e07"
+              "asset_id": "stimulus_40c323b7be42"
             },
             "budget": {
               "kind": "literal",
@@ -30322,10 +30370,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_26c7dfb39e07",
+          "id": "stimulus_40c323b7be42",
           "kind": "ref",
-          "path": "26c7dfb39e073d60c898549a3cdea6e7edc3b55648ecd1b5811bb64681075ee1.json",
-          "sha256": "fa560eed1538543c5cea5daf3235d243da2dd8006ab21c7df1122c4488b86aa9",
+          "path": "40c323b7be42dd33f4334823bd31b23a87d5565a4a274e6694e76027c6a33de9.json",
+          "sha256": "897953d5c4d398e18649f5c038a6526bec3f50ab996e226e8342d721327345a2",
           "media_type": "application/json"
         }
       ],
@@ -30338,7 +30386,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_26c7dfb39e07"
+              "asset_id": "stimulus_40c323b7be42"
             },
             "budget": {
               "kind": "literal",
@@ -30374,10 +30422,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_26c7dfb39e07",
+          "id": "stimulus_40c323b7be42",
           "kind": "ref",
-          "path": "26c7dfb39e073d60c898549a3cdea6e7edc3b55648ecd1b5811bb64681075ee1.json",
-          "sha256": "fa560eed1538543c5cea5daf3235d243da2dd8006ab21c7df1122c4488b86aa9",
+          "path": "40c323b7be42dd33f4334823bd31b23a87d5565a4a274e6694e76027c6a33de9.json",
+          "sha256": "897953d5c4d398e18649f5c038a6526bec3f50ab996e226e8342d721327345a2",
           "media_type": "application/json"
         }
       ],
@@ -30390,7 +30438,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_26c7dfb39e07"
+              "asset_id": "stimulus_40c323b7be42"
             },
             "budget": {
               "kind": "literal",
@@ -30426,10 +30474,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_26c7dfb39e07",
+          "id": "stimulus_40c323b7be42",
           "kind": "ref",
-          "path": "26c7dfb39e073d60c898549a3cdea6e7edc3b55648ecd1b5811bb64681075ee1.json",
-          "sha256": "fa560eed1538543c5cea5daf3235d243da2dd8006ab21c7df1122c4488b86aa9",
+          "path": "40c323b7be42dd33f4334823bd31b23a87d5565a4a274e6694e76027c6a33de9.json",
+          "sha256": "897953d5c4d398e18649f5c038a6526bec3f50ab996e226e8342d721327345a2",
           "media_type": "application/json"
         }
       ],
@@ -30442,7 +30490,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_26c7dfb39e07"
+              "asset_id": "stimulus_40c323b7be42"
             },
             "budget": {
               "kind": "literal",
@@ -30478,10 +30526,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_e3fa72f22dd9",
+          "id": "stimulus_11b23c3c5b7e",
           "kind": "ref",
-          "path": "e3fa72f22dd9b0ed9bed8959fba0aa969d0cf86fcce1f99cfdf9441a770d3b67.json",
-          "sha256": "9400f776cae2787349bde0f8d4a817a766f871aba99772e92a310ed99d4d3dd3",
+          "path": "11b23c3c5b7e13da1db8e1cd44ec0284cd4d0c5b85aecdd0039375cc30e8cff3.json",
+          "sha256": "aa5fd7571c7c9d72c374db494b83bebb0296207f105ec2109eab5200dff33cd6",
           "media_type": "application/json"
         }
       ],
@@ -30494,7 +30542,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_e3fa72f22dd9"
+              "asset_id": "stimulus_11b23c3c5b7e"
             },
             "budget": {
               "kind": "literal",

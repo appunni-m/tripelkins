@@ -88,7 +88,7 @@ pub(crate) fn pack_hosted_context(full: &Value, budget: usize) -> Result<Value, 
     }
     if full["developmentPlan"].is_object() {
         let p = &full["developmentPlan"];
-        let mut plan = pick(p, &["parent", "expanding"]);
+        let mut plan = pick(p, &["parent", "title", "expanding"]);
         plan["children"] = json!(
             list(p, "children")
                 .iter()

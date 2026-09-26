@@ -191,6 +191,9 @@ impl Engine {
             "game.development-plan.updateDevelopmentPlan" => self.update_development_plan(),
             "game.development.colonyMilestone" => development::colony_milestone(&self.world),
             "game.development.industryMilestone" => development::industry_milestone(&self.world),
+            "game.development.nextIndustryBuilding" => {
+                development::next_industry_building(&self.world)
+            }
             "game.development.isConstruction" => json!(development::construction(p)),
             "game.development.projectFunded" => json!(development::project_funded(
                 &self.world,

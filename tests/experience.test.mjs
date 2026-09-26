@@ -608,6 +608,16 @@ test("new births beyond 96 remain named individuals without replacing saved live
   );
   assert.equal(migrateWorld(w).district.population, w.cohort);
 });
+test("healthy early colonies grow in five-second waves and stop at the intelligence threshold", () => {
+  const w=colony();w.stage=2;w.runtime={growth:{limit:LIMITS.creatures,held:false}};
+  for(let i=0;i<4;i++) {
+    const c=addCreature(w,20+(i%2)*8,20+Math.floor(i/2)*8);
+    c.fed=c.clean=c.amused=100;
+  }
+  step(w,5);assert.equal(w.creatures.length,8);
+  step(w,5);assert.equal(w.creatures.length,16);
+  step(w,5);assert.equal(w.creatures.length,21);
+});
 test("cancelled or newly invalid commitments cannot reject the whole colony schedule", () => {
   const w = colony();
   care(w);

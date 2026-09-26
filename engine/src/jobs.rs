@@ -517,7 +517,10 @@ impl Engine {
             for task in tasks {
                 let t = task.as_str();
                 if t == "orbit"
-                    && assignments.iter().filter(|a| text(a, "task") == "orbit").count()
+                    && assignments
+                        .iter()
+                        .filter(|a| text(a, "task") == "orbit")
+                        .count()
                         >= orbit_limit
                 {
                     continue;

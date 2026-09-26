@@ -39,9 +39,12 @@ impl Engine {
                 // rejecting every crew's plan because one resident finished work.
                 if flag(a, "keep")
                     && let Some(c) = list(&self.world, "creatures")
-                        .iter().find(|c| same_id(&c["id"], &a["id"]))
-                    && (c["task"] != a["task"] || !same_id(&c["target"], &a["target"])
-                        || ["completed", "blocked", "cancelled"].contains(&text(&c["job"], "state")))
+                        .iter()
+                        .find(|c| same_id(&c["id"], &a["id"]))
+                    && (c["task"] != a["task"]
+                        || !same_id(&c["target"], &a["target"])
+                        || ["completed", "blocked", "cancelled"]
+                            .contains(&text(&c["job"], "state")))
                 {
                     *a = json!({"id":c["id"],"task":"idle","target":null,"slot":0,
                         "point":{"x":c["x"],"y":c["y"]},"keep":true,

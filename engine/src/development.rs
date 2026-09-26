@@ -80,6 +80,21 @@ pub fn building_name(kind: &str) -> &'static str {
         _ => "Colony work",
     }
 }
+fn formatted_number(value: f64) -> String {
+    let whole = value.abs().floor().to_string();
+    let mut grouped = String::with_capacity(whole.len() + whole.len() / 3);
+    for (index, character) in whole.chars().enumerate() {
+        if index > 0 && (whole.len() - index).is_multiple_of(3) {
+            grouped.push(',');
+        }
+        grouped.push(character);
+    }
+    if value < 0. {
+        format!("-{grouped}")
+    } else {
+        grouped
+    }
+}
 pub fn building_spec(kind: &str) -> Value {
     match kind {
         "orchard" => {
@@ -103,7 +118,9 @@ pub fn building_spec(kind: &str) -> Value {
         "theatre" => {
             json!({"wood":36,"cost":500,"blocks":1000,"stage":2,"capacity":20,"help":"Entertains a crowd and puts a spring in their step."})
         }
-        "cannon" => json!({"flag":"secondContact","capacity":8,"help":"Carries healthy volunteers to a shared home in orbit. Keep at least eight on the ground."}),
+        "cannon" => {
+            json!({"flag":"secondContact","capacity":8,"help":"Carries healthy volunteers to a shared home in orbit. Keep at least eight on the ground."})
+        }
         "sculpture" => json!({"cost":50,"blocks":100,"stage":2,"capacity":2}),
         _ => json!({}),
     }
@@ -114,9 +131,7 @@ pub fn building_materials(kind: &str) -> Value {
 }
 pub fn orbital_plan(w: &Value) -> Value {
     let launcher_built = flag(&w["progress"], "cannon");
-    let launcher_in_progress = projects(w)
-        .iter()
-        .any(|p| text(p, "type") == "cannon");
+    let launcher_in_progress = projects(w).iter().any(|p| text(p, "type") == "cannon");
     let launches = num(&w["orbital"], "launches").floor().max(0.) as usize;
     let residents = num(&w["orbital"], "population").floor().max(0.) as usize;
     let remaining = ORBITAL_SETTLERS
@@ -241,6 +256,13 @@ pub fn colony_milestone(w: &Value) -> Value {
     {
         return Value::Null;
     }
+    if num(w, "population") >= 4. && !flag(&w["progress"], "bridge") {
+        let stock = list(w, "objects")
+            .iter()
+            .find(|o| text(o, "type") == "bridge")
+            .map_or(0., |o| num(o, "stock"));
+        return json!({"id":"story-bridge","kind":"bridge","project":"crossing","target":24,"value":stock,"remaining":(24. - stock).max(0.),"title":"Build the river bridge","step":"Gather timber and carry 24 logs to open the way to the mountain."});
+    }
     if num(w, "stage") == 2. && num(&w["progress"], "peakBlocks") < 300. {
         let v = num(&w["progress"], "peakBlocks");
         json!({"id":"story-first-blocks","kind":"blocks","project":"refine","target":300,"value":v,"remaining":(300.-v).max(0.),"title":"Brightness in the stone","step":"Quarry rocks, collect ore and refine the first 300 blocks to unlock a stone workshop."})
@@ -260,6 +282,39 @@ pub fn industry_milestone(w: &Value) -> Value {
     }
     let v = num(&w["progress"], "energy");
     json!({"id":"story-industry","kind":"energy","project":"industry","target":1500000,"value":v,"remaining":1500000.-v,"title":"A new kind of world","step":"Build stocked mines and stone workshops in local neighborhoods; carry ore and produce energy. Keep care available."})
+}
+pub fn next_industry_building(w: &Value) -> Value {
+    let active_projects = projects(w);
+    let factories = list(w, "objects")
+        .iter()
+        .filter(|o| text(o, "type") == "factory")
+        .count()
+        + active_projects
+            .iter()
+            .filter(|p| text(p, "type") == "factory")
+            .count();
+    let mines = list(w, "objects")
+        .iter()
+        .filter(|o| text(o, "type") == "mine" && num(o, "stock") > 0.)
+        .count()
+        + active_projects
+            .iter()
+            .filter(|p| text(p, "type") == "mine")
+            .count();
+    let residents = list(w, "creatures").len();
+    let wanted_mines = ((residents as f64 / 32.).ceil() as usize).min(
+        (((factories.max(1) as f64 * (num(&building_spec("factory"), "capacity") * 3. / 2.8))
+            / (num(&building_spec("mine"), "capacity") * 3. / 3.))
+            .ceil() as usize)
+            .max(1),
+    );
+    if mines < wanted_mines {
+        json!("mine")
+    } else if factories < (residents as f64 / 48.).ceil() as usize {
+        json!("factory")
+    } else {
+        Value::Null
+    }
 }
 pub fn timber_reserve(w: &Value) -> Value {
     let largest = INDEPENDENT_BUILDINGS
@@ -375,6 +430,7 @@ impl Engine {
         }
         children.push(json!({"id":"space","kind":"explore","title":"Scout space for the next neighborhood","remaining":density["crowded"],"status":if expanding{"needed"}else{"satisfied"}}));
         let orbital = orbital_plan(&self.world);
+        let story = self.current_goal();
         if flag(&orbital, "missionActive") {
             let launcher_built = flag(&orbital, "launcherBuilt");
             let launcher_in_progress = flag(&orbital, "launcherInProgress");
@@ -397,8 +453,15 @@ impl Engine {
         }
         if let Some(g) = &goal {
             let kind = text(g, "kind");
-            if ["wood", "ore", "blocks", "bridge"].contains(&kind) {
-                let value = if kind == "bridge" {
+            let value = match kind {
+                "care" => list(&self.world, "creatures")
+                    .iter()
+                    .map(minimum)
+                    .reduce(f64::min)
+                    .unwrap_or(0.)
+                    .js_round(),
+                "grow" => num(&self.world, "population"),
+                "bridge" => {
                     if flag(&self.world["progress"], "bridge") {
                         24.
                     } else {
@@ -407,28 +470,98 @@ impl Engine {
                             .find(|o| text(o, "type") == "bridge")
                             .map_or(0., |o| num(o, "stock"))
                     }
-                } else {
-                    num(&self.world["inventory"], kind)
-                };
-                children.push(json!({"id":format!("goal-{kind}"),"kind":match kind{"wood"=>"timber","ore"=>"quarry","blocks"=>"refine",_=>"crossing"},"title":if kind=="bridge"{"Finish the crossing".into()}else{format!("Store {} {kind}",num(g,"target"))},"remaining":(num(g,"target")-value).max(0.),"status":if value>=num(g,"target"){"satisfied"}else{"needed"}}));
-            }
+                }
+                _ => num(&self.world["inventory"], kind).floor(),
+            };
+            let target = num(g, "target");
+            let title = match kind {
+                "care" => format!("Keep every need above {target}%"),
+                "grow" => format!("Reach {} Tripelkins", formatted_number(target)),
+                "bridge" => "Finish the river crossing".into(),
+                "wood" => format!("Store {} wood", formatted_number(target)),
+                "ore" => format!("Store {} ore", formatted_number(target)),
+                "blocks" => format!("Store {} stone blocks", formatted_number(target)),
+                _ => String::new(),
+            };
+            children.push(json!({"id":format!("goal-{kind}"),"kind":kind,"title":title,
+                "remaining":(target-value).max(0.),"status":if kind=="care"{"working"}else if value>=target{"satisfied"}else{"needed"}}));
+        }
+        if goal.is_none() && milestone.is_null() && !flag(&orbital, "missionActive") {
+            let finished = num(&self.world, "stage") == 4.
+                || (flag(&self.world["progress"], "hatched")
+                    && num(&self.world, "population") == 0.);
+            let remaining = if num(&self.world, "stage") == 3. {
+                (num(&self.world["progress"], "finalRequired")
+                    - num(&self.world["progress"], "uplinks"))
+                .max(0.)
+            } else if finished {
+                0.
+            } else {
+                1.
+            };
+            children.push(json!({"id":"story-current","kind":"story","title":story[1],
+                "remaining":remaining,"status":if finished{"satisfied"}else{"needed"}}));
         }
         let ps = self.work_projects();
+        let building_projects: Vec<_> = ps.iter().filter(|p| construction(p)).collect();
+        if text(&milestone, "id") == "story-industry" && !ps.iter().any(construction) {
+            let kind = next_industry_building(&self.world);
+            if let Some(kind) = kind.as_str() {
+                let spec = building_spec(kind);
+                let blocks = (num(&spec, "cost") - uncommitted_blocks(&self.world)).max(0.);
+                let wood_needed = ps
+                    .iter()
+                    .map(|p| num(&building_spec(text(p, "type")), "wood"))
+                    .sum::<f64>()
+                    + num(&spec, "wood");
+                let wood = (wood_needed - num(&self.world["inventory"], "wood")).max(0.);
+                if blocks > 0. {
+                    children.push(json!({"id":"prerequisite:blocks","kind":"refine",
+                        "title":format!("Make {} blocks before building the {}",formatted_number(blocks),building_name(kind).to_lowercase()),
+                        "remaining":blocks,"status":"needed"}));
+                }
+                if wood > 0. {
+                    children.push(json!({"id":"prerequisite:wood","kind":"timber",
+                        "title":format!("Gather {} wood before building the {}",formatted_number(wood),building_name(kind).to_lowercase()),
+                        "remaining":wood,"status":"needed"}));
+                }
+                if blocks == 0. && wood == 0. {
+                    children.push(json!({"id":"next-industry-building","kind":kind,
+                        "title":format!("Build the {}",building_name(kind).to_lowercase()),
+                        "remaining":1,"status":"needed"}));
+                }
+            }
+        }
+        let required_wood = building_projects
+            .iter()
+            .map(|p| num(&building_spec(text(p, "type")), "wood"))
+            .sum::<f64>();
+        let required_blocks = building_projects
+            .iter()
+            .map(|p| num(&building_spec(text(p, "type")), "cost"))
+            .sum::<f64>();
+        if let Some(first) = building_projects.first() {
+            let missing_wood = (required_wood - num(&self.world["inventory"], "wood")).max(0.);
+            let missing_blocks =
+                (required_blocks - num(&self.world["inventory"], "blocks")).max(0.);
+            if missing_wood > 0. {
+                children.push(json!({"id":"materials:wood","kind":"timber",
+                    "title":format!("Gather {} wood before finishing the {}",formatted_number(missing_wood),building_name(text(first,"type")).to_lowercase()),
+                    "remaining":missing_wood,"status":"needed"}));
+            }
+            if missing_blocks > 0. {
+                children.push(json!({"id":"materials:blocks","kind":"refine",
+                    "title":format!("Make {} blocks before finishing the {}",formatted_number(missing_blocks),building_name(text(first,"type")).to_lowercase()),
+                    "remaining":missing_blocks,"status":"needed"}));
+            }
+        }
         let timber = timber_reserve(&self.world);
-        if ps.is_empty()
+        if building_projects.is_empty()
+            && ps.is_empty()
             && flag(&timber, "refill")
             && text(&self.world["community"], "consent") == "accepted"
         {
             children.push(json!({"id":"timber-buffer","kind":"timber","title":format!("Keep {} wood ready for building",num(&timber,"target")),"remaining":timber["short"],"status":"needed"}));
-        }
-        if ps.iter().any(construction) {
-            let wood = (ps
-                .iter()
-                .map(|p| num(&building_spec(text(p, "type")), "wood"))
-                .sum::<f64>()
-                - num(&self.world["inventory"], "wood"))
-            .max(0.);
-            children.push(json!({"id":"materials","kind":"timber","title":"Gather materials for our building","remaining":wood,"status":if wood>0.{"needed"}else{"satisfied"}}));
         }
         for r in list(&self.world["community"], "access").iter().take(2) {
             children.push(json!({"id":format!("access:{}",scalar_string(&r["id"])),"kind":"clearance","title":format!("Open a path to the {}",text(r,"label")),"remaining":1,"status":if text(r,"status")=="clearing"{"working"}else{"blocked"}}));
@@ -449,36 +582,105 @@ impl Engine {
                     material(text(p, "type")).unwrap_or(""),
                 )
             };
-            children.push(json!({"id":if i==0{"project".into()}else{format!("project:{}",scalar_string(&p["id"]))},"kind":p["type"],"title":format!("Finish {} at {}, {}",text(p,"type"),num(p,"x").js_round(),num(p,"y").js_round()),"status":if text(p,"blocked").is_empty(){"working"}else{"blocked"},"remaining":if material(text(p,"type")).is_some(){(num(p,"target")-value).max(0.)}else{(num(p,"required")-num(p,"progress")).max(0.)}}));
-        }
-        children.sort_by_key(|c| text(c, "status") == "satisfied");
-        children.truncate(7);
-        let title = if flag(&orbital, "missionActive") {
-            if flag(&orbital, "launcherBuilt") {
-                format!("Send {} volunteers to the shared home in orbit", num(&orbital, "remaining"))
-            } else if flag(&orbital, "launcherInProgress") {
-                "Finish the sky launcher for the shared orbital home".into()
+            let status = if !text(p, "blocked").is_empty() {
+                "blocked"
+            } else if construction(p) && !project_funded(&self.world, p) {
+                "waiting"
             } else {
-                "Build a sky launcher for the shared orbital home".into()
-            }
-        } else {
-            goal.as_ref()
-                .map(|g| match text(g, "kind") {
-                    "grow" => crate::goals::goal_title(g),
-                    "care" => "Keep everyone comfortable".into(),
-                    "wood" => format!("Store {} wood", num(g, "target")),
-                    "ore" => format!("Store {} ore", num(g, "target")),
-                    "blocks" => format!("Save {} blocks", num(g, "target")),
-                    _ => "Finish the river crossing".into(),
-                })
-                .unwrap_or_else(|| {
-                    if !milestone.is_null() {
-                        text(&milestone, "title").into()
-                    } else {
-                        "Grow a healthy, spacious colony".into()
-                    }
-                })
+                "working"
+            };
+            children.push(json!({"id":if i==0{"project".into()}else{format!("project:{}",scalar_string(&p["id"]))},"kind":p["type"],"title":format!("Finish {} at {}, {}",text(p,"type"),num(p,"x").js_round(),num(p,"y").js_round()),"status":status,"remaining":if material(text(p,"type")).is_some(){(num(p,"target")-value).max(0.)}else{(num(p,"required")-num(p,"progress")).max(0.)}}));
+        }
+        let sentence_case = |value: &str| {
+            let lower = value.to_lowercase();
+            let mut chars = lower.chars();
+            chars.next().map_or_else(String::new, |first| {
+                first.to_uppercase().collect::<String>() + chars.as_str()
+            })
         };
+        let goal_title = goal.as_ref().map(|g| match text(g, "kind") {
+            "grow" => format!("Grow to {} Tripelkins", formatted_number(num(g, "target"))),
+            "care" => "Keep everyone comfortable".into(),
+            "wood" => format!("Store {} wood", formatted_number(num(g, "target"))),
+            "ore" => format!("Store {} ore", formatted_number(num(g, "target"))),
+            "blocks" => format!("Save {} blocks", formatted_number(num(g, "target"))),
+            _ => "Finish the river crossing".into(),
+        });
+        let orbital_title = children
+            .iter()
+            .find(|c| text(c, "id").starts_with("orbital-"))
+            .map(|c| text(c, "title").to_owned());
+        let title = goal_title.unwrap_or_else(|| {
+            if !milestone.is_null() {
+                text(&milestone, "title").to_owned()
+            } else if flag(&orbital, "missionActive") {
+                orbital_title.unwrap_or_else(|| sentence_case(text(&story, "0")))
+            } else {
+                sentence_case(story[0].as_str().unwrap_or(""))
+            }
+        });
+        let focus_id = goal
+            .as_ref()
+            .map(|g| format!("goal-{}", text(g, "kind")))
+            .or_else(|| (!milestone.is_null()).then(|| text(&milestone, "id").to_owned()))
+            .or_else(|| {
+                flag(&orbital, "missionActive").then(|| {
+                    children
+                        .iter()
+                        .find(|c| text(c, "id").starts_with("orbital-"))
+                        .map(|c| text(c, "id").to_owned())
+                        .unwrap_or_default()
+                })
+            })
+            .unwrap_or_else(|| "story-current".into());
+        let focus = children.iter().find(|c| text(c, "id") == focus_id);
+        let rank = |child: &Value| {
+            let id = text(child, "id");
+            if id.starts_with("access:") {
+                0
+            } else if id.starts_with("materials:") || id.starts_with("prerequisite:") {
+                1
+            } else if id == "next-industry-building" || id.starts_with("project") {
+                2
+            } else if text(child, "status") == "urgent" {
+                3
+            } else if id.starts_with("care-") {
+                4
+            } else if id.starts_with("outpost:") {
+                5
+            } else if id == "space" {
+                6
+            } else {
+                7
+            }
+        };
+        let mut pending: Vec<_> = children
+            .iter()
+            .enumerate()
+            .filter(|(_, child)| {
+                text(child, "id") != focus_id && text(child, "status") != "satisfied"
+            })
+            .collect();
+        pending.sort_by_key(|(index, child)| (rank(child), *index));
+        let limit = if focus.is_some() { 6 } else { 7 };
+        let mut ordered: Vec<Value> = pending
+            .into_iter()
+            .take(limit)
+            .map(|(_, child)| child.clone())
+            .collect();
+        if let Some(focus) = focus {
+            ordered.push(focus.clone());
+        }
+        if ordered.len() < 7 {
+            for child in &children {
+                if ordered.len() >= 7 {
+                    break;
+                }
+                if text(child, "id") != focus_id && text(child, "status") == "satisfied" {
+                    ordered.push(child.clone());
+                }
+            }
+        }
         let parent = goal.as_ref().map(|g| g["id"].clone()).unwrap_or_else(|| {
             if !milestone.is_null() {
                 milestone["id"].clone()
@@ -488,7 +690,7 @@ impl Engine {
                 json!("colony")
             }
         });
-        json!({"parent":parent,"title":title,"expanding":expanding,"density":density,"children":children})
+        json!({"parent":parent,"title":title,"expanding":expanding,"density":density,"children":ordered})
     }
     pub fn update_development_plan(&mut self) -> Value {
         let p = self.development_plan();

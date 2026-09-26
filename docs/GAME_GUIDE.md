@@ -1,6 +1,6 @@
 # Playing Tripelkins
 
-Welcome the first spacecraft and nurture the little colony. Feed hungry creatures, keep them clean and give them places to play. Healthy Tripelkins multiply at a gentler pace: about 75 healthy seconds per birth in the early colony, and 180 once twenty individuals live on the ground. Crowding slows this further; care and device headroom must still permit a birth. They gather resources, explore new ground and work together as the settlement grows.
+Welcome the first spacecraft and nurture the little colony. Feed hungry creatures, keep them clean and give them places to play. Healthy Tripelkins grow quickly to 21 named residents, with about five healthy seconds per early birth. After the colony reaches twenty residents, growth slows to about 180 healthy seconds per birth. Crowding slows this further; care and device headroom must still permit a birth. They gather resources, explore new ground and work together as the settlement grows.
 
 ## Controls
 

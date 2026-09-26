@@ -172,14 +172,21 @@ impl Engine {
     }
     pub fn plan_reward(&mut self, p: &Value) -> Value {
         let goal = self.active_goal();
-        let kind = goal.as_ref().map(|g| text(g, "kind")).unwrap_or("");
+        let milestone = colony_milestone(&self.world);
+        let industry = industry_milestone(&self.world);
+        let kind = goal
+            .as_ref()
+            .map(|g| text(g, "kind"))
+            .or_else(|| (!milestone.is_null()).then(|| text(&milestone, "kind")))
+            .or_else(|| (!industry.is_null()).then(|| text(&industry, "kind")))
+            .unwrap_or("");
         let crowded = num(&self.density_summary(), "crowded") > 0.;
         let effects = if p["effects"].is_object() {
             p["effects"].clone()
         } else {
             self.judge_plan(p)["effects"].clone()
         };
-        let components = json!({"care":num(&effects,"care")*8.,"commitment":num(&effects,"commitment")*0.15,"material":num(&effects,"material")*if ["wood","bridge"].contains(&kind){6.}else{2.},"production":num(&effects,"production")*if ["ore","blocks"].contains(&kind){6.}else{2.},"discovery":num(&effects,"discovery")*if crowded||kind=="grow"{8.}else{3.},"space":num(&effects,"space"),"maintenance":num(&effects,"maintenance")*2.,"travel":num(&effects,"travel")});
+        let components = json!({"care":num(&effects,"care")*8.,"commitment":num(&effects,"commitment")*0.15,"material":num(&effects,"material")*if ["wood","bridge"].contains(&kind){6.}else{2.},"production":num(&effects,"production")*if ["ore","blocks","energy"].contains(&kind){6.}else{2.},"discovery":num(&effects,"discovery")*if crowded||kind=="grow"{8.}else{3.},"space":num(&effects,"space"),"maintenance":num(&effects,"maintenance")*2.,"travel":num(&effects,"travel")});
         let total = components
             .as_object()
             .unwrap()

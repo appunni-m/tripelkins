@@ -25,6 +25,7 @@ export class EngineClient {
       if(data.views)this.views=data.views;
       if (data.health) this.onHealth(data.health);
       if (data.state) this.accept(data.state, data.uiPatch);
+      else if (data.frame) this.acceptFrame(data.frame);
       if (data.kind === 'frame') {
         // At most one outstanding frame. Slow rendering replaces presentation
         // with the next current snapshot, never a growing queue of old worlds.
@@ -51,6 +52,22 @@ export class EngineClient {
       Object.assign(this.world,snapshot,{ui,settings});
       if(uiPatch)Object.assign(ui,uiPatch);
     }
+    this.onState(this.world);
+  }
+  acceptFrame(frame) {
+    if (!this.world) return;
+    if (Array.isArray(frame.creatures)) {
+      const current = new Map(this.world.creatures.map(c => [c.id, c]));
+      this.world.creatures = frame.creatures.map(update => {
+        const creature = current.get(update.id);
+        return creature ? Object.assign(creature, update) : { ...update };
+      });
+    }
+    for (const [key, value] of Object.entries(frame)) {
+      if (key === 'creatures' || key === 'memory') continue;
+      this.world[key] = value;
+    }
+    if (frame.memory) Object.assign(this.world.memory ||= {}, frame.memory);
     this.onState(this.world);
   }
   fail(error) {

@@ -140,7 +140,7 @@ test('the next story objective keeps production and expansion materials in model
   const snapshot=buildContext(w);
   assert.equal(snapshot.context.currentMilestone.kind,'energy');
   assert.match(snapshot.localParts[0],/produce energy/);
-  assert.match(settlementDecisionInput(w,choices).requiredContext,/build stocked mines and stone workshops/);
+  assert.match(settlementDecisionInput(w,choices).requiredContext,/build stocked mines and stone workshops/i);
   assert.equal(packHostedContext(snapshot.context,16000).context.currentMilestone.target,1500000);
   addObject(w,'factory',-40,-25,{inputOre:0});w.inventory.blocks=25;
   assert.ok(settlementChoices(w).some(c=>c.id==='refine'&&c.target>=300),'new workplaces still get a material supply project');

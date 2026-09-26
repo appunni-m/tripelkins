@@ -9,11 +9,17 @@ let w=developmentWorld("crossing"), restored=false;
 addObject(w,"node",48,28,{stock:10000});
 addObject(w,"node",51,17,{stock:10000});
 const started=[];
+let housingOptions=0;
 for(let tick=0;tick<18000;tick++) {
   if(tick%300===0) {
     const choices=settlementChoices(w);
-    if(choices.length && startSettlement(w,choices[0],"Deterministic verification planner"))
-      started.push({second:Math.round(w.time),type:choices[0].id});
+    const housingNeeded=w.progress.energy>=1500000 &&
+      w.objects.filter(o=>o.type==="dwelling").length<Math.ceil(w.creatures.length/24);
+    const housing=housingNeeded?choices.find(c=>c.id==="dwelling"):null;
+    if(housing)housingOptions++;
+    const choice=housing||choices[0];
+    if(choice && startSettlement(w,choice,"Deterministic verification planner"))
+      started.push({second:Math.round(w.time),type:choice.id});
   }
   stepWorld(w,.1);
   if(!restored && w.time>=900) {
@@ -23,7 +29,7 @@ for(let tick=0;tick<18000;tick++) {
 const result={scope:"30 simulated minutes with a deterministic project selector; no caretaker tools; restore at minute 15",
   population:w.population,losses:w.evidence.deaths,bridge:w.progress.bridge,inventory:w.inventory,energy:w.progress.energy,
   facilities:Object.fromEntries(["orchard","bath","roundabout","mine","factory","dwelling","theatre"].map(t=>[t,w.objects.filter(o=>o.type===t).length])),
-  completed:w.community.completed,project:w.community.project,started,jobs:w.memory.activity,
+  completed:w.community.completed,project:w.community.project,started,housingOptions,jobs:w.memory.activity,
   retained:{objects:w.objects.length,inbox:w.community.inbox.length,activity:w.community.activity.length,visited:w.community.visited.length}};
 console.log(JSON.stringify(result,null,2));
 if(process.argv.includes("--snapshot")) writeFileSync("/tmp/tripelkins-development-world.json",JSON.stringify(w));

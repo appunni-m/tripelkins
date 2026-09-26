@@ -5,7 +5,7 @@
     "mode": "full",
     "inventory": {
       "authority": "scripts/migration/contracts/inventory.mjs#sourceFiles",
-      "revision": "cfa8e8fd62f4a7565e7273ae2975b5e57add3be4",
+      "revision": "eb3b78ed6128c9a17016ab8709ca4835878fefef",
       "command_id": "migration-inventory"
     }
   },
@@ -13,7 +13,7 @@
     {
       "id": "javascript-reference",
       "name": "Tripelkins JavaScript simulation",
-      "version": "cfa8e8fd62f4a7565e7273ae2975b5e57add3be4",
+      "version": "eb3b78ed6128c9a17016ab8709ca4835878fefef",
       "runtime": "Node.js v24.18.0",
       "identity_command_id": "migration-oracle-identity",
       "contract": "All exported production game engine behavior at the pinned source revision.",
@@ -10449,6 +10449,115 @@
               "id": "game.development.isConstruction.native-code",
               "dimension": "code_path",
               "description": "Measure the native Rust implementation reached by the public isConstruction workflow. WASM instrumentation is not available; no WASM coverage claim is made.",
+              "lanes": [
+                "coverage"
+              ],
+              "target_profiles": [
+                "rust-native"
+              ]
+            }
+          ],
+          "parity": {
+            "applicability": "required",
+            "target_profiles": [
+              "rust-native",
+              "rust-wasm"
+            ]
+          },
+          "coverage": {
+            "applicability": "required",
+            "target_profiles": [
+              "rust-native"
+            ],
+            "component_ids": [
+              "development-native-code",
+              "engine-support-native-code"
+            ]
+          },
+          "benchmark": {
+            "applicability": "not_applicable",
+            "reason": "Measured through the complete simulation/planning workloads; isolated helper latency is not an independent performance objective."
+          }
+        },
+        {
+          "id": "nextIndustryBuilding",
+          "kind": "function",
+          "classification": "endpoint",
+          "lifecycle": {
+            "status": "current"
+          },
+          "source": {
+            "oracle_id": "javascript-reference",
+            "path": "src/game/development.js#nextIndustryBuilding",
+            "signature": "function nextIndustryBuilding(w)",
+            "parameters": [
+              {
+                "id": "w",
+                "style": "positional",
+                "value_types": [
+                  "any_json"
+                ],
+                "omission": {
+                  "kind": "required"
+                }
+              }
+            ],
+            "result": {
+              "shape": "scalar",
+              "observations": [
+                {
+                  "path": "value",
+                  "value_types": [
+                    "any_json"
+                  ],
+                  "comparison": {
+                    "kind": "exact"
+                  }
+                }
+              ],
+              "error": {
+                "fields": [
+                  "class",
+                  "kind",
+                  "message",
+                  "stage",
+                  "code"
+                ],
+                "message": {
+                  "mode": "exact",
+                  "transforms": [],
+                  "reason": null
+                }
+              }
+            }
+          },
+          "targets": [
+            {
+              "target_id": "rust-engine",
+              "path": "tripelkins_engine::Engine::dispatch(\"contract.call\")",
+              "signature": "dispatch(operation: &str, input: &str) -> Result<String, JsValue>",
+              "support": {
+                "status": "supported"
+              }
+            }
+          ],
+          "requirements": [
+            {
+              "id": "game.development.nextIndustryBuilding.contract",
+              "dimension": "feature",
+              "description": "Preserve nextIndustryBuilding's returned value, public errors, in-place state mutations, ordering, limits, and deterministic state transitions from src/game/development.js.",
+              "lanes": [
+                "parity"
+              ],
+              "target_profiles": [
+                "rust-native",
+                "rust-wasm"
+              ]
+            },
+            {
+              "id": "game.development.nextIndustryBuilding.native-code",
+              "dimension": "code_path",
+              "description": "Measure the native Rust implementation reached by the public nextIndustryBuilding workflow. WASM instrumentation is not available; no WASM coverage claim is made.",
               "lanes": [
                 "coverage"
               ],

@@ -888,7 +888,9 @@ async function runAI(fresh = false) {
       lastSettlement = -Infinity;
       return;
     }
-    await engine.command("planning.commitDecision",{result});
+    const applied=await engine.command("planning.commitDecision",{result});
+    if(brainStatus.scheduleReview?.selected===result.policy)
+      brainStatus.scheduleReview.outcome=applied ? "Applied to the colony." : "Schedule was rejected at commit.";
   } catch (error) {
     if (fresh) showAdvancedNotice(error.message);
   }
@@ -899,7 +901,12 @@ async function runSettlement() {
   const result = await decideSettlement(current,token);
   if (!result || current !== world || world.ui.paused || $("modal").open || document.hidden ||
       !independent(world) || world.commandRevision !== result.revision) return;
-  if(await engine.command("settlement.commitDecision",{result})){lastAI=-Infinity;save();}
+  const started=await engine.command("settlement.commitDecision",{result});
+  if(brainStatus.developmentReview)
+    brainStatus.developmentReview.status=result.choice
+      ? started ? `Started ${result.choice.id}.` : "Selected project was not started at commit."
+      : "Intelligence chose to wait.";
+  if(started){lastAI=-Infinity;save();}
   } catch (error) {
     if (current === world) showAdvancedNotice(error.message);
   }

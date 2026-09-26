@@ -3,8 +3,10 @@ import wasmUrl from '../../engine/pkg/tripelkins_engine_bg.wasm?url';
 import * as storage from '../persistence.js';
 import { BackgroundSchedule } from './background-schedule.js';
 
+const FULL_SNAPSHOT_INTERVAL_MS=5000;
 let engine, generation=0, awaitingGeneration=null, paused=true, initialized=false, preview=false,
-  framePending=false, tickQueued=false, lastSaveAt=0, lastViewAt=-Infinity, views=null, tail=Promise.resolve();
+  framePending=false, tickQueued=false, lastFullSnapshotAt=0, lastPublishedCreatureIds='',
+  lastPublishedDiscoveryRevision=-1, pendingFullSnapshot=null, lastViewAt=-Infinity, views=null, tail=Promise.resolve();
 const initializedWasm=init({module_or_path:wasmUrl});
 const scheduler = new BackgroundSchedule({
   enqueue:operation=>{tail=tail.then(operation).catch(error=>scheduler.fail(error));},
@@ -66,7 +68,32 @@ const clock=()=>call('clock',{iso:new Date().toISOString()});
 function health(){return {...storage.saveHealth,...(preview?{status:'Preview · progress is not saved'}:{})};}
 function send(data){self.postMessage({protocol:1,generation,...data,health:health()});}
 function viewState(force=false){if(force || performance.now()-lastViewAt>=400){views=call('planning.ui');lastViewAt=performance.now();}return views;}
-function publish(){if(framePending || !initialized)return;framePending=true;send({kind:'frame',state:state(),views:viewState()});}
+function rememberFullSnapshot(snapshot){
+  lastPublishedCreatureIds=JSON.stringify(snapshot.creatures.map(c=>c.id));
+  lastPublishedDiscoveryRevision=Number(snapshot.discovery?.revision??-1);
+}
+function publish(fullSnapshot=null){
+  if(!initialized)return;
+  if(framePending){if(fullSnapshot)pendingFullSnapshot=fullSnapshot;return;}
+  fullSnapshot=pendingFullSnapshot||fullSnapshot;
+  pendingFullSnapshot=null;
+  let frame=null;
+  if(!fullSnapshot){
+    frame=JSON.parse(engine.frame(lastPublishedDiscoveryRevision));
+    const creatureIds=JSON.stringify(frame.creatures.map(c=>c.id));
+    // Births and deaths need full identity records. They are rare; ordinary
+    // 100 ms frames only carry the fields used for live presentation.
+    if(creatureIds!==lastPublishedCreatureIds)fullSnapshot=state();
+  }
+  framePending=true;
+  if(fullSnapshot){
+    rememberFullSnapshot(fullSnapshot);
+    send({kind:'frame',state:fullSnapshot,views:viewState()});
+  }else{
+    if(frame.discovery)lastPublishedDiscoveryRevision=Number(frame.discovery.revision);
+    send({kind:'frame',frame,views:viewState()});
+  }
+}
 function syncPresentation(data){
   if(data.ui || data.settings)call('presentation',{ui:data.ui,settings:data.settings,
     intelligenceAvailable:data.intelligenceAvailable,growth:data.growth});
@@ -94,8 +121,9 @@ async function operate(message){
     let world=message.world || (!preview && await storage.loadWorld());
     if(!world)world=call('state.createWorld',{empty:false,seed:crypto.getRandomValues(new Uint32Array(1))[0]});
     engine.free();engine=new Engine(JSON.stringify(world));clock();
-    initialized=true;paused=true;lastSaveAt=performance.now();
-    send({kind:'reply',id:message.id,state:state(),views:viewState(true),result:true});return;
+    initialized=true;paused=true;lastFullSnapshotAt=performance.now();pendingFullSnapshot=null;
+    const snapshot=state();rememberFullSnapshot(snapshot);
+    send({kind:'reply',id:message.id,state:snapshot,views:viewState(true),result:true});return;
   }
   if(message.kind==='adoptGeneration'){
     if(awaitingGeneration!==message.generation)throw new Error('The restored world generation was not expected.');
@@ -142,7 +170,9 @@ async function operate(message){
         result.ui.paused=true;
         stopPlanner('A different saved world was opened.');
         scheduler.reset();
-        engine.free();engine=new Engine(JSON.stringify(result));clock();awaitingGeneration=generation+1;break;
+        engine.free();engine=new Engine(JSON.stringify(result));clock();
+        lastFullSnapshotAt=performance.now();pendingFullSnapshot=null;rememberFullSnapshot(result);
+        awaitingGeneration=generation+1;break;
       }
       default:throw new Error('Unknown storage operation.');
     }
@@ -162,12 +192,17 @@ setInterval(()=>{
     if(paused)return;
     const start=performance.now();clock();
     const time=call(scheduler.disabled?'simulation.stepWorld':'simulation.stepLive',{dt:0.1});
+    const now=performance.now();
+    let fullSnapshot=null;
+    if(now-lastFullSnapshotAt>=FULL_SNAPSHOT_INTERVAL_MS){
+      lastFullSnapshotAt=now;
+      fullSnapshot=state();
+    }
+    publish(fullSnapshot);
     call('diagnostics.workerTick',{milliseconds:performance.now()-start});
-    publish();
     if(!scheduler.disabled && typeof time==='number')scheduler.request(time,generation);
-    if(!preview && performance.now()-lastSaveAt>=5000){
-      lastSaveAt=performance.now();
-      try{await storage.saveWorld(state());}
+    if(!preview && fullSnapshot){
+      try{await storage.saveWorld(fullSnapshot);}
       catch(error){
         // Keep the authoritative world alive so a failed disk write can be
         // exported or retried. Simulation/codec faults still stop the engine.
