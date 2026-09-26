@@ -261,6 +261,8 @@ function modal(title, eyebrow, body, type = "other") {
   $("voice-subtitles").hidden = true;
   $("modal-content").innerHTML =
     `<div class="modal-inner ${type === "options" ? "game-options" : ""}"><div class="modal-header"><div><div class="eyebrow">${esc(eyebrow)}</div><h2 id="dialog-title">${esc(title)}</h2></div><button data-action="close" aria-label="Close dialog">${uiIcon("close")}</button></div>${body}</div>`;
+  if (type === "choice")
+    $("modal-content").firstElementChild.classList.add("important-choice");
   $("modal").setAttribute("aria-labelledby", "dialog-title");
   if (!$("modal").open) $("modal").showModal();
   engine.updatePresentation({paused:true,ui:world.ui,settings:world.settings});
@@ -685,7 +687,7 @@ function choiceDialog(kind, entity) {
   }[kind];
   modal(
     text[0],
-    "A CONVERSATION",
+    "IMPORTANT DECISION · GAME PAUSED",
     `<img class="portrait" src="${iconUrl("creature")}" alt="A curious Tripelkin"><p>${text[1]}</p><div class="button-row"><button class="secondary" data-choice="${kind}" data-answer="${kind === "monolith" ? "care" : "no"}" data-entity="${esc(entity || "")}">${kind === "monolith" ? "Look after each other." : kind === "second-contact" ? "Keep a home below." : kind === "nuke" ? "Keep our world." : "Let them live."}</button><button class="primary" data-choice="${kind}" data-answer="${kind === "monolith" ? "explore" : "yes"}" data-entity="${esc(entity || "")}">${kind === "monolith" ? "Let’s find out." : kind === "second-contact" ? "We can reach the sky." : kind === "nuke" ? "Open the connection." : "Use the Reclaimer."}</button></div>`,
     "choice",
   );

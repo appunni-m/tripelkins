@@ -2089,3 +2089,63 @@ summary {
 .inbox-entry[data-category="flight"]{border-left:3px solid #928399;padding-left:16px}
 .inbox-entry[data-category="work"]{border-left:3px solid #8aa178;padding-left:16px}
 .inbox-entry[data-category="help"]{border-left:3px solid #bd9670;padding-left:16px}
+.decision-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid #a9783e;
+  border-radius: 999px;
+  background: #f5e3b5;
+  color: #68451f;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .07em;
+  line-height: 1.35;
+}
+.decision-callout {
+  margin: 0 0 18px;
+  padding: 16px;
+  border: 2px solid #bb925c;
+  border-left: 6px solid #99673d;
+  border-radius: 6px;
+  background: #f3e7c3;
+}
+.decision-callout p {
+  margin: 12px 0 0;
+  color: #433d2e;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+.inbox-button[data-decision="important"] {
+  border-color: #99673d;
+  background: #f3e1ad;
+  box-shadow: 0 0 0 3px #d8b87580, 2px 3px #35473230;
+}
+.inbox-entry[data-decision="important"] {
+  margin: 14px 0;
+  padding: 18px;
+  border: 2px solid #bb925c;
+  border-left: 6px solid #99673d;
+  border-radius: 7px;
+  background: #f3e7c3;
+  box-shadow: 2px 3px #35473218;
+}
+.important-choice .eyebrow { color: #82582d; font-weight: 900; }
+.important-choice .modal-header {
+  padding-bottom: 16px;
+  border-bottom: 2px solid #bf9d66;
+}
+.important-choice > p {
+  margin: 14px 0 18px;
+  padding: 15px 17px;
+  border: 1px solid #b9a47a;
+  border-left: 5px solid #a47543;
+  border-radius: 5px;
+  background: #f0e6c9;
+  color: #413d30;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+.important-choice .button-row button { min-height: 44px; }

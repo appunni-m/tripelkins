@@ -25,7 +25,11 @@ export function createCommunityUI({ engine, getWorld, ready, modal, closeModal, 
     const entries = w.community.inbox.slice().reverse().filter(m=>inboxFilter==="all" || m.category===inboxFilter).map((m) => {
       const story = m.story && storyEntry(m.story);
       const pending = story && !w.story.responses.some((r)=>r.id===story.id) && story.responses.length>1;
-      return `<article class="inbox-entry" data-category="${esc(m.category || "letter")}"><small>${stamp(m.tick)} · ${esc(categories[m.category] || "Colony letters")}${pending || m.action ? " · AWAITING YOUR REPLY" : ""}</small><h3>${esc(m.title)}</h3><p>${esc(m.action === "independence" ? independenceText() : m.text)}</p>${m.action === "independence" ? `<div class="button-row">${consentButtons()}</div>` : pending ? `<div class="button-row">${story.responses.map((r)=>`<button class="secondary" data-inbox-story="${esc(story.id)}" data-inbox-answer="${esc(r)}">${esc(r)}</button>`).join("")}</div>` : ""}</article>`;
+      const importantDecision = m.action === "independence";
+      const status = importantDecision
+        ? '<span class="decision-badge">IMPORTANT DECISION · YOUR CHOICE IS NEEDED</span>'
+        : pending || m.action ? " · AWAITING YOUR REPLY" : "";
+      return `<article class="inbox-entry" data-category="${esc(m.category || "letter")}"${importantDecision ? ' data-decision="important"' : ""}><small>${stamp(m.tick)} · ${esc(categories[m.category] || "Colony letters")}${status}</small><h3>${esc(m.title)}</h3><p>${esc(importantDecision ? independenceText() : m.text)}</p>${importantDecision ? `<div class="button-row">${consentButtons()}</div>` : pending ? `<div class="button-row">${story.responses.map((r)=>`<button class="secondary" data-inbox-story="${esc(story.id)}" data-inbox-answer="${esc(r)}">${esc(r)}</button>`).join("")}</div>` : ""}</article>`;
     }).join("");
     const filters = Object.entries({all:"Everything",...categories}).map(([key,label])=>`<button class="secondary" data-inbox-filter="${key}" aria-pressed="${inboxFilter===key}">${label}</button>`).join("");
     modal("Letters from the clearing", "THE INBOX · GAME PAUSED", `<p class="muted">Their journey, little victories, and the things they need help with. Up to 64 messages stay with this world; unanswered choices are kept first.</p><nav class="inbox-filters" aria-label="Filter inbox">${filters}</nav>${entries || '<p>No messages here yet. Their story unfolds as the colony grows.</p>'}`, "inbox");
@@ -35,7 +39,7 @@ export function createCommunityUI({ engine, getWorld, ready, modal, closeModal, 
     const w = getWorld();
     if (w.population <= 20 && w.community.consent === "unasked") return;
     modal("Standing on our own", "COLONY INDEPENDENCE · GAME PAUSED",
-      `<p>${esc(independenceText())}</p><p class="muted">${w.community.consent === "accepted" ? "Independent building is allowed. You can take over again whenever you like." : "This choice can be changed in Options."} They use real materials, organize local work crews, and respect your work restrictions. Destructive powers and story choices remain yours.</p><div class="button-row">${consentButtons()}</div>`, "independence");
+      `<section class="decision-callout"><span class="decision-badge">IMPORTANT DECISION · YOUR CHOICE IS NEEDED</span><p>${esc(independenceText())}</p></section><p class="muted">${w.community.consent === "accepted" ? "Independent building is allowed. You can take over again whenever you like." : "This choice can be changed in Options."} They use real materials, organize local work crews, and respect your work restrictions. Destructive powers and story choices remain yours.</p><div class="button-row">${consentButtons()}</div>`, "independence");
   }
   function update(status, notify = false) {
     const w = getWorld();
@@ -54,9 +58,14 @@ export function createCommunityUI({ engine, getWorld, ready, modal, closeModal, 
         .finally(() => { updatePending = false; });
     } else if (!updatePending) wasReady = isReady;
     const unread = w.community.inbox.filter((m)=>!m.read).length;
+    const importantDecision = w.community.inbox.some((m) => m.action === "independence");
     $("inbox-count").textContent = unread || "";
     $("inbox-count").hidden = !unread;
-    $("inbox-button").setAttribute("aria-label",`Open inbox${unread ? `, ${unread} unread messages` : ""}`);
+    $("inbox-button").dataset.decision = importantDecision ? "important" : "none";
+    $("inbox-button").setAttribute("aria-label",`Open inbox${unread ? `, ${unread} unread messages` : ""}${importantDecision ? ", important colony decision needs your choice" : ""}`);
+    $("inbox-button").title = importantDecision
+      ? "Important colony decision needs your choice"
+      : "Words from below";
     $("thought-status").textContent = status.kind === "thinking" ? "Thinking…" : status.kind === "on" ? "Intelligence on" : status.title;
     $("thought-log").dataset.state = status.kind;
     if ($("thought-log").open) {
@@ -72,8 +81,14 @@ export function createCommunityUI({ engine, getWorld, ready, modal, closeModal, 
     }
   }
   function showNotice(message) {
+    if (message.action === "independence") {
+      $("colony-notice").hidden = true;
+      independence();
+      return;
+    }
     $("colony-notice-title").textContent = message.title;
-    $("colony-notice-text").textContent = message.action === "independence" ? independenceText() : message.text;
+    $("colony-notice-text").textContent = message.text;
+    $("colony-notice-read").textContent = "Read in inbox ↗";
     $("colony-notice").hidden = false;
     clearTimeout(timer);
     timer = setTimeout(()=>$("colony-notice").hidden=true,5000);
