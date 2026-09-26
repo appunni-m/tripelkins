@@ -2083,6 +2083,258 @@ summary {
 .inspector .orbit-arrival { margin-bottom: 8px; }
 .orbit-arrivals { font-size: 11px; margin-top: 12px; }
 .orbit-arrivals ul { padding-left: 18px; }
+
+/* Use the visible phone viewport and keep controls clear of display cutouts. */
+#game,
+#world {
+  height: 100vh;
+  height: 100dvh;
+}
+.hud {
+  top: max(24px, env(safe-area-inset-top, 0px));
+  right: max(28px, env(safe-area-inset-right, 0px));
+  left: max(28px, env(safe-area-inset-left, 0px));
+}
+.resources {
+  top: max(135px, calc(env(safe-area-inset-top, 0px) + 110px));
+  left: max(28px, env(safe-area-inset-left, 0px));
+}
+.game-footer {
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  left: max(28px, env(safe-area-inset-left, 0px));
+  right: max(28px, env(safe-area-inset-right, 0px));
+}
+.inspector {
+  max-height: calc(100dvh - 340px - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.colony-notice {
+  top: max(90px, calc(env(safe-area-inset-top, 0px) + 70px));
+  right: max(28px, env(safe-area-inset-right, 0px));
+  width: min(310px, calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+}
+dialog {
+  width: min(640px, calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  max-height: calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 700px) {
+  .hud {
+    top: max(18px, env(safe-area-inset-top, 0px));
+    right: max(16px, env(safe-area-inset-right, 0px));
+    left: max(16px, env(safe-area-inset-left, 0px));
+  }
+  .resources {
+    top: calc(103px + env(safe-area-inset-top, 0px));
+    left: max(16px, env(safe-area-inset-left, 0px));
+    max-width: calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  }
+  .game-footer {
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    left: max(16px, env(safe-area-inset-left, 0px));
+    right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .inspector {
+    top: max(162px, calc(env(safe-area-inset-top, 0px) + 120px));
+    left: max(16px, env(safe-area-inset-left, 0px));
+    width: min(240px, calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+    max-height: calc(100dvh - 480px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+  .colony-notice {
+    top: max(106px, calc(env(safe-area-inset-top, 0px) + 85px));
+    right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .toast {
+    top: max(100px, calc(env(safe-area-inset-top, 0px) + 82px));
+  }
+  .voice-subtitles {
+    bottom: calc(236px + env(safe-area-inset-bottom, 0px));
+  }
+  .voice-live {
+    bottom: calc(188px + env(safe-area-inset-bottom, 0px));
+  }
+  .chat-composer {
+    bottom: calc(218px + env(safe-area-inset-bottom, 0px));
+    left: max(14px, env(safe-area-inset-left, 0px));
+    width: calc(100vw - 28px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  }
+  .voice-key-hint {
+    display: none;
+  }
+  input,
+  select,
+  textarea,
+  .chat-composer input {
+    font-size: 16px;
+  }
+}
+
+@media (pointer: coarse) {
+  button {
+    min-height: 44px;
+    -webkit-tap-highlight-color: #4b6c5540;
+  }
+  .world-controls button {
+    width: 44px;
+    height: 44px;
+  }
+  .world-controls .intelligence-status {
+    flex-basis: 44px;
+  }
+  .tool-tray {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+  }
+  .tool-scroll {
+    min-height: 44px;
+  }
+  #tabs button {
+    min-height: 48px;
+  }
+  .identity-actions button,
+  .inbox-filters button,
+  .options-nav button,
+  .button-row button,
+  #colony-notice-close {
+    min-height: 44px;
+  }
+  .inspector .close,
+  .modal-header button {
+    width: 44px;
+    height: 44px;
+  }
+  .thought-log summary {
+    min-height: 44px;
+  }
+  input,
+  select,
+  textarea,
+  .chat-composer input {
+    font-size: 16px;
+  }
+}
+
+/* Landscape phones need room for both the playfield and the tool shelf. */
+@media (max-height: 520px) and (orientation: landscape) and (pointer: coarse) {
+  .hud {
+    top: max(8px, env(safe-area-inset-top, 0px));
+    right: max(12px, env(safe-area-inset-right, 0px));
+    left: max(12px, env(safe-area-inset-left, 0px));
+    gap: 8px;
+  }
+  .population {
+    width: 56px;
+    height: 56px;
+  }
+  .population img {
+    width: 20px;
+    height: 20px;
+  }
+  .population span {
+    font-size: 15px;
+    line-height: 16px;
+  }
+  .goal {
+    padding: 4px 7px;
+  }
+  .goal b {
+    font-size: 13px;
+  }
+  .goal small {
+    font-size: 9px;
+  }
+  .resources {
+    top: max(68px, calc(env(safe-area-inset-top, 0px) + 58px));
+    left: max(12px, env(safe-area-inset-left, 0px));
+    max-width: min(230px, 34vw);
+  }
+  .resource {
+    min-height: 32px;
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+  .resource img {
+    width: 18px;
+    height: 18px;
+  }
+  .inspector {
+    top: max(78px, calc(env(safe-area-inset-top, 0px) + 66px));
+    left: max(12px, env(safe-area-inset-left, 0px));
+    width: min(220px, 32vw);
+    max-height: calc(100dvh - 230px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+  .game-footer {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    left: max(12px, env(safe-area-inset-left, 0px));
+    right: max(12px, env(safe-area-inset-right, 0px));
+    gap: 8px;
+  }
+  .world-controls {
+    max-width: min(315px, 42vw);
+  }
+  .toolbox {
+    width: min(390px, 50vw);
+  }
+  .tool-list {
+    --tool-columns: 3;
+    grid-auto-columns: calc((100% - 12px) / 3);
+  }
+  .tool {
+    height: 76px;
+    grid-template-rows: 16px 32px minmax(20px, 1fr);
+  }
+  .tool img {
+    width: 30px;
+    height: 30px;
+  }
+  .tool-hint {
+    display: none;
+  }
+  .thought-log {
+    position: absolute;
+    right: 0;
+    bottom: calc(132px + env(safe-area-inset-bottom, 0px));
+    width: min(250px, 34vw);
+  }
+  .thought-log #thought-content {
+    max-height: 24vh;
+  }
+  .voice-subtitles {
+    bottom: calc(145px + env(safe-area-inset-bottom, 0px));
+  }
+  .voice-live {
+    bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+  }
+  .chat-composer {
+    bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+    left: max(12px, env(safe-area-inset-left, 0px));
+    width: min(405px, calc(100vw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  }
+}
+
+@media (max-height: 700px) and (orientation: portrait) and (pointer: coarse) {
+  .tool-hint {
+    display: none;
+  }
+  .tool {
+    height: 76px;
+    grid-template-rows: 16px 32px minmax(20px, 1fr);
+  }
+  .tool img {
+    width: 30px;
+    height: 30px;
+  }
+  .inspector {
+    max-height: calc(100dvh - 420px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+}
 .inbox-filters{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0 22px}
 .inbox-filters .secondary{padding:7px 10px;font-size:12px}
 .inbox-filters [aria-pressed="true"]{background:#435e5c;color:#fff3d9;border-color:#435e5c}
