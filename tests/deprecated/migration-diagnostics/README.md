@@ -1,6 +1,6 @@
 # Retained migration diagnostics
 
-These are input/configuration files for the older domain-specific diagnostic runners. They contain no stored expected outcomes. Both sides still execute the JavaScript oracle pinned at `ae3350fd53414258ce7a9f94a0fe8315c7dafe29` and the native or shipped-WASM consumer independently.
+These are input/configuration files for the older domain-specific diagnostic runners. They contain no stored expected outcomes. Both sides execute the JavaScript oracle pinned by `scripts/migration/contracts/inventory.mjs` and the native or shipped-WASM consumer independently.
 
 The canonical manifest is `tests/fixtures/manifest.json`. Its input corpus covers every required public export and fully maps the 125 simulation stimuli into canonical cases. The larger historical spatial, state and planning workflows are retained here or beside their runners until their complete sequence-level behavior is represented by canonical workflows. They remain registered commands in the native coverage plan and must not be deleted merely because representative canonical cases pass.
 

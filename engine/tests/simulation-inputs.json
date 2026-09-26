@@ -1,6 +1,6 @@
 {
   "schema": "tripelkins/simulation-inputs@1",
-  "reference": "ae3350fd53414258ce7a9f94a0fe8315c7dafe29",
+  "reference": "b0f2fd2e6b90c5aa70fafac46898c37fb3e454e2",
   "cases": [
     {
       "id": "inspect:lander",
