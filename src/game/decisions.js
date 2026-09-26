@@ -2,6 +2,7 @@ import { makePlan, minimum, allowsTask } from "./jobs.js";
 import { activeGoal } from "./goals.js";
 import { withRouteCosts } from "./navigation.js";
 import { densityAt, densityReward, densitySummary } from "./density.js";
+import { colonyMilestone, industryMilestone } from "./development.js";
 import { CARE_START } from "./work-balance.js";
 export const POLICIES = {
   care: "Recover needs",
@@ -100,11 +101,12 @@ function buildFeasiblePlans(w) {
   return (nondominated.length ? nondominated : all).slice(0, 5);
 }
 export function planReward(w, p) {
-  const goal = activeGoal(w)?.kind, crowded = densitySummary(w).crowded;
+  const goal = activeGoal(w)?.kind || colonyMilestone(w)?.kind || industryMilestone(w)?.kind,
+    crowded = densitySummary(w).crowded;
   const e = p.effects || judgePlan(w,p).effects;
   const components = {care:e.care*8,commitment:e.commitment*.15,
     material:e.material*(["wood","bridge"].includes(goal)?6:2),
-    production:e.production*(["ore","blocks"].includes(goal)?6:2),
+    production:e.production*(["ore","blocks","energy"].includes(goal)?6:2),
     discovery:e.discovery*(crowded || goal==="grow"?8:3),
     space:e.space||0,maintenance:(e.maintenance||0)*2,travel:e.travel||0};
   return {total:Object.values(components).reduce((a,b)=>a+b,0),components};

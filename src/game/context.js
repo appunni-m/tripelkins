@@ -200,8 +200,30 @@ export function buildContext(w, { includePlans = true } = {}) {
       ? Math.min(...groups.map((group) => group.needs[key].min))
       : 0,
   );
+  const taskCounts = (plan) => plan.assignments.reduce((counts, assignment) => {
+    counts[assignment.task] = (counts[assignment.task] || 0) + 1;
+    return counts;
+  }, {});
+  const taskMix = (plan) => {
+    const counts = taskCounts(plan);
+    return Object.fromEntries([
+      "haul", "gather", "construct", "quarry", "refine", "mine", "work", "explore",
+      "clean", "eat", "wash", "play", "home", "orbit", "rest", "social", "idle",
+    ].filter((task) => counts[task]).map((task) => [
+      task === "explore" ? "scouts" : task,
+      counts[task],
+    ]));
+  };
+  const goalLabel = objective
+    ? `player ${objective.kind} goal ${objectiveState.value}/${objective.target}; next ${objectiveState.step}. ${objectiveState.blocker}`
+    : context.currentMilestone
+      ? `${context.currentMilestone.title}: ${context.currentMilestone.step}`
+      : context.currentStoryObjective?.step || defaultGoal[0].toLowerCase();
+  const candidateMix = plans.map((plan) =>
+    `${plan.id} [${Object.entries(taskMix(plan)).map(([task, count]) => `${count} ${task}`).join(", ")}]`,
+  ).join("; ");
   const localParts = [
-    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || context.currentMilestone?.step || context.currentStoryObjective?.step || defaultGoal[0].toLowerCase()}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
+    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${goalLabel}. Bridge ${w.progress.bridge ? "done" : `${context.bridgeConstruction?.delivered || 0}/${context.bridgeConstruction?.required || 24} delivered, ${context.bridgeConstruction?.staged || 0} staged`}; wood ${w.inventory.wood}. Candidate task mix: ${candidateMix}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
     orbital.phase === "locked" ? "The orbital home is locked until second contact." :
       orbital.phase === "building" ? "Our sky launcher is being built; finish that crew's work before assigning volunteers." :
       orbital.phase === "build" ? orbital.missionActive
@@ -268,17 +290,23 @@ export function buildContext(w, { includePlans = true } = {}) {
           objectiveState.policy,
         ]
       : null,
+    context.currentMilestone
+      ? [context.currentMilestone.id, context.currentMilestone.kind, context.currentMilestone.target, context.currentMilestone.step]
+      : null,
+    context.currentStoryObjective
+      ? [context.currentStoryObjective.title, context.currentStoryObjective.step]
+      : null,
   ]);
   return {
     context,
     maxTokens: 320,
     question:orbital.missionActive && orbital.phase === "launch"
       ? "Which crew allocation sends eligible volunteers to the orbital home, protects urgent care, and keeps eight residents on the ground?"
-      : "Which crew allocation makes useful progress without unnecessary care or leaving healthy residents idle?",
-    options: Object.fromEntries(plans.map(p=>{
-      const count=task=>p.assignments.filter(a=>task(a.task)).length;
-      return [p.id,`${count(t=>t==="orbit")} orbital volunteers; ${count(t=>t==="explore")} scouts; ${count(t=>USEFUL_TASKS.has(t)&&!(["explore","orbit"].includes(t)))} other workers; ${count(t=>["idle","rest","social"].includes(t))} rest; ${count(t=>["eat","wash","play","home"].includes(t))} recover.`];
-    })),
+      : "Which crew allocation best advances the stated goal while protecting urgent care and using available healthy residents for useful work?",
+    options: Object.fromEntries(plans.map((plan) => [
+      plan.id,
+      Object.entries(taskMix(plan)).map(([task, count]) => `${count} ${task}`).join(", ") || "no assignments",
+    ])),
     local: localParts.join(" "),
     localParts,
     plans,

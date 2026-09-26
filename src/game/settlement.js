@@ -15,8 +15,10 @@ import { routeCost, withRouteCosts } from "./navigation.js";
 import { materializeObject, remember } from "./state.js";
 import { activity, postMessage } from "./community.js";
 import { CARE_BUILDINGS, INDEPENDENT_BUILDINGS, RESOURCE_PROJECTS, DEVELOPMENT_TYPES,
-  projectName, isConstruction, projectFunded, projectRequirements, timberReserve, colonyMilestone, industryMilestone,
+  projectName, projectStatus, isConstruction, projectFunded, projectRequirements, timberReserve, colonyMilestone, industryMilestone,
   nextIndustryBuilding, uncommittedBlocks } from "./development.js";
+import { bridgeProject } from "./bridge-project.js";
+import { inspectGoal } from "./goals.js";
 import { orbitalPlan } from "./orbit-rules.js";
 export { CARE_BUILDINGS } from "./development.js";
 const activeGoal = (w) => w.memory.goals.find((g) => g.status === "active");
@@ -429,8 +431,8 @@ export function settlementDecisionInput(w, choices) {
   // Keep urgent-care inputs focused. Unrelated unlocks crowd out the immediate
   // capacity problem in the small model's bounded context.
   const priority=careFirst
-    ? `Urgent care first; ${reserve.refill ? "replenish timber before optional expansion" : "gather missing building timber"}.`
-    : `${milestone} Urgent care first; otherwise advance goals and unlock work. Gather missing timber.`;
+    ? `Urgent care first while current need shortages remain; timber refill is ${reserve.refill ? "below its minimum" : "not below its minimum"}.`
+    : `${milestone} Timber refill is ${reserve.refill ? "below its minimum" : "not below its minimum"}; care urgency appears in the need counts and candidate list.`;
   const orbital=orbitalPlan(w);
   const orbitalContext=orbital.phase==="build" && orbital.missionActive
     ? "The active orbital mission needs one sky launcher; keep eight residents on the ground."
@@ -439,12 +441,22 @@ export function settlementDecisionInput(w, choices) {
       : "";
   const goalStep=storyGoal?.step || industry?.step || storyObjective(w)[1] || storyObjective(w)[0];
   const defaultGoal=goalStep.replace(/[. ]+$/,"").replace(/^./,letter=>letter.toLowerCase());
-  const requiredContext = `${w.creatures.length} residents; ${workProjects(w).length}/${projectLimit(w)} crews active. Assign free local groups. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind || defaultGoal}. ${accessBrief(w)} ${priority} ${orbitalContext} Prefer more help and reward closer to zero.`;
+  const playerGoal=activeGoal(w), goalState=playerGoal && inspectGoal(w,playerGoal);
+  const goalLabel=playerGoal
+    ? `Player goal ${playerGoal.kind} ${goalState.value}/${playerGoal.target}; next ${goalState.step}. ${goalState.blocker}`
+    : storyGoal ? `${storyGoal.title}: ${storyGoal.step}`
+      : industry ? `${industry.title}: ${industry.step}` : defaultGoal;
+  const bridge=bridgeProject(w);
+  const bridgeStatus=bridge
+    ? `${bridge.delivered}/${bridge.required} delivered, ${bridge.staged} staged, ${bridge.carried} carried`
+    : "complete or unavailable";
+  const currentProjects=workProjects(w).slice(0,3).map(p=>`${projectName(p)}: ${projectStatus(w,p)}`).join("; ") || "none";
+  const requiredContext = `${w.creatures.length} residents; ${workProjects(w).length}/${projectLimit(w)} crews active. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Bridge ${bridgeStatus}; current projects ${currentProjects}. Goal ${goalLabel}. ${accessBrief(w)} ${priority} ${orbitalContext} Higher help, density reward closer to zero, and shorter travel are favorable tradeoffs.`;
   const contextParts = choices.map(c=>c.description);
   return {options,requiredContext,contextParts,context:[requiredContext,...contextParts].join(" "),
     question:orbital.phase==="build" && orbital.missionActive
       ? "Which listed project and location best advance the goals? Build the one sky launcher for the active orbital mission while protecting urgent care and keeping eight residents on the ground."
-      : "Which project and location best advance the goal?",maxTokens:320};
+      : "Which listed project and site best advances the goal? Use the facts provided and return an exact option key, or wait.",maxTokens:320};
 }
 export function settlementContext(w,choices) {
   return {care:careContext(w), plan:developmentPlan(w), timber:timberReserve(w),

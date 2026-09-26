@@ -199,9 +199,14 @@ export function stepWorld(w, dt) {
   }
   const deaths = [],
     births = [];
-  // Keep the saved 0..50 growth meter; slow colony growth without discarding
-  // existing lives or growth progress. Device headroom remains a separate gate.
-  const growthSeconds = w.creatures.length < 20 ? 75 : 180;
+  // Get a new colony to its first 21 named residents quickly, then return to
+  // the long-term growth pace. Device headroom and care remain separate gates.
+  const earlyGrowth = w.creatures.length < 20;
+  const configuredGrowthLimit = Number(w.runtime?.growth?.limit ?? LIMITS.creatures);
+  const growthLimit = Math.min(LIMITS.creatures,
+    Number.isFinite(configuredGrowthLimit) ? Math.max(0, Math.floor(configuredGrowthLimit)) : LIMITS.creatures,
+    earlyGrowth ? 21 : LIMITS.creatures);
+  const growthSeconds = earlyGrowth ? 5 : 180;
   for (const c of [...w.creatures]) {
     if (
       c.carry > 0 &&
@@ -237,9 +242,8 @@ export function stepWorld(w, dt) {
         : Math.max(0, c.growth - dt * 0.25);
     if (
       c.growth >= 50 &&
-      w.population < 1e15 && w.creatures.length < LIMITS.creatures &&
-      !w.runtime?.growth?.held &&
-      w.creatures.length < (w.runtime?.growth?.limit ?? LIMITS.creatures)
+      w.population < 1e15 && w.creatures.length < growthLimit &&
+      !w.runtime?.growth?.held
     ) {
       births.push(c);
     }
@@ -449,7 +453,12 @@ export function stepWorld(w, dt) {
   }
   for (const { c, cause } of deaths)
     die(w, [c], cause, addObject, remember, "world");
-  for (const parent of births)
+  for (let i = 0; i < births.length; i++) {
+    const parent = births[i];
+    if (w.creatures.length >= growthLimit) {
+      if (earlyGrowth) for (const waiting of births.slice(i)) waiting.growth = 0;
+      break;
+    }
     if (w.creatures.includes(parent)) {
       const before = w.population;
       const c = addCreature(w, parent.x + 0.7, parent.y, parent);
@@ -465,6 +474,7 @@ export function stepWorld(w, dt) {
         remember(w, "birth", `${c.name} joined us.`, c.id);
       }
     }
+  }
   separateBodies(w);
   const builtProjects = finishSettlement(w,placeBuilding);
   if (builtProjects.length)
