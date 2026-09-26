@@ -25,6 +25,43 @@ async function request(path) {
   if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
   return response;
 }
+async function verifyAsset(asset) {
+  const attempts = 5;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      const response = await request(asset.path);
+      const mime = response.headers.get("content-type") || "";
+      if (asset.path.endsWith(".wasm") && !mime.includes("application/wasm"))
+        throw new Error(`WASM MIME is ${mime}`);
+      if (brotliPaths.has(asset.path) || gzipPaths.has(asset.path)) {
+        const encoding = response.headers.get("content-encoding");
+        if (encoding !== "br" && encoding !== "gzip")
+          throw new Error(`WASM response has unexpected Content-Encoding: ${encoding}`);
+      }
+      if (/\.(?:m?js)$/.test(asset.path) && !/(?:java|ecma)script/.test(mime))
+        throw new Error(`JavaScript MIME is ${mime}`);
+      const hash = createHash("sha256");
+      let bytes = 0;
+      for await (const part of response.body) {
+        hash.update(part);
+        bytes += part.length;
+      }
+      if (bytes !== asset.bytes || hash.digest("hex") !== asset.sha256)
+        throw new Error("Downloaded bytes differ from the build artifact");
+      console.log(`PASS ${asset.path} (${bytes} bytes)`);
+      return;
+    } catch (error) {
+      if (attempt === attempts - 1)
+        throw new Error(`${error.message} after ${attempts} attempts`, { cause: error });
+      // A Worker can publish its manifest before every asset is available at each edge.
+      const delay = 1000 * 2 ** attempt;
+      console.warn(
+        `RETRY ${asset.path} (${attempt + 1}/${attempts}) in ${delay}ms: ${error.message}`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
 let published;
 // Worker deployments can finish before every edge serves the new manifest.
 for (let attempt = 0; attempt < 12; attempt++) {
@@ -48,26 +85,7 @@ await Promise.all(
     while (next < expected.assets.length) {
       const asset = expected.assets[next++];
       try {
-        const response = await request(asset.path);
-        const mime = response.headers.get("content-type") || "";
-        if (asset.path.endsWith(".wasm") && !mime.includes("application/wasm"))
-          throw new Error(`WASM MIME is ${mime}`);
-        if (brotliPaths.has(asset.path) || gzipPaths.has(asset.path)) {
-          const encoding = response.headers.get("content-encoding");
-          if (encoding !== "br" && encoding !== "gzip")
-            throw new Error(`WASM response has unexpected Content-Encoding: ${encoding}`);
-        }
-        if (/\.(?:m?js)$/.test(asset.path) && !/(?:java|ecma)script/.test(mime))
-          throw new Error(`JavaScript MIME is ${mime}`);
-        const hash = createHash("sha256");
-        let bytes = 0;
-        for await (const part of response.body) {
-          hash.update(part);
-          bytes += part.length;
-        }
-        if (bytes !== asset.bytes || hash.digest("hex") !== asset.sha256)
-          throw new Error("Downloaded bytes differ from the build artifact");
-        console.log(`PASS ${asset.path} (${bytes} bytes)`);
+        await verifyAsset(asset);
       } catch (error) {
         failures++;
         console.error(`FAIL ${asset.path}: ${error.message}`);
