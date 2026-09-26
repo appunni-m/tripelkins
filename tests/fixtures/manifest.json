@@ -5,7 +5,7 @@
     "mode": "full",
     "inventory": {
       "authority": "scripts/migration/contracts/inventory.mjs#sourceFiles",
-      "revision": "8f6767015037123a17c711bf55e73f860608598f",
+      "revision": "13a97c065ee0c6be6733f11aa7fd4bbeb23cd212",
       "command_id": "migration-inventory"
     }
   },
@@ -13,7 +13,7 @@
     {
       "id": "javascript-reference",
       "name": "Tripelkins JavaScript simulation",
-      "version": "8f6767015037123a17c711bf55e73f860608598f",
+      "version": "13a97c065ee0c6be6733f11aa7fd4bbeb23cd212",
       "runtime": "Node.js v24.18.0",
       "identity_command_id": "migration-oracle-identity",
       "contract": "All exported production game engine behavior at the pinned source revision.",

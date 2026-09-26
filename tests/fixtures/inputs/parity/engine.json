@@ -12154,7 +12154,9 @@
             },
             "entity": {
               "kind": "literal",
-              "value": "c1"
+              "value": {
+                "id": "c1"
+              }
             }
           }
         }
@@ -17646,6 +17648,85 @@
                 "sickness": 0,
                 "blocked": []
               }
+            }
+          }
+        }
+      ],
+      "observations": [
+        "observe"
+      ]
+    },
+    {
+      "case_id": "game.decisions.selectPlan.precomputed-initial",
+      "surface": "game.decisions",
+      "operation": "selectPlan",
+      "covers": [
+        "game.decisions.selectPlan.contract"
+      ],
+      "target_profiles": [
+        "rust-native",
+        "rust-wasm"
+      ],
+      "assets": [
+        {
+          "id": "clock",
+          "kind": "builtin",
+          "name": "runtime.clock:2000-01-01T00:00:00.000Z:monotonic:0"
+        },
+        {
+          "id": "entropy",
+          "kind": "builtin",
+          "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
+        },
+        {
+          "id": "stimulus_48d92503346d",
+          "kind": "ref",
+          "path": "48d92503346d32410cd5c2b27971b079f7558fcdf63b719db0f8321a0eaea241.json",
+          "sha256": "e2dda812c979070da7d0290052dd5c2a5e92ecd6d4744ff71a9c35de16ae4802",
+          "media_type": "application/json"
+        }
+      ],
+      "steps": [
+        {
+          "step_id": "observe",
+          "surface": "game.decisions",
+          "operation": "selectPlan",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "stimulus_48d92503346d"
+            },
+            "policy": {
+              "kind": "literal",
+              "value": "balanced"
+            },
+            "source": {
+              "kind": "literal",
+              "value": "Coverage"
+            },
+            "model": {
+              "kind": "literal",
+              "value": "contract"
+            },
+            "initial": {
+              "kind": "literal",
+              "value": [
+                {
+                  "id": "balanced",
+                  "assignments": [],
+                  "effects": {
+                    "care": 0,
+                    "commitment": 0,
+                    "material": 0,
+                    "production": 0,
+                    "discovery": 0,
+                    "space": 0,
+                    "maintenance": 0,
+                    "travel": 0
+                  }
+                }
+              ]
             }
           }
         }
@@ -30241,6 +30322,950 @@
       ],
       "observations": [
         "observe"
+      ]
+    },
+    {
+      "case_id": "game.traffic.canEnterBridge.travelers-clear-approach-queue",
+      "surface": "game.traffic",
+      "operation": "canEnterBridge",
+      "covers": [
+        "game.simulation.stepWorld.contract",
+        "game.traffic.canEnterBridge.contract"
+      ],
+      "target_profiles": [
+        "rust-native",
+        "rust-wasm"
+      ],
+      "assets": [
+        {
+          "id": "clock",
+          "kind": "builtin",
+          "name": "runtime.clock:2000-01-01T00:00:00.000Z:monotonic:0"
+        },
+        {
+          "id": "entropy",
+          "kind": "builtin",
+          "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
+        },
+        {
+          "id": "traffic_queue_world",
+          "kind": "inline",
+          "encoding": "utf8",
+          "data": "{\"schema\":4,\"discovery\":{\"version\":1,\"cell\":4,\"revision\":3,\"regions\":{\"1:0\":65520,\"0:0\":52224,\"2:0\":13056,\"0:1\":61166,\"1:1\":65535,\"2:1\":65535,\"0:2\":204,\"1:2\":4095,\"2:2\":63,\"3:1\":13105,\"3:2\":1}},\"seed\":18492,\"map\":{\"version\":1,\"seed\":18492,\"revision\":0,\"cleared\":{}},\"nextId\":5,\"nextEvent\":1,\"revision\":0,\"time\":0,\"population\":3,\"cohort\":0,\"stage\":2,\"creatures\":[{\"id\":\"c2\",\"identityVersion\":1,\"birthOrdinal\":0,\"dictionaryVersion\":1,\"nameIndex\":2108,\"name\":\"Peep Cloverseed\",\"customName\":null,\"parentId\":null,\"birthTick\":0,\"traits\":{\"curiosity\":0.3719051277730614,\"sociability\":0.8875574183184654,\"diligence\":0.2231208945158869},\"encounters\":[],\"relationships\":[],\"favorite\":false,\"x\":42,\"y\":25,\"fed\":85,\"clean\":85,\"amused\":85,\"age\":0,\"growth\":0,\"task\":\"explore\",\"target\":null,\"work\":0,\"wanderX\":42,\"wanderY\":25,\"deadTime\":0,\"carry\":0,\"cargoKind\":null,\"job\":{\"state\":\"travelling\",\"point\":{\"x\":50,\"y\":25},\"started\":0,\"lastProgress\":0,\"progressAt\":0,\"bestDistance\":8,\"expected\":60},\"sickness\":0,\"blocked\":[]},{\"id\":\"c3\",\"identityVersion\":1,\"birthOrdinal\":1,\"dictionaryVersion\":1,\"nameIndex\":10027,\"name\":\"Wom Berryreed\",\"customName\":null,\"parentId\":null,\"birthTick\":0,\"traits\":{\"curiosity\":0.7438126257620752,\"sociability\":0.7751038852147758,\"diligence\":0.4462317614816129},\"encounters\":[],\"relationships\":[],\"favorite\":false,\"x\":46,\"y\":25,\"fed\":85,\"clean\":85,\"amused\":85,\"age\":0,\"growth\":0,\"task\":\"explore\",\"target\":null,\"work\":0,\"wanderX\":46,\"wanderY\":25,\"deadTime\":0,\"carry\":0,\"cargoKind\":null,\"job\":{\"state\":\"travelling\",\"point\":{\"x\":32,\"y\":25},\"started\":0,\"lastProgress\":0,\"progressAt\":0,\"bestDistance\":14,\"expected\":60},\"sickness\":0,\"blocked\":[]},{\"id\":\"c4\",\"identityVersion\":1,\"birthOrdinal\":2,\"dictionaryVersion\":1,\"nameIndex\":1562,\"name\":\"Fig Bananapetal\",\"customName\":null,\"parentId\":null,\"birthTick\":0,\"traits\":{\"curiosity\":0.11572870681993663,\"sociability\":0.6626656109001487,\"diligence\":0.669356933562085},\"encounters\":[],\"relationships\":[],\"favorite\":false,\"x\":46.8,\"y\":25,\"fed\":85,\"clean\":85,\"amused\":85,\"age\":0,\"growth\":0,\"task\":\"explore\",\"target\":null,\"work\":0,\"wanderX\":46.8,\"wanderY\":25,\"deadTime\":0,\"carry\":0,\"cargoKind\":null,\"job\":{\"state\":\"travelling\",\"point\":{\"x\":32,\"y\":25},\"started\":0,\"lastProgress\":0,\"progressAt\":0,\"bestDistance\":14,\"expected\":60},\"sickness\":0,\"blocked\":[]}],\"objects\":[{\"id\":\"o1\",\"type\":\"bridge\",\"x\":42,\"y\":25,\"stock\":24,\"level\":1,\"progress\":0,\"bridge\":{\"a\":{\"x\":38.7,\"y\":25},\"b\":{\"x\":45.3,\"y\":25},\"width\":1.2,\"complete\":true,\"required\":24,\"delivered\":{\"wood\":24,\"bones\":0}}}],\"inventory\":{\"wood\":16,\"blocks\":0,\"ore\":0,\"bones\":0,\"corpses\":0},\"progress\":{\"hatched\":true,\"bridge\":true,\"monolith\":false,\"energy\":0,\"peakBlocks\":0,\"chopped\":0,\"bugs\":0,\"pollution\":0,\"uplinks\":0},\"memory\":{\"commands\":[],\"summary\":{\"eventsCompacted\":0,\"commandsCompacted\":0,\"throughTick\":0,\"milestones\":[]},\"recent\":[],\"totals\":{},\"choices\":[],\"jobs\":[],\"activity\":{},\"lastPlan\":null,\"conversations\":[],\"goals\":[]},\"ui\":{\"x\":24,\"y\":24,\"zoom\":1,\"tool\":\"inspect\",\"selected\":null,\"tab\":\"care\",\"muted\":false,\"paused\":false,\"welcome\":false},\"settings\":{\"provider\":\"laya\",\"backend\":\"auto\",\"model\":\"openai/gpt-5-mini\",\"url\":\"https://openrouter.ai/api/v1\",\"autonomy\":true,\"decisionSpeed\":\"medium\",\"intelligenceWorkers\":1,\"localEnabled\":false,\"localBackend\":null,\"voiceBackend\":null,\"voiceEnabled\":false,\"voiceConfigured\":false},\"savedAt\":null,\"nextBirth\":3,\"commandRevision\":0,\"navRevision\":1,\"groups\":[],\"departed\":[],\"pollution\":[],\"story\":{\"completed\":[],\"seen\":[],\"queue\":[],\"active\":null,\"lastAt\":-60,\"lastLetterAt\":0,\"lastIncidentAt\":0,\"refusals\":[],\"promises\":[],\"responses\":[],\"archives\":[],\"evidence\":[],\"assessments\":[]},\"evidence\":{\"care\":0,\"deliveries\":0,\"woodDelivered\":0,\"bonesDelivered\":0,\"deaths\":0,\"neglect\":0,\"pollutionDeaths\":0,\"hammer\":0,\"meteor\":0,\"meteorDeaths\":0,\"sacrificed\":0,\"cleaned\":0,\"discovered\":0,\"launches\":0,\"autonomy\":0},\"directives\":{\"pauseWork\":false,\"avoidPollution\":false,\"careFloor\":35,\"members\":[],\"region\":null},\"orbital\":{\"population\":0,\"fraction\":0,\"energy\":0,\"launches\":0,\"lastLaunch\":0},\"district\":{\"population\":0,\"capacity\":0,\"health\":100,\"fraction\":0,\"lossFraction\":0},\"metrics\":{\"switches\":0,\"stalls\":0,\"completed\":0,\"violations\":0,\"decisions\":0},\"decisions\":[],\"community\":{\"consent\":\"accepted\",\"project\":null,\"projects\":[],\"nextProject\":1,\"lastProjectAt\":-60,\"completed\":0,\"inbox\":[],\"nextMessage\":1,\"lastNoticeAt\":-60,\"visited\":[],\"explored\":0,\"activity\":[],\"plan\":null,\"workTurn\":0,\"access\":[],\"nextAccess\":1},\"runtime\":{\"lastSchedule\":100,\"intelligenceAvailable\":true,\"growth\":{\"held\":true}}}",
+          "sha256": "1073c9645c0c89f59f365a827277a79ee95bc1e046e04c27c491a8a3aea89d52",
+          "media_type": "application/json"
+        }
+      ],
+      "steps": [
+        {
+          "step_id": "queue-step-0",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-1",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-2",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-3",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-4",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-5",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-6",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-7",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-8",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-9",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-10",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-11",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-12",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-13",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-14",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-15",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-16",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-17",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-18",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-19",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-20",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-21",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-22",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-23",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-24",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-25",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-26",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-27",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-28",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-29",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-30",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-31",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-32",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-33",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-34",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-35",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-36",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-37",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-38",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-39",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-40",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-41",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-42",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-43",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "queue-step-44",
+          "surface": "game.simulation",
+          "operation": "stepWorld",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "dt": {
+              "kind": "literal",
+              "value": 0.1
+            }
+          }
+        },
+        {
+          "step_id": "east-first-admitted",
+          "surface": "game.traffic",
+          "operation": "canEnterBridge",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "c": {
+              "kind": "literal",
+              "value": {
+                "id": "c3",
+                "identityVersion": 1,
+                "birthOrdinal": 1,
+                "dictionaryVersion": 1,
+                "nameIndex": 10027,
+                "name": "Wom Berryreed",
+                "customName": null,
+                "parentId": null,
+                "birthTick": 0,
+                "traits": {
+                  "curiosity": 0.7438126257620752,
+                  "sociability": 0.7751038852147758,
+                  "diligence": 0.4462317614816129
+                },
+                "encounters": [],
+                "relationships": [],
+                "favorite": false,
+                "x": 46,
+                "y": 25,
+                "fed": 85,
+                "clean": 85,
+                "amused": 85,
+                "age": 0,
+                "growth": 0,
+                "task": "explore",
+                "target": null,
+                "work": 0,
+                "wanderX": 46,
+                "wanderY": 25,
+                "deadTime": 0,
+                "carry": 0,
+                "cargoKind": null,
+                "job": {
+                  "state": "travelling",
+                  "point": {
+                    "x": 32,
+                    "y": 25
+                  },
+                  "started": 0,
+                  "lastProgress": 0,
+                  "progressAt": 0,
+                  "bestDistance": 14,
+                  "expected": 60
+                },
+                "sickness": 0,
+                "blocked": []
+              }
+            },
+            "destination": {
+              "kind": "literal",
+              "value": {
+                "x": 32,
+                "y": 25
+              }
+            }
+          }
+        },
+        {
+          "step_id": "east-second-admitted",
+          "surface": "game.traffic",
+          "operation": "canEnterBridge",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "traffic_queue_world"
+            },
+            "c": {
+              "kind": "literal",
+              "value": {
+                "id": "c4",
+                "identityVersion": 1,
+                "birthOrdinal": 2,
+                "dictionaryVersion": 1,
+                "nameIndex": 1562,
+                "name": "Fig Bananapetal",
+                "customName": null,
+                "parentId": null,
+                "birthTick": 0,
+                "traits": {
+                  "curiosity": 0.11572870681993663,
+                  "sociability": 0.6626656109001487,
+                  "diligence": 0.669356933562085
+                },
+                "encounters": [],
+                "relationships": [],
+                "favorite": false,
+                "x": 46.8,
+                "y": 25,
+                "fed": 85,
+                "clean": 85,
+                "amused": 85,
+                "age": 0,
+                "growth": 0,
+                "task": "explore",
+                "target": null,
+                "work": 0,
+                "wanderX": 46.8,
+                "wanderY": 25,
+                "deadTime": 0,
+                "carry": 0,
+                "cargoKind": null,
+                "job": {
+                  "state": "travelling",
+                  "point": {
+                    "x": 32,
+                    "y": 25
+                  },
+                  "started": 0,
+                  "lastProgress": 0,
+                  "progressAt": 0,
+                  "bestDistance": 14,
+                  "expected": 60
+                },
+                "sickness": 0,
+                "blocked": []
+              }
+            },
+            "destination": {
+              "kind": "literal",
+              "value": {
+                "x": 32,
+                "y": 25
+              }
+            }
+          }
+        }
+      ],
+      "observations": [
+        "queue-step-0",
+        "queue-step-1",
+        "queue-step-2",
+        "queue-step-3",
+        "queue-step-4",
+        "queue-step-5",
+        "queue-step-6",
+        "queue-step-7",
+        "queue-step-8",
+        "queue-step-9",
+        "queue-step-10",
+        "queue-step-11",
+        "queue-step-12",
+        "queue-step-13",
+        "queue-step-14",
+        "queue-step-15",
+        "queue-step-16",
+        "queue-step-17",
+        "queue-step-18",
+        "queue-step-19",
+        "queue-step-20",
+        "queue-step-21",
+        "queue-step-22",
+        "queue-step-23",
+        "queue-step-24",
+        "queue-step-25",
+        "queue-step-26",
+        "queue-step-27",
+        "queue-step-28",
+        "queue-step-29",
+        "queue-step-30",
+        "queue-step-31",
+        "queue-step-32",
+        "queue-step-33",
+        "queue-step-34",
+        "queue-step-35",
+        "queue-step-36",
+        "queue-step-37",
+        "queue-step-38",
+        "queue-step-39",
+        "queue-step-40",
+        "queue-step-41",
+        "queue-step-42",
+        "queue-step-43",
+        "queue-step-44",
+        "east-first-admitted",
+        "east-second-admitted"
       ]
     },
     {
