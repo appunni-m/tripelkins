@@ -793,13 +793,16 @@ impl Engine {
             || goal
                 .as_ref()
                 .is_some_and(|g| ["wood", "ore", "bridge", "blocks"].contains(&text(g, "kind")));
+        let orbital = orbital_plan(&self.world);
         let outposts = self.outpost_context();
         for kind in INDEPENDENT_BUILDINGS {
             let spec = building_spec(kind);
             if !unlocked(&self.world, kind)
                 || num(&spec, "cost") > 0. && uncommitted_blocks(&self.world) < num(&spec, "cost")
                 || kind == "factory" && flag(&self.world["directives"], "avoidPollution")
-                || resource_goal && !CARE_BUILDINGS.contains(&kind)
+                || resource_goal
+                    && !CARE_BUILDINGS.contains(&kind)
+                    && !(kind == "cannon" && flag(&orbital, "missionActive"))
             {
                 continue;
             }
@@ -818,14 +821,18 @@ impl Engine {
                 _ => None,
             };
             if !CARE_BUILDINGS.contains(&kind) {
-                let needed = (count as f64
+                let needed = if kind == "cannon" {
+                    1.
+                } else {
+                    (count as f64
                     / match kind {
                         "mine" => 32.,
                         "factory" => 48.,
                         "dwelling" => 24.,
                         _ => 64.,
                     })
-                .ceil();
+                .ceil()
+                };
                 if existing as f64 >= needed {
                     continue;
                 }
@@ -884,6 +891,8 @@ impl Engine {
                 } else {
                     30.
                 }) + 15_f64.min(num(s, "urgent") + num(s, "short") / count as f64 * 10.)
+            } else if kind == "cannon" {
+                95.
             } else if ["mine", "factory"].contains(&kind) {
                 if !industry.is_null() {
                     if kind == "factory" { 90. } else { 85. }

@@ -81,7 +81,7 @@ pub(crate) fn pack_hosted_context(full: &Value, budget: usize) -> Result<Value, 
         };
     }
     let mut packed = json!({"version":4});
-    for key in ["workload", "currentMilestone", "care"] {
+    for key in ["workload", "currentMilestone", "care", "orbitalPlan"] {
         if let Some(value) = full.get(key) {
             packed[key] = value.clone();
         }

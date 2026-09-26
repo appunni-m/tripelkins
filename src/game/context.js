@@ -13,6 +13,7 @@ export { POLICIES };
 import { goal } from "./catalog.js";
 import { activeGoal, inspectGoal, goalTitle } from "./goals.js";
 import { biome, CHUNK_SIZE, nearbyObjects, naturalObject } from "./map.js";
+import { orbitalPlan } from "./orbit-rules.js";
 export function buildContext(w, { includePlans = true } = {}) {
   const started = performance.now();
   const care = careContext(w);
@@ -54,6 +55,7 @@ export function buildContext(w, { includePlans = true } = {}) {
       .map((c) => c.id),
   }));
   const plans = includePlans ? feasiblePlans(w) : [];
+  const orbital = orbitalPlan(w);
   const workload = {tasks:{},states:{},available:0,useful:0};
   workload.projectWorkers=workProjects(w).reduce((n,p)=>n+p.crew.length,0);
   workload.crews=workProjects(w).length;
@@ -97,6 +99,7 @@ export function buildContext(w, { includePlans = true } = {}) {
       members: g.members.length,
     })),
     orbital: { ...w.orbital },
+    orbitalPlan: orbital,
     district: { ...w.district },
     story: {
       premise: COLONY_PREMISE,
@@ -196,6 +199,14 @@ export function buildContext(w, { includePlans = true } = {}) {
   );
   const localParts = [
     `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || (context.currentMilestone?.kind==="blocks" ? `first ${context.currentMilestone.target} blocks` : context.currentMilestone ? "mine ore and produce energy" : "healthy growth")}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
+    orbital.phase === "locked" ? "The orbital home is locked until second contact." :
+      orbital.phase === "building" ? "Our sky launcher is being built; finish that crew's work before assigning volunteers." :
+      orbital.phase === "build" ? orbital.missionActive
+        ? "Active orbital mission: build one sky launcher, then send up to twelve healthy volunteers while keeping eight residents on the ground."
+        : "A sky launcher is unlocked; hold its mission until independence is active and any resource goal is complete." :
+      orbital.phase === "launch" || orbital.phase === "waiting"
+        ? `Orbital home ${orbital.launches}/${orbital.target} journeys; ${orbital.missionActive ? "the independent mission is active" : orbital.phase === "waiting" ? "waiting until at least nine residents can stay on the ground" : "waiting for independence or completion of the active resource goal"}. Send healthy non-favorites only; keep eight on the ground.`
+        : `The orbital home has its ${orbital.target} journeys. Do not send more residents.`,
     ...plans.map(p=>`${p.id} planning score ${planReward(w,p).total.toFixed(2)}; density cost ${p.effects.space.toFixed(2)}, travel cost ${p.effects.travel.toFixed(2)}. Higher is better; estimates, not learned rewards.`),
     `Care capacity: ${careSummary(care)}.`,
     `Expansion: ${context.developmentPlan.expanding ? "scout new neighborhoods" : "balance space and care"}. Density target ${context.developmentPlan.density.target} per 100 ground units; crowding penalty 4, isolation penalty 0.6. Child goals: ${context.developmentPlan.children.filter(s=>s.status!=="satisfied").map(s=>s.kind).join(",")}.`,
@@ -224,6 +235,7 @@ export function buildContext(w, { includePlans = true } = {}) {
   const key = JSON.stringify([
     w.stage,
     w.commandRevision,
+    orbital,
     w.community.consent, workProjects(w),
     workload, w.memory.activity,
     w.community.access.map(r=>[r.id,r.status,r.blocker,r.crew]),
@@ -257,10 +269,12 @@ export function buildContext(w, { includePlans = true } = {}) {
   return {
     context,
     maxTokens: 320,
-    question:"Which crew allocation makes useful progress without unnecessary care or leaving healthy residents idle?",
+    question:orbital.missionActive && orbital.phase === "launch"
+      ? "Which crew allocation sends eligible volunteers to the orbital home, protects urgent care, and keeps eight residents on the ground?"
+      : "Which crew allocation makes useful progress without unnecessary care or leaving healthy residents idle?",
     options: Object.fromEntries(plans.map(p=>{
       const count=task=>p.assignments.filter(a=>task(a.task)).length;
-      return [p.id,`Send ${count(t=>t==="explore")} scouts; ${count(t=>["idle","rest","social"].includes(t))} rest; ${count(t=>USEFUL_TASKS.has(t)&&t!=="explore")} work; ${count(t=>["eat","wash","play","home"].includes(t))} recover.`];
+      return [p.id,`${count(t=>t==="orbit")} orbital volunteers; ${count(t=>t==="explore")} scouts; ${count(t=>USEFUL_TASKS.has(t)&&!(["explore","orbit"].includes(t)))} other workers; ${count(t=>["idle","rest","social"].includes(t))} rest; ${count(t=>["eat","wash","play","home"].includes(t))} recover.`];
     })),
     local: localParts.join(" "),
     localParts,

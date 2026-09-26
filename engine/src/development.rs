@@ -2,7 +2,7 @@
 use crate::{Engine, value::*};
 use serde_json::{Value, json};
 pub const CARE_BUILDINGS: [&str; 3] = ["orchard", "bath", "roundabout"];
-pub const INDEPENDENT_BUILDINGS: [&str; 7] = [
+pub const INDEPENDENT_BUILDINGS: [&str; 8] = [
     "orchard",
     "bath",
     "roundabout",
@@ -10,7 +10,11 @@ pub const INDEPENDENT_BUILDINGS: [&str; 7] = [
     "factory",
     "dwelling",
     "theatre",
+    "cannon",
 ];
+pub const ORBITAL_SETTLERS: usize = 12;
+pub const ORBITAL_GROUND_RESERVE: usize = 8;
+pub const ORBITAL_VOLUNTEER_NEED: f64 = 68.;
 pub const RESOURCE_PROJECTS: [&str; 4] = ["timber", "quarry", "refine", "crossing"];
 pub const USEFUL_TASKS: [&str; 10] = [
     "haul",
@@ -99,6 +103,7 @@ pub fn building_spec(kind: &str) -> Value {
         "theatre" => {
             json!({"wood":36,"cost":500,"blocks":1000,"stage":2,"capacity":20,"help":"Entertains a crowd and puts a spring in their step."})
         }
+        "cannon" => json!({"flag":"secondContact","capacity":8,"help":"Carries healthy volunteers to a shared home in orbit. Keep at least eight on the ground."}),
         "sculpture" => json!({"cost":50,"blocks":100,"stage":2,"capacity":2}),
         _ => json!({}),
     }
@@ -106,6 +111,51 @@ pub fn building_spec(kind: &str) -> Value {
 pub fn building_materials(kind: &str) -> Value {
     let s = building_spec(kind);
     json!({"wood":num(&s,"wood"),"blocks":num(&s,"cost")})
+}
+pub fn orbital_plan(w: &Value) -> Value {
+    let launcher_built = flag(&w["progress"], "cannon");
+    let launcher_in_progress = projects(w)
+        .iter()
+        .any(|p| text(p, "type") == "cannon");
+    let launches = num(&w["orbital"], "launches").floor().max(0.) as usize;
+    let residents = num(&w["orbital"], "population").floor().max(0.) as usize;
+    let remaining = ORBITAL_SETTLERS
+        .saturating_sub(launches)
+        .min(ORBITAL_SETTLERS.saturating_sub(residents));
+    let ground = list(w, "creatures").len();
+    let unlocked = flag(&w["progress"], "secondContact");
+    let active_goal = list(&w["memory"], "goals")
+        .iter()
+        .find(|g| text(g, "status") == "active");
+    let blocking_goal = active_goal.is_some_and(|g| !["grow", "care"].contains(&text(g, "kind")));
+    let autonomous = text(&w["community"], "consent") == "accepted"
+        && w["settings"]["autonomy"] != json!(false)
+        && flag(&w["runtime"], "intelligenceAvailable")
+        && num(w, "stage") < 3.;
+    let mission_active = autonomous
+        && unlocked
+        && !blocking_goal
+        && (!launcher_built || (remaining > 0 && ground > ORBITAL_GROUND_RESERVE));
+    let eligible = remaining.min(ground.saturating_sub(ORBITAL_GROUND_RESERVE));
+    let phase = if !unlocked {
+        "locked"
+    } else if launcher_built {
+        if remaining == 0 {
+            "complete"
+        } else if ground > ORBITAL_GROUND_RESERVE {
+            "launch"
+        } else {
+            "waiting"
+        }
+    } else if launcher_in_progress {
+        "building"
+    } else {
+        "build"
+    };
+    json!({"unlocked":unlocked,"launcherBuilt":launcher_built,"launcherInProgress":launcher_in_progress,
+        "launches":launches,"residents":residents,"target":ORBITAL_SETTLERS,"remaining":remaining,
+        "groundReserve":ORBITAL_GROUND_RESERVE,"eligible":eligible,"autonomous":autonomous,
+        "missionActive":mission_active,"phase":phase})
 }
 pub fn building_cost(kind: &str) -> String {
     let s = building_spec(kind);
@@ -127,6 +177,7 @@ pub fn unlocked(w: &Value, kind: &str) -> bool {
     num(w, "population") >= num(&s, "population")
         && num(w, "stage") >= num(&s, "stage")
         && num(&w["progress"], "peakBlocks") >= num(&s, "blocks")
+        && (text(&s, "flag").is_empty() || flag(&w["progress"], text(&s, "flag")))
 }
 pub fn projects(w: &Value) -> Vec<&Value> {
     let mut out = Vec::new();
@@ -323,6 +374,24 @@ impl Engine {
             children.push(json!({"id":format!("outpost:{}:{}",text(camp,"kind"),at.join(":")),"kind":crate::outposts::care_type(text(camp,"kind")),"status":"needed","remaining":camp["residents"],"title":format!("Support {} residents at {}: {}",num(camp,"residents"),at.join(", "),if flag(camp,"unserved"){String::from("no reachable service")}else{format!("{}s care round trip",num(camp,"roundTripSeconds"))})}));
         }
         children.push(json!({"id":"space","kind":"explore","title":"Scout space for the next neighborhood","remaining":density["crowded"],"status":if expanding{"needed"}else{"satisfied"}}));
+        let orbital = orbital_plan(&self.world);
+        if flag(&orbital, "missionActive") {
+            let launcher_built = flag(&orbital, "launcherBuilt");
+            let launcher_in_progress = flag(&orbital, "launcherInProgress");
+            children.push(json!({
+                "id": if launcher_built { "orbital-volunteers" } else { "orbital-launcher" },
+                "kind": if launcher_built { "orbit" } else { "cannon" },
+                "title": if launcher_built {
+                    format!("Send {} volunteers to the shared home in orbit", num(&orbital, "remaining"))
+                } else if launcher_in_progress {
+                    "Finish the sky launcher for the shared orbital home".into()
+                } else {
+                    "Build a sky launcher for the shared orbital home".into()
+                },
+                "remaining": if launcher_built { orbital["remaining"].clone() } else { json!(1) },
+                "status": if launcher_in_progress && !launcher_built { "working" } else { "needed" }
+            }));
+        }
         if !milestone.is_null() {
             children.push(json!({"id":milestone["id"],"kind":milestone["project"],"title":milestone["step"],"remaining":milestone["remaining"],"status":"needed"}));
         }
@@ -384,24 +453,42 @@ impl Engine {
         }
         children.sort_by_key(|c| text(c, "status") == "satisfied");
         children.truncate(7);
-        let title = goal
-            .as_ref()
-            .map(|g| match text(g, "kind") {
-                "grow" => crate::goals::goal_title(g),
-                "care" => "Keep everyone comfortable".into(),
-                "wood" => format!("Store {} wood", num(g, "target")),
-                "ore" => format!("Store {} ore", num(g, "target")),
-                "blocks" => format!("Save {} blocks", num(g, "target")),
-                _ => "Finish the river crossing".into(),
-            })
-            .unwrap_or_else(|| {
-                if !milestone.is_null() {
-                    text(&milestone, "title").into()
-                } else {
-                    "Grow a healthy, spacious colony".into()
-                }
-            });
-        json!({"parent":goal.as_ref().map(|g|g["id"].clone()).unwrap_or_else(||if !milestone.is_null(){milestone["id"].clone()}else{json!("colony")}),"title":title,"expanding":expanding,"density":density,"children":children})
+        let title = if flag(&orbital, "missionActive") {
+            if flag(&orbital, "launcherBuilt") {
+                format!("Send {} volunteers to the shared home in orbit", num(&orbital, "remaining"))
+            } else if flag(&orbital, "launcherInProgress") {
+                "Finish the sky launcher for the shared orbital home".into()
+            } else {
+                "Build a sky launcher for the shared orbital home".into()
+            }
+        } else {
+            goal.as_ref()
+                .map(|g| match text(g, "kind") {
+                    "grow" => crate::goals::goal_title(g),
+                    "care" => "Keep everyone comfortable".into(),
+                    "wood" => format!("Store {} wood", num(g, "target")),
+                    "ore" => format!("Store {} ore", num(g, "target")),
+                    "blocks" => format!("Save {} blocks", num(g, "target")),
+                    _ => "Finish the river crossing".into(),
+                })
+                .unwrap_or_else(|| {
+                    if !milestone.is_null() {
+                        text(&milestone, "title").into()
+                    } else {
+                        "Grow a healthy, spacious colony".into()
+                    }
+                })
+        };
+        let parent = goal.as_ref().map(|g| g["id"].clone()).unwrap_or_else(|| {
+            if !milestone.is_null() {
+                milestone["id"].clone()
+            } else if flag(&orbital, "missionActive") {
+                json!("orbital-home")
+            } else {
+                json!("colony")
+            }
+        });
+        json!({"parent":parent,"title":title,"expanding":expanding,"density":density,"children":children})
     }
     pub fn update_development_plan(&mut self) -> Value {
         let p = self.development_plan();

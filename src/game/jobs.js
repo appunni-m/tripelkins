@@ -14,6 +14,7 @@ import { frontier, scoutLimit } from "./exploration.js";
 import { densityAt, densityReward, DENSITY } from "./density.js";
 import { constructionSlots, projectTasks, projectTask, refiningShortage, storedSupply, deliveryStock } from "./settlement.js";
 import { projectFunded, projectName } from "./development.js";
+import { ORBIT_VOLUNTEER_NEED, orbitalPlan } from "./orbit-rules.js";
 export const TASKS = [
   "idle",
   "eat",
@@ -134,7 +135,9 @@ function workTargets(w, c, task) {
         !w.memory.goals.some((g) => g.status === "active" && g.kind === "ore")
       );
     if (task === "orbit")
-      return o.type === "cannon" && w.creatures.length > 8 && !c.favorite;
+      return o.type === "cannon" && orbitalPlan(w).missionActive &&
+        orbitalPlan(w).phase === "launch" && !c.favorite && c.sickness < 50 &&
+        Math.min(c.fed, c.clean, c.amused) >= ORBIT_VOLUNTEER_NEED && c.carry === 0;
     if (task === "explore")
       return (
         ["monolith", "mountain", "node"].includes(o.type) &&
@@ -197,6 +200,7 @@ function desired(w, c, policy) {
       ...(maintain ? ["clean"] : []),
       ...(clearanceTask(w,c) ? [clearanceTask(w,c).task] : []),
       ...projectTasks(w,c),
+      ...(orbitalPlan(w).missionActive && orbitalPlan(w).phase === "launch" && !c.favorite ? ["orbit"] : []),
       ...work,
       // A bounded scouting crew can include any healthy resident with no work.
       ...(minimum(c) >= 76 && !c.carry && isCrowded(w,c) ? ["explore"] : []),
@@ -233,6 +237,7 @@ export function makePlan(w, policy = "balanced") {
     assignments = [], access = [],
     slotCache = new Map();
   const floor = w.directives?.careFloor || 35;
+  const orbitLimit = orbitalPlan(w).missionActive ? orbitalPlan(w).eligible : 0;
   const refiningCrews=Math.max(1,workProjects(w).filter(p=>p.type==="refine").length);
   const priority = c => minimum(c) < floor || c.sickness >= 50 ? 0 :
     c.job && !["completed", "blocked", "cancelled"].includes(c.job.state) &&
@@ -298,6 +303,7 @@ export function makePlan(w, policy = "balanced") {
     }
     let chosen, obstruction;
     for (const task of tasks) {
+      if (task === "orbit" && assignments.filter(a=>a.task==="orbit").length >= orbitLimit) continue;
       if(task==="quarry" && project?.type==="refine" && !clearanceTask(w,c) &&
         (refiningShortage(w,project)<=(stock.get("pending:ore")||0) ||
          (stock.get(`pending:ore:${project.id}`)||0)>=Math.ceil(refiningShortage(w,project)/refiningCrews))) continue;

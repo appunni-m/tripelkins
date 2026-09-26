@@ -31,8 +31,9 @@ export function playOpening(root, onComplete) {
     last = performance.now();
   }, { signal: events.signal });
   document.addEventListener("visibilitychange", () => { last = performance.now(); }, { signal: events.signal });
-  function tick(now) {
+  function tick() {
     if (disposed) return;
+    const now = performance.now();
     if (!paused && !document.hidden) elapsed += Math.min((now-last)/1000, .25);
     last = now;
     if (elapsed >= OPENING_DURATION) { finish(); return; }
@@ -52,6 +53,6 @@ export function playOpening(root, onComplete) {
     progress.querySelectorAll("b").forEach((bar,i)=>bar.style.transform=`scaleX(${Math.max(0,Math.min(1,(elapsed-i*10)/10))})`);
     frame = requestAnimationFrame(tick);
   }
-  tick(last);
+  tick();
   return { finish, dispose };
 }

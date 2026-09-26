@@ -54,6 +54,8 @@ impl Engine {
                     c["obstacle"].as_str().unwrap_or("obstacle"),
                     c["resume"].as_str().unwrap_or("resume blocked work")
                 )
+            } else if kind == "cannon" {
+                "Build one sky launcher for the shared orbital home; send at most twelve volunteers and keep eight on the ground".into()
             } else if c["density"].is_object() {
                 let services = care_services(kind);
                 format!(
@@ -152,6 +154,12 @@ impl Engine {
                 "{milestone} Urgent care first; otherwise advance goals and unlock work. Gather missing timber."
             )
         };
+        let orbital = orbital_plan(&self.world);
+        let orbital_context = match text(&orbital, "phase") {
+            "build" if flag(&orbital, "missionActive") => "The active orbital mission needs one sky launcher; keep eight residents on the ground.",
+            "building" => "The sky launcher already has a building crew; do not start another.",
+            _ => "",
+        };
         let goal = self.active_goal();
         let goal = goal
             .as_ref()
@@ -167,7 +175,7 @@ impl Engine {
             });
         let access = self.access_brief();
         let required = format!(
-            "{} residents; {}/{} crews active. Assign free local groups. {shortage}. Wood {} (refill below {}, target {}), ore {}, blocks {}. Goal {goal}. {access} {priority} Prefer more help and reward closer to zero.",
+            "{} residents; {}/{} crews active. Assign free local groups. {shortage}. Wood {} (refill below {}, target {}), ore {}, blocks {}. Goal {goal}. {access} {priority} {orbital_context} Prefer more help and reward closer to zero.",
             list(&self.world, "creatures").len(),
             projects(&self.world).len(),
             project_limit(&self.world),
@@ -185,13 +193,18 @@ impl Engine {
             .chain(parts.clone())
             .collect::<Vec<_>>()
             .join(" ");
-        json!({"options":options,"requiredContext":required,"contextParts":parts,"context":context,"question":"Which project and location best advance the goal?","maxTokens":320})
+        let question = if flag(&orbital, "missionActive") && text(&orbital, "phase") == "build" {
+            "Which listed project and location best advance the goals? Build the one sky launcher for the active orbital mission while protecting urgent care and keeping eight residents on the ground."
+        } else {
+            "Which project and location best advance the goal?"
+        };
+        json!({"options":options,"requiredContext":required,"contextParts":parts,"context":context,"question":question,"maxTokens":320})
     }
     pub fn settlement_context(&mut self, choices: &[Value]) -> Value {
         let care = self.care_context();
         let plan = self.development_plan();
         let outposts = self.outpost_context();
-        json!({"care":care,"plan":plan,"timber":timber_reserve(&self.world),"densityRule":{"target":6,"above":4,"below":0.6,"units":"residents per 100 ground units; asymmetric squared penalty"},"outposts":outposts,"choices":choices.iter().map(|c|{let mut v=pick(c,&["key","id","target","cost","priority","description","density","benefit","travel","outpost","subgoal","request","blocker"]);v["at"]=json!([c["x"],c["y"]]);if c["camps"].is_array(){v["camps"]=json!(list(c,"camps").iter().map(|p|json!([num(p,"x").js_round(),num(p,"y").js_round()])).collect::<Vec<_>>());}v}).collect::<Vec<_>>()})
+        json!({"care":care,"plan":plan,"timber":timber_reserve(&self.world),"orbitalPlan":orbital_plan(&self.world),"densityRule":{"target":6,"above":4,"below":0.6,"units":"residents per 100 ground units; asymmetric squared penalty"},"outposts":outposts,"choices":choices.iter().map(|c|{let mut v=pick(c,&["key","id","target","cost","priority","description","density","benefit","travel","outpost","subgoal","request","blocker"]);v["at"]=json!([c["x"],c["y"]]);if c["camps"].is_array(){v["camps"]=json!(list(c,"camps").iter().map(|p|json!([num(p,"x").js_round(),num(p,"y").js_round()])).collect::<Vec<_>>());}v}).collect::<Vec<_>>()})
     }
     pub fn build_context(&mut self, include_plans: bool) -> Value {
         let started = crate::timing::now();
@@ -295,6 +308,7 @@ impl Engine {
         } else {
             "unexplored"
         };
+        let orbital = orbital_plan(&self.world);
         let candidates:Vec<_>=plans.iter().map(|p|{let reward=self.plan_reward(p);json!({"id":p["id"],"description":policy_name(text(p,"id")),"allocation":count_tasks(p),"expected":p["effects"],"reward":reward,"groups":groups.iter().map(|g|json!({"id":g["id"],"jobs":list(p,"assignments").iter().filter(|a|list(g,"members").iter().any(|id| same_id(id, &a["id"]))).cloned().collect::<Vec<_>>()})).collect::<Vec<_>>()})}).collect();
         let memory = &self.world["memory"];
         let commands: Vec<_> = list(memory, "commands")
@@ -303,7 +317,7 @@ impl Engine {
             .cloned()
             .collect();
         let growth = &self.world["runtime"]["growth"];
-        let mut context = json!({"version":4,"workload":workload,"currentMilestone":milestone,"developmentPlan":development,"timber":timber_reserve(&self.world),"blockedWork":blocked,"growthBudget":if growth.is_object(){json!({"target":growth["target"],"held":growth["held"],"reason":growth["reason"],"metric":growth["source"],"renderDuty":growth["gpuDuty"]})}else{Value::Null},"care":care,"commandRevision":self.world["commandRevision"],"permissions":self.world["directives"],"independence":{"consent":self.world["community"]["consent"],"project":self.world["community"]["project"],"crews":projects(&self.world).iter().map(|p|json!({"id":p["id"],"type":p["type"],"at":[num(p,"x").js_round(),num(p,"y").js_round()],"members":list(p,"crew").len(),"target":p["target"],"blocked":p["blocked"]})).collect::<Vec<_>>(),"crewCapacity":project_limit(&self.world),"completed":self.world["community"]["completed"],"scouted":self.world["community"]["explored"]},"projects":list(&self.world,"groups").iter().map(|g|json!({"id":g["id"],"role":g["role"],"project":g["project"],"members":list(g,"members").len()})).collect::<Vec<_>>(),"orbital":self.world["orbital"],"district":self.world["district"],"story":{"premise":"Tripelkins escaped a three-star system's simultaneous flares. A fictional DNA change preserved their bodies and instincts but cost them deliberate planning. Care helps them survive and multiply; shared intelligence, with the player's permission after twenty residents, helps them rebuild independently. Do not claim invented events or completed tasks.","completed":tail(&self.world["story"]["completed"],4),"promises":tail(&self.world["story"]["promises"],3)},"outcomes":tail(&self.world["decisions"],3),"tick":num(&self.world,"time").floor(),"population":self.world["population"],"represented":list(&self.world,"creatures").len(),"cohort":self.world["cohort"],"stage":self.world["stage"],"goal":self.current_goal()[1],"longTermGoal":long_goal,"goalQueue":list(memory,"goals").iter().filter(|g|text(g,"status")=="queued").map(|g|pick(g,&["id","kind","target","command"])).collect::<Vec<_>>(),"bridge":self.world["progress"]["bridge"],"bridgeConstruction":self.bridge_project(None),"terrain":{"generation":self.world["map"]["version"],"area":area,"discovery":discovery,"region":[(num(&self.world["ui"],"x")/16.).floor(),(num(&self.world["ui"],"y")/16.).floor()],"scope":"Fog clears around creatures, never the camera. Only explored objects are listed. Procedural world. Listed objects include saved colony objects and a bounded resource sample near the player's view. Object counts cover saved objects only. Jobs use nearby reachable facilities.","observedResources":observed_counts},"inventory":self.world["inventory"],"pollution":num(&self.world["progress"],"pollution").js_round(),"groups":groups,"objects":list(&self.world,"objects").iter().chain(&observed).filter(|o|self.is_explored(Point::read(o))&&!["tree","flowers","stump"].contains(&text(o,"type"))).map(|o|json!({"id":o["id"],"type":o["type"],"at":[(num(o,"x")*10.).js_round()/10.,(num(o,"y")*10.).js_round()/10.],"stock":num(o,"stock").floor(),"deliveredOre":num(o,"inputOre"),"capacity":capacity(o),"level":o["level"],"quality":num(o,"quality").max(1.)})).collect::<Vec<_>>(),"objectCounts":counts,"player":{"tool":self.world["ui"]["tool"],"selected":self.world["ui"]["selected"],"viewport":[num(&self.world["ui"],"x").js_round(),num(&self.world["ui"],"y").js_round(),self.world["ui"]["zoom"]]},"memory":{"totals":memory["totals"],"summary":memory["summary"],"commands":commands.iter().skip(commands.len().saturating_sub(3)).map(|c|pick(c,&["text","status","reply","goalId"])).collect::<Vec<_>>(),"choices":tail(&memory["choices"],6),"recent":tail(&memory["recent"],6).iter().map(|e|pick(e,&["kind","message"])).collect::<Vec<_>>(),"previous":memory["lastPlan"],"conversations":tail(&memory["conversations"],6),"completedJobs":tail(&memory["jobs"],16),"jobTotals":memory["activity"]},"candidates":candidates});
+        let mut context = json!({"version":4,"workload":workload,"currentMilestone":milestone,"developmentPlan":development,"timber":timber_reserve(&self.world),"blockedWork":blocked,"growthBudget":if growth.is_object(){json!({"target":growth["target"],"held":growth["held"],"reason":growth["reason"],"metric":growth["source"],"renderDuty":growth["gpuDuty"]})}else{Value::Null},"care":care,"commandRevision":self.world["commandRevision"],"permissions":self.world["directives"],"independence":{"consent":self.world["community"]["consent"],"project":self.world["community"]["project"],"crews":projects(&self.world).iter().map(|p|json!({"id":p["id"],"type":p["type"],"at":[num(p,"x").js_round(),num(p,"y").js_round()],"members":list(p,"crew").len(),"target":p["target"],"blocked":p["blocked"]})).collect::<Vec<_>>(),"crewCapacity":project_limit(&self.world),"completed":self.world["community"]["completed"],"scouted":self.world["community"]["explored"]},"projects":list(&self.world,"groups").iter().map(|g|json!({"id":g["id"],"role":g["role"],"project":g["project"],"members":list(g,"members").len()})).collect::<Vec<_>>(),"orbital":self.world["orbital"],"orbitalPlan":orbital.clone(),"district":self.world["district"],"story":{"premise":"Tripelkins escaped a three-star system's simultaneous flares. A fictional DNA change preserved their bodies and instincts but cost them deliberate planning. Care helps them survive and multiply; shared intelligence, with the player's permission after twenty residents, helps them rebuild independently. Do not claim invented events or completed tasks.","completed":tail(&self.world["story"]["completed"],4),"promises":tail(&self.world["story"]["promises"],3)},"outcomes":tail(&self.world["decisions"],3),"tick":num(&self.world,"time").floor(),"population":self.world["population"],"represented":list(&self.world,"creatures").len(),"cohort":self.world["cohort"],"stage":self.world["stage"],"goal":self.current_goal()[1],"longTermGoal":long_goal,"goalQueue":list(memory,"goals").iter().filter(|g|text(g,"status")=="queued").map(|g|pick(g,&["id","kind","target","command"])).collect::<Vec<_>>(),"bridge":self.world["progress"]["bridge"],"bridgeConstruction":self.bridge_project(None),"terrain":{"generation":self.world["map"]["version"],"area":area,"discovery":discovery,"region":[(num(&self.world["ui"],"x")/16.).floor(),(num(&self.world["ui"],"y")/16.).floor()],"scope":"Fog clears around creatures, never the camera. Only explored objects are listed. Procedural world. Listed objects include saved colony objects and a bounded resource sample near the player's view. Object counts cover saved objects only. Jobs use nearby reachable facilities.","observedResources":observed_counts},"inventory":self.world["inventory"],"pollution":num(&self.world["progress"],"pollution").js_round(),"groups":groups,"objects":list(&self.world,"objects").iter().chain(&observed).filter(|o|self.is_explored(Point::read(o))&&!["tree","flowers","stump"].contains(&text(o,"type"))).map(|o|json!({"id":o["id"],"type":o["type"],"at":[(num(o,"x")*10.).js_round()/10.,(num(o,"y")*10.).js_round()/10.],"stock":num(o,"stock").floor(),"deliveredOre":num(o,"inputOre"),"capacity":capacity(o),"level":o["level"],"quality":num(o,"quality").max(1.)})).collect::<Vec<_>>(),"objectCounts":counts,"player":{"tool":self.world["ui"]["tool"],"selected":self.world["ui"]["selected"],"viewport":[num(&self.world["ui"],"x").js_round(),num(&self.world["ui"],"y").js_round(),self.world["ui"]["zoom"]]},"memory":{"totals":memory["totals"],"summary":memory["summary"],"commands":commands.iter().skip(commands.len().saturating_sub(3)).map(|c|pick(c,&["text","status","reply","goalId"])).collect::<Vec<_>>(),"choices":tail(&memory["choices"],6),"recent":tail(&memory["recent"],6).iter().map(|e|pick(e,&["kind","message"])).collect::<Vec<_>>(),"previous":memory["lastPlan"],"conversations":tail(&memory["conversations"],6),"completedJobs":tail(&memory["jobs"],16),"jobTotals":memory["activity"]},"candidates":candidates});
         if let Some(g) = context["growthBudget"].as_object_mut() {
             for (to, from) in [
                 ("target", "target"),
@@ -363,6 +377,20 @@ impl Engine {
             list(&self.world, "creatures").len(),
             self.access_brief()
         )];
+        local.push(match text(&orbital, "phase") {
+            "locked" => "The orbital home is locked until second contact.".into(),
+            "building" => "Our sky launcher is being built; finish that crew's work before assigning volunteers.".into(),
+            "build" if flag(&orbital, "missionActive") => "Active orbital mission: build one sky launcher, then send up to twelve healthy volunteers while keeping eight residents on the ground.".into(),
+            "build" => "A sky launcher is unlocked; hold its mission until independence is active and any resource goal is complete.".into(),
+            "launch" => format!(
+                "Orbital home {}/{} journeys; {}. Send healthy non-favorites only and keep eight residents on the ground.",
+                num(&orbital, "launches"),
+                num(&orbital, "target"),
+                if flag(&orbital, "missionActive") { "the independent mission is active" } else { "waiting for independence or completion of the active resource goal" }
+            ),
+            "waiting" => "The orbital mission is waiting until at least nine residents can stay on the ground.".into(),
+            _ => format!("The orbital home has its {} journeys. Do not send more residents.", num(&orbital, "target")),
+        });
         for p in &plans {
             local.push(format!("{} planning score {:.2}; density cost {:.2}, travel cost {:.2}. Higher is better; estimates, not learned rewards.",text(p,"id"),num(&self.plan_reward(p),"total"),num(&p["effects"],"space"),num(&p["effects"],"travel")));
         }
@@ -442,6 +470,7 @@ impl Engine {
         let key = json!([
             self.world["stage"],
             self.world["commandRevision"],
+            orbital.clone(),
             self.world["community"]["consent"],
             self.work_projects(),
             workload,
@@ -501,16 +530,20 @@ impl Engine {
             options.insert(
                 text(p, "id").into(),
                 json!(format!(
-                    "Send {} scouts; {} rest; {} work; {} recover.",
+                    "{} orbital volunteers; {} scouts; {} other workers; {} rest; {} recover.",
+                    assignments
+                        .iter()
+                        .filter(|a| text(a, "task") == "orbit")
+                        .count(),
                     num(&counts, "explore"),
                     assignments
                         .iter()
-                        .filter(|a| ["idle", "rest", "social"].contains(&text(a, "task")))
+                        .filter(|a| USEFUL_TASKS.contains(&text(a, "task"))
+                            && !["explore", "orbit"].contains(&text(a, "task")))
                         .count(),
                     assignments
                         .iter()
-                        .filter(|a| USEFUL_TASKS.contains(&text(a, "task"))
-                            && text(a, "task") != "explore")
+                        .filter(|a| ["idle", "rest", "social"].contains(&text(a, "task")))
                         .count(),
                     assignments
                         .iter()
@@ -519,6 +552,11 @@ impl Engine {
                 )),
             );
         }
-        json!({"context":context,"maxTokens":320,"question":"Which crew allocation makes useful progress without unnecessary care or leaving healthy residents idle?","options":options,"local":local.join(" "),"localParts":local,"plans":plans,"key":crate::value::js_json(&key),"prepMs":crate::timing::now()-started})
+        let question = if flag(&orbital, "missionActive") && text(&orbital, "phase") == "launch" {
+            "Which crew allocation sends eligible volunteers to orbit, protects care, and keeps eight residents on the ground?"
+        } else {
+            "Which crew allocation makes useful progress without unnecessary care or leaving healthy residents idle?"
+        };
+        json!({"context":context,"maxTokens":320,"question":question,"options":options,"local":local.join(" "),"localParts":local,"plans":plans,"key":crate::value::js_json(&key),"prepMs":crate::timing::now()-started})
     }
 }

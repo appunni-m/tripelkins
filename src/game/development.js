@@ -2,7 +2,7 @@ import { BUILDINGS, unlocked } from "./catalog.js";
 import { workProjects } from "./work-projects.js";
 
 export const CARE_BUILDINGS = ["orchard", "bath", "roundabout"];
-export const INDEPENDENT_BUILDINGS = [...CARE_BUILDINGS, "mine", "factory", "dwelling", "theatre"];
+export const INDEPENDENT_BUILDINGS = [...CARE_BUILDINGS, "mine", "factory", "dwelling", "theatre", "cannon"];
 export const RESOURCE_PROJECTS = {
   timber: { name: "Timber reserve", material: "wood" },
   quarry: { name: "Stone gathering", material: "ore" },

@@ -16,6 +16,7 @@ import { materializeObject, remember } from "./state.js";
 import { activity, postMessage } from "./community.js";
 import { CARE_BUILDINGS, INDEPENDENT_BUILDINGS, RESOURCE_PROJECTS, DEVELOPMENT_TYPES,
   projectName, isConstruction, projectFunded, projectRequirements, timberReserve, colonyMilestone, industryMilestone, uncommittedBlocks } from "./development.js";
+import { orbitalPlan } from "./orbit-rules.js";
 export { CARE_BUILDINGS } from "./development.js";
 const activeGoal = (w) => w.memory.goals.find((g) => g.status === "active");
 export function outpostReason(p) {
@@ -202,7 +203,7 @@ function availableSettlementChoices(w) {
   if (!independent(w) || workProjects(w).length>=projectLimit(w) || !w.creatures.length ||
       w.objects.length >= LIMITS.objects - 4 || w.directives.pauseWork ||
       w.time-w.community.lastProjectAt < Math.max(1,decisionPace(w.settings).development/3)) return [];
-  const choices = [], goal = activeGoal(w), milestone=colonyMilestone(w), industry=industryMilestone(w), care = careContext(w), plan=developmentPlan(w);
+  const choices = [], goal = activeGoal(w), milestone=colonyMilestone(w), industry=industryMilestone(w), care = careContext(w), plan=developmentPlan(w), orbital=orbitalPlan(w);
   const workers = w.creatures.filter((c)=>scoped(w,c) && c.sickness<50 && !workerProject(w,c));
   const camp = workers.find((c)=>allowedRegion(w,c));
   if (!camp) return [];
@@ -249,11 +250,12 @@ function availableSettlementChoices(w) {
   for (const type of INDEPENDENT_BUILDINGS) {
     const spec = BUILDINGS[type];
     if (!unlocked(w,spec) || (spec.cost && uncommittedBlocks(w) < spec.cost) ||
-        (type === "factory" && w.directives.avoidPollution) || (resourceGoal && !CARE_BUILDINGS.includes(type))) continue;
+        (type === "factory" && w.directives.avoidPollution) ||
+        (resourceGoal && !CARE_BUILDINGS.includes(type) && !(type === "cannon" && orbital.missionActive))) continue;
     const existing = w.objects.filter((o) => o.type === type && (type!=="mine" || o.stock>0)).length+
       workProjects(w).filter(p=>p.type===type).length;
     if (!CARE_BUILDINGS.includes(type)) {
-      const needed = {mine:Math.ceil(w.creatures.length/32),factory:Math.ceil(w.creatures.length/48),
+      const needed = type === "cannon" ? 1 : {mine:Math.ceil(w.creatures.length/32),factory:Math.ceil(w.creatures.length/48),
         dwelling:Math.ceil(w.creatures.length/24),theatre:Math.ceil(w.creatures.length/64)}[type];
       if (existing>=needed) continue;
       if(type==="mine") {
@@ -274,7 +276,7 @@ function availableSettlementChoices(w) {
     }
     const kind = Object.keys(CARE_TYPES).find(k=>CARE_TYPES[k]===type), status = care[kind];
     const strained = status && status.low>w.creatures.length/4;
-    const priority = status ? (!existing && status.unserved ? 100 : strained ? 80 : status.short ? 70 : status.growthShort ? 60 : type==="orchard" && plan.expanding ? 56 : 30) +
+    const priority = type === "cannon" ? 95 : status ? (!existing && status.unserved ? 100 : strained ? 80 : status.short ? 70 : status.growthShort ? 60 : type==="orchard" && plan.expanding ? 56 : 30) +
       Math.min(15,status.urgent + status.short/w.creatures.length*10) : ["mine","factory"].includes(type) ? industry?(type==="factory"?90:85):55 : 40;
     const sites = findSites(w,type,plan.expanding), point=sites[0];
     if (point) choices.push({id:type,...point,sites,cost:buildingMaterials(spec),
@@ -405,7 +407,7 @@ export function settlementDecisionInput(w, choices) {
   // descriptions can be omitted by the token budget; internal type names alone
   // do not tell a small classifier which need a building will actually serve.
   const options = Object.fromEntries([...choices.map(c=>[c.key||c.id,
-    c.id==="clearance" ? `Clear ${c.obstacle || "obstacle"} to ${c.resume || "resume blocked work"}` : c.density ? `Build ${careServices(c.id).join("/") || BUILDINGS[c.id]?.name || c.id}; ${buildingCost(BUILDINGS[c.id])}; help ${Math.round(c.benefit)}; reward ${Math.round(c.density.reward)}`
+    c.id==="clearance" ? `Clear ${c.obstacle || "obstacle"} to ${c.resume || "resume blocked work"}` : c.id==="cannon" ? "Build one sky launcher for the shared orbital home; send at most twelve volunteers and keep eight on the ground" : c.density ? `Build ${careServices(c.id).join("/") || BUILDINGS[c.id]?.name || c.id}; ${buildingCost(BUILDINGS[c.id])}; help ${Math.round(c.benefit)}; reward ${Math.round(c.density.reward)}`
       : `${resourceLabel(c)}; ${c.camps?.length||1} local crews`]),["wait",careFirst ? "Postpone building; no new care capacity" : "Postpone building; no progress on construction or resources"]]);
   for(const c of choices)if(c.outpost?.worthwhile)options[c.key||c.id]+=c.outpost.unserved
     ? `; support ${c.outpost.workers} remote residents` : `; saves ${Math.round(c.outpost.savedSeconds)} travel seconds`;
@@ -416,13 +418,22 @@ export function settlementDecisionInput(w, choices) {
   const priority=careFirst
     ? `Urgent care first; ${reserve.refill ? "replenish timber before optional expansion" : "gather missing building timber"}.`
     : `${milestone} Urgent care first; otherwise advance goals and unlock work. Gather missing timber.`;
-  const requiredContext = `${w.creatures.length} residents; ${workProjects(w).length}/${projectLimit(w)} crews active. Assign free local groups. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind || (storyGoal ? `first ${storyGoal.target} blocks` : industry ? "build mines and stone workshops; produce energy" : "grow")}. ${accessBrief(w)} ${priority} Prefer more help and reward closer to zero.`;
+  const orbital=orbitalPlan(w);
+  const orbitalContext=orbital.phase==="build" && orbital.missionActive
+    ? "The active orbital mission needs one sky launcher; keep eight residents on the ground."
+    : orbital.phase==="building"
+      ? "The sky launcher already has a building crew; do not start another."
+      : "";
+  const requiredContext = `${w.creatures.length} residents; ${workProjects(w).length}/${projectLimit(w)} crews active. Assign free local groups. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind || (storyGoal ? `first ${storyGoal.target} blocks` : industry ? "build mines and stone workshops; produce energy" : "grow")}. ${accessBrief(w)} ${priority} ${orbitalContext} Prefer more help and reward closer to zero.`;
   const contextParts = choices.map(c=>c.description);
   return {options,requiredContext,contextParts,context:[requiredContext,...contextParts].join(" "),
-    question:"Which project and location best advance the goal?",maxTokens:320};
+    question:orbital.phase==="build" && orbital.missionActive
+      ? "Which listed project and location best advance the goals? Build the one sky launcher for the active orbital mission while protecting urgent care and keeping eight residents on the ground."
+      : "Which project and location best advance the goal?",maxTokens:320};
 }
 export function settlementContext(w,choices) {
   return {care:careContext(w), plan:developmentPlan(w), timber:timberReserve(w),
+    orbitalPlan:orbitalPlan(w),
     densityRule:{target:DENSITY.target,above:DENSITY.above,below:DENSITY.below,units:"residents per 100 ground units; asymmetric squared penalty"},
     outposts:outpostContext(w),choices:choices.map(({key,id,x,y,camps,target,cost,priority,description,density,benefit,travel,outpost,subgoal,request,blocker})=>({key,id,at:[x,y],camps:camps?.map(p=>[Math.round(p.x),Math.round(p.y)]),target,cost,priority,description,density,benefit,travel,outpost,subgoal,request,blocker}))};
 }

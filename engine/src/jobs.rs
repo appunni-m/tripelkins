@@ -78,6 +78,16 @@ fn unique(v: Vec<String>) -> Vec<String> {
     v.into_iter().filter(|t| seen.insert(t.clone())).collect()
 }
 impl Engine {
+    fn orbital_priority(&self) -> bool {
+        let plan = orbital_plan(&self.world);
+        flag(&plan, "missionActive") && text(&plan, "phase") == "launch"
+    }
+    fn orbital_assignment_limit(&self) -> usize {
+        if !self.orbital_priority() {
+            return 0;
+        }
+        num(&orbital_plan(&self.world), "eligible") as usize
+    }
     fn crowded(&self, c: &Value) -> bool {
         self.resident_density(Point::read(c)) > 6.
             || self
@@ -202,8 +212,11 @@ impl Engine {
                     }
                     "orbit" => {
                         kind == "cannon"
-                            && list(&self.world, "creatures").len() > 8
+                            && self.orbital_priority()
                             && !flag(c, "favorite")
+                            && minimum(c) >= ORBITAL_VOLUNTEER_NEED
+                            && num(c, "sickness") < 50.
+                            && num(c, "carry") == 0.
                     }
                     "explore" => {
                         ["monolith", "mountain", "node"].contains(&kind)
@@ -303,6 +316,9 @@ impl Engine {
             a.push(text(&r, "task").into());
         }
         a.extend(self.project_tasks(c));
+        if self.orbital_priority() && !flag(c, "favorite") {
+            a.push("orbit".into());
+        }
         a.extend(work);
         if minimum(c) >= 76. && num(c, "carry") == 0. && self.crowded(c) {
             a.push("explore".into());
@@ -393,6 +409,7 @@ impl Engine {
         let mut idle_points: Vec<Point> = Vec::new();
         let mut access: Vec<Value> = Vec::new();
         let mut slot_cache: HashMap<String, Vec<Value>> = HashMap::new();
+        let orbit_limit = self.orbital_assignment_limit();
         let floor = num(&self.world["directives"], "careFloor").max(35.);
         let refining_crews = projects(&self.world)
             .iter()
@@ -499,6 +516,12 @@ impl Engine {
             let mut obstruction = None;
             for task in tasks {
                 let t = task.as_str();
+                if t == "orbit"
+                    && assignments.iter().filter(|a| text(a, "task") == "orbit").count()
+                        >= orbit_limit
+                {
+                    continue;
+                }
                 if t == "quarry"
                     && project
                         .as_ref()

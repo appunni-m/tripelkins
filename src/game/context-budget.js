@@ -21,6 +21,7 @@ export function packHostedContext(full, budget) {
     workload: full.workload,
     currentMilestone: full.currentMilestone,
     care: full.care,
+    orbitalPlan: full.orbitalPlan,
     developmentPlan: concisePlan(full.developmentPlan),
     timber: full.timber,
     growthBudget: full.growthBudget,

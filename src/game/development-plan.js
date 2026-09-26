@@ -5,6 +5,7 @@ import { densitySummary } from "./density.js";
 import { discoverySummary } from "./discovery.js";
 import { BUILDINGS } from "./catalog.js";
 import { timberReserve, colonyMilestone, industryMilestone, RESOURCE_PROJECTS } from "./development.js";
+import { orbitalPlan } from "./orbit-rules.js";
 
 // Bounded child goals derived from authoritative state. The model chooses a
 // feasible project/site to satisfy them; completion comes from the simulation.
@@ -20,11 +21,23 @@ export function developmentPlan(w) {
   }));
   const expanding = n>20 && growing && (density.crowded>0 ||
     discoverySummary(w).area < n / density.target * 100 * 2);
+  const orbital = orbitalPlan(w);
   for(const camp of outpostContext(w).slice(0,2))children.push({id:`outpost:${camp.kind}:${camp.at.join(":")}`,
     kind:{food:"orchard",wash:"bath",play:"roundabout"}[camp.kind],status:"needed",remaining:camp.residents,
     title:`Support ${camp.residents} residents at ${camp.at.join(", ")}: ${camp.unserved?"no reachable service":`${camp.roundTripSeconds}s care round trip`}`});
   children.push({id:"space",kind:"explore",title:"Scout space for the next neighborhood",
     remaining:density.crowded,status:expanding?"needed":"satisfied"});
+  if (orbital.missionActive) children.push({
+    id: orbital.launcherBuilt ? "orbital-volunteers" : "orbital-launcher",
+    kind: orbital.launcherBuilt ? "orbit" : "cannon",
+    title: orbital.launcherBuilt
+      ? `Send ${orbital.remaining} volunteers to the shared home in orbit`
+      : orbital.launcherInProgress
+        ? "Finish the sky launcher for the shared orbital home"
+        : "Build a sky launcher for the shared orbital home",
+    remaining: orbital.launcherBuilt ? orbital.remaining : 1,
+    status: orbital.launcherInProgress ? "working" : "needed",
+  });
   if (milestone) children.push({id:milestone.id,kind:milestone.project,title:milestone.step,
     remaining:milestone.remaining,status:"needed"});
   if (goal && ["wood","ore","blocks","bridge"].includes(goal.kind)) {
@@ -51,7 +64,7 @@ export function developmentPlan(w) {
       : project.required-project.progress) });
   const title=goal ? ({grow:`Grow to ${goal.target.toLocaleString()} Tripelkins`,care:"Keep everyone comfortable",
     wood:`Store ${goal.target} wood`,ore:`Store ${goal.target} ore`,blocks:`Save ${goal.target} blocks`,bridge:"Finish the river crossing"}[goal.kind]) : milestone?.title || "Grow a healthy, spacious colony";
-  return { parent:goal?.id||milestone?.id||"colony", title,
+  return { parent:goal?.id||milestone?.id||(orbital.missionActive?"orbital-home":"colony"), title:orbital.missionActive?children.find(c=>c.id.startsWith("orbital-"))?.title||title:title,
     expanding, density, children:children.filter(c=>c.status!=="satisfied").concat(children.filter(c=>c.status==="satisfied")).slice(0,7) };
 }
 export function updateDevelopmentPlan(w) {
