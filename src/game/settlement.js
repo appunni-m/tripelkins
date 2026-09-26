@@ -437,7 +437,8 @@ export function settlementDecisionInput(w, choices) {
     : orbital.phase==="building"
       ? "The sky launcher already has a building crew; do not start another."
       : "";
-  const defaultGoal=storyGoal?.title || industry?.title || storyObjective(w)[0].toLowerCase();
+  const goalStep=storyGoal?.step || industry?.step || storyObjective(w)[1] || storyObjective(w)[0];
+  const defaultGoal=goalStep.replace(/[. ]+$/,"").replace(/^./,letter=>letter.toLowerCase());
   const requiredContext = `${w.creatures.length} residents; ${workProjects(w).length}/${projectLimit(w)} crews active. Assign free local groups. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind || defaultGoal}. ${accessBrief(w)} ${priority} ${orbitalContext} Prefer more help and reward closer to zero.`;
   const contextParts = choices.map(c=>c.description);
   return {options,requiredContext,contextParts,context:[requiredContext,...contextParts].join(" "),

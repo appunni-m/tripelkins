@@ -201,7 +201,7 @@ export function buildContext(w, { includePlans = true } = {}) {
       : 0,
   );
   const localParts = [
-    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || context.currentMilestone?.title || defaultGoal[0].toLowerCase()}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
+    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || context.currentMilestone?.step || context.currentStoryObjective?.step || defaultGoal[0].toLowerCase()}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
     orbital.phase === "locked" ? "The orbital home is locked until second contact." :
       orbital.phase === "building" ? "Our sky launcher is being built; finish that crew's work before assigning volunteers." :
       orbital.phase === "build" ? orbital.missionActive

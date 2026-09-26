@@ -46,7 +46,7 @@ test('care project consumes exact timber once, and progress and permission survi
   finishSettlement(w,placeBuilding);assert.equal(w.inventory.wood,wood-10);assert.equal(w.community.completed,1);
 });
 test('builders physically gather timber and finish a facility; urgent care interrupts',()=>{
-  const w=colony();setIndependence(w,true);w.inventory.wood=0;
+  const w=colony();w.progress.bridge=true;setIndependence(w,true);w.inventory.wood=0;
   addObject(w,'tree',16,19);addObject(w,'tree',16,23);addObject(w,'tree',16,27);
   addObject(w,'orchard',26,26,{stock:12});addObject(w,'bath',29,18);addObject(w,'roundabout',23,29);
   const choice=settlementChoices(w).find((c)=>c.id==='orchard');assert.ok(choice);
