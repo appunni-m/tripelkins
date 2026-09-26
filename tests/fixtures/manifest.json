@@ -5,7 +5,7 @@
     "mode": "full",
     "inventory": {
       "authority": "scripts/migration/contracts/inventory.mjs#sourceFiles",
-      "revision": "ae3350fd53414258ce7a9f94a0fe8315c7dafe29",
+      "revision": "cfa8e8fd62f4a7565e7273ae2975b5e57add3be4",
       "command_id": "migration-inventory"
     }
   },
@@ -13,7 +13,7 @@
     {
       "id": "javascript-reference",
       "name": "Tripelkins JavaScript simulation",
-      "version": "ae3350fd53414258ce7a9f94a0fe8315c7dafe29",
+      "version": "cfa8e8fd62f4a7565e7273ae2975b5e57add3be4",
       "runtime": "Node.js v24.18.0",
       "identity_command_id": "migration-oracle-identity",
       "contract": "All exported production game engine behavior at the pinned source revision.",
@@ -1131,7 +1131,7 @@
       "id": "orbit-rules-native-code",
       "target_profile": "rust-native",
       "paths": [
-        "engine/src/population.rs"
+        "engine/src/development.rs"
       ],
       "dimensions": [
         "function",
@@ -22448,6 +22448,107 @@
       "storage_slug": "orbit-rules",
       "operations": [
         {
+          "id": "GROUND_RESERVE",
+          "kind": "constant",
+          "classification": "endpoint",
+          "lifecycle": {
+            "status": "current"
+          },
+          "source": {
+            "oracle_id": "javascript-reference",
+            "path": "src/game/orbit-rules.js#GROUND_RESERVE",
+            "signature": "GROUND_RESERVE",
+            "parameters": [],
+            "result": {
+              "shape": "scalar",
+              "observations": [
+                {
+                  "path": "value",
+                  "value_types": [
+                    "any_json"
+                  ],
+                  "comparison": {
+                    "kind": "numeric",
+                    "absolute_tolerance": 1e-10,
+                    "relative_tolerance": 1e-12,
+                    "nan_policy": "forbidden"
+                  }
+                }
+              ],
+              "error": {
+                "fields": [
+                  "class",
+                  "kind",
+                  "message",
+                  "stage",
+                  "code"
+                ],
+                "message": {
+                  "mode": "exact",
+                  "transforms": [],
+                  "reason": null
+                }
+              }
+            }
+          },
+          "targets": [
+            {
+              "target_id": "rust-engine",
+              "path": "tripelkins_engine::Engine::dispatch(\"contract.constant\")",
+              "signature": "dispatch(operation: &str, input: &str) -> Result<String, JsValue>",
+              "support": {
+                "status": "supported"
+              }
+            }
+          ],
+          "requirements": [
+            {
+              "id": "game.orbit-rules.GROUND_RESERVE.contract",
+              "dimension": "feature",
+              "description": "Preserve GROUND_RESERVE's returned value, public errors, in-place state mutations, ordering, limits, and deterministic state transitions from src/game/orbit-rules.js.",
+              "lanes": [
+                "parity"
+              ],
+              "target_profiles": [
+                "rust-native",
+                "rust-wasm"
+              ]
+            },
+            {
+              "id": "game.orbit-rules.GROUND_RESERVE.native-code",
+              "dimension": "code_path",
+              "description": "Measure the native Rust implementation reached by the public GROUND_RESERVE workflow. WASM instrumentation is not available; no WASM coverage claim is made.",
+              "lanes": [
+                "coverage"
+              ],
+              "target_profiles": [
+                "rust-native"
+              ]
+            }
+          ],
+          "parity": {
+            "applicability": "required",
+            "target_profiles": [
+              "rust-native",
+              "rust-wasm"
+            ]
+          },
+          "coverage": {
+            "applicability": "required",
+            "target_profiles": [
+              "rust-native"
+            ],
+            "component_ids": [
+              "orbit-rules-native-code",
+              "engine-support-native-code"
+            ]
+          },
+          "benchmark": {
+            "applicability": "not_applicable",
+            "reason": "Measured through the complete simulation/planning workloads; isolated helper latency is not an independent performance objective."
+          }
+        },
+        {
           "id": "ORBIT_SETTLERS",
           "kind": "constant",
           "classification": "endpoint",
@@ -22518,6 +22619,219 @@
               "id": "game.orbit-rules.ORBIT_SETTLERS.native-code",
               "dimension": "code_path",
               "description": "Measure the native Rust implementation reached by the public ORBIT_SETTLERS workflow. WASM instrumentation is not available; no WASM coverage claim is made.",
+              "lanes": [
+                "coverage"
+              ],
+              "target_profiles": [
+                "rust-native"
+              ]
+            }
+          ],
+          "parity": {
+            "applicability": "required",
+            "target_profiles": [
+              "rust-native",
+              "rust-wasm"
+            ]
+          },
+          "coverage": {
+            "applicability": "required",
+            "target_profiles": [
+              "rust-native"
+            ],
+            "component_ids": [
+              "orbit-rules-native-code",
+              "engine-support-native-code"
+            ]
+          },
+          "benchmark": {
+            "applicability": "not_applicable",
+            "reason": "Measured through the complete simulation/planning workloads; isolated helper latency is not an independent performance objective."
+          }
+        },
+        {
+          "id": "ORBIT_VOLUNTEER_NEED",
+          "kind": "constant",
+          "classification": "endpoint",
+          "lifecycle": {
+            "status": "current"
+          },
+          "source": {
+            "oracle_id": "javascript-reference",
+            "path": "src/game/orbit-rules.js#ORBIT_VOLUNTEER_NEED",
+            "signature": "ORBIT_VOLUNTEER_NEED",
+            "parameters": [],
+            "result": {
+              "shape": "scalar",
+              "observations": [
+                {
+                  "path": "value",
+                  "value_types": [
+                    "any_json"
+                  ],
+                  "comparison": {
+                    "kind": "numeric",
+                    "absolute_tolerance": 1e-10,
+                    "relative_tolerance": 1e-12,
+                    "nan_policy": "forbidden"
+                  }
+                }
+              ],
+              "error": {
+                "fields": [
+                  "class",
+                  "kind",
+                  "message",
+                  "stage",
+                  "code"
+                ],
+                "message": {
+                  "mode": "exact",
+                  "transforms": [],
+                  "reason": null
+                }
+              }
+            }
+          },
+          "targets": [
+            {
+              "target_id": "rust-engine",
+              "path": "tripelkins_engine::Engine::dispatch(\"contract.constant\")",
+              "signature": "dispatch(operation: &str, input: &str) -> Result<String, JsValue>",
+              "support": {
+                "status": "supported"
+              }
+            }
+          ],
+          "requirements": [
+            {
+              "id": "game.orbit-rules.ORBIT_VOLUNTEER_NEED.contract",
+              "dimension": "feature",
+              "description": "Preserve ORBIT_VOLUNTEER_NEED's returned value, public errors, in-place state mutations, ordering, limits, and deterministic state transitions from src/game/orbit-rules.js.",
+              "lanes": [
+                "parity"
+              ],
+              "target_profiles": [
+                "rust-native",
+                "rust-wasm"
+              ]
+            },
+            {
+              "id": "game.orbit-rules.ORBIT_VOLUNTEER_NEED.native-code",
+              "dimension": "code_path",
+              "description": "Measure the native Rust implementation reached by the public ORBIT_VOLUNTEER_NEED workflow. WASM instrumentation is not available; no WASM coverage claim is made.",
+              "lanes": [
+                "coverage"
+              ],
+              "target_profiles": [
+                "rust-native"
+              ]
+            }
+          ],
+          "parity": {
+            "applicability": "required",
+            "target_profiles": [
+              "rust-native",
+              "rust-wasm"
+            ]
+          },
+          "coverage": {
+            "applicability": "required",
+            "target_profiles": [
+              "rust-native"
+            ],
+            "component_ids": [
+              "orbit-rules-native-code",
+              "engine-support-native-code"
+            ]
+          },
+          "benchmark": {
+            "applicability": "not_applicable",
+            "reason": "Measured through the complete simulation/planning workloads; isolated helper latency is not an independent performance objective."
+          }
+        },
+        {
+          "id": "orbitalPlan",
+          "kind": "function",
+          "classification": "endpoint",
+          "lifecycle": {
+            "status": "current"
+          },
+          "source": {
+            "oracle_id": "javascript-reference",
+            "path": "src/game/orbit-rules.js#orbitalPlan",
+            "signature": "function orbitalPlan(w)",
+            "parameters": [
+              {
+                "id": "w",
+                "style": "positional",
+                "value_types": [
+                  "any_json"
+                ],
+                "omission": {
+                  "kind": "required"
+                }
+              }
+            ],
+            "result": {
+              "shape": "record",
+              "observations": [
+                {
+                  "path": "value",
+                  "value_types": [
+                    "any_json"
+                  ],
+                  "comparison": {
+                    "kind": "numeric",
+                    "absolute_tolerance": 1e-10,
+                    "relative_tolerance": 1e-12,
+                    "nan_policy": "forbidden"
+                  }
+                }
+              ],
+              "error": {
+                "fields": [
+                  "class",
+                  "kind",
+                  "message",
+                  "stage",
+                  "code"
+                ],
+                "message": {
+                  "mode": "exact",
+                  "transforms": [],
+                  "reason": null
+                }
+              }
+            }
+          },
+          "targets": [
+            {
+              "target_id": "rust-engine",
+              "path": "tripelkins_engine::Engine::dispatch(\"contract.call\")",
+              "signature": "dispatch(operation: &str, input: &str) -> Result<String, JsValue>",
+              "support": {
+                "status": "supported"
+              }
+            }
+          ],
+          "requirements": [
+            {
+              "id": "game.orbit-rules.orbitalPlan.contract",
+              "dimension": "feature",
+              "description": "Preserve orbitalPlan's returned value, public errors, in-place state mutations, ordering, limits, and deterministic state transitions from src/game/orbit-rules.js.",
+              "lanes": [
+                "parity"
+              ],
+              "target_profiles": [
+                "rust-native",
+                "rust-wasm"
+              ]
+            },
+            {
+              "id": "game.orbit-rules.orbitalPlan.native-code",
+              "dimension": "code_path",
+              "description": "Measure the native Rust implementation reached by the public orbitalPlan workflow. WASM instrumentation is not available; no WASM coverage claim is made.",
               "lanes": [
                 "coverage"
               ],

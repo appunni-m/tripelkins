@@ -437,6 +437,7 @@ impl Engine {
                     )
                 }
             }
+            "game.orbit-rules.orbitalPlan" => development::orbital_plan(&self.world),
             "game.outposts.assessOutpost" => self.assess_outpost(
                 text(a, "type"),
                 Point::read(p),

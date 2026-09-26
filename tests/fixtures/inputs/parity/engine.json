@@ -8872,6 +8872,42 @@
       ]
     },
     {
+      "case_id": "game.orbit-rules.GROUND_RESERVE.representative",
+      "surface": "game.orbit-rules",
+      "operation": "GROUND_RESERVE",
+      "covers": [
+        "game.orbit-rules.GROUND_RESERVE.contract"
+      ],
+      "target_profiles": [
+        "rust-native",
+        "rust-wasm"
+      ],
+      "assets": [
+        {
+          "id": "clock",
+          "kind": "builtin",
+          "name": "runtime.clock:2000-01-01T00:00:00.000Z:monotonic:0"
+        },
+        {
+          "id": "entropy",
+          "kind": "builtin",
+          "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
+        }
+      ],
+      "steps": [
+        {
+          "step_id": "observe",
+          "surface": "game.orbit-rules",
+          "operation": "GROUND_RESERVE",
+          "receiver": null,
+          "arguments": {}
+        }
+      ],
+      "observations": [
+        "observe"
+      ]
+    },
+    {
       "case_id": "game.orbit-rules.ORBIT_SETTLERS.representative",
       "surface": "game.orbit-rules",
       "operation": "ORBIT_SETTLERS",
@@ -8901,6 +8937,90 @@
           "operation": "ORBIT_SETTLERS",
           "receiver": null,
           "arguments": {}
+        }
+      ],
+      "observations": [
+        "observe"
+      ]
+    },
+    {
+      "case_id": "game.orbit-rules.ORBIT_VOLUNTEER_NEED.representative",
+      "surface": "game.orbit-rules",
+      "operation": "ORBIT_VOLUNTEER_NEED",
+      "covers": [
+        "game.orbit-rules.ORBIT_VOLUNTEER_NEED.contract"
+      ],
+      "target_profiles": [
+        "rust-native",
+        "rust-wasm"
+      ],
+      "assets": [
+        {
+          "id": "clock",
+          "kind": "builtin",
+          "name": "runtime.clock:2000-01-01T00:00:00.000Z:monotonic:0"
+        },
+        {
+          "id": "entropy",
+          "kind": "builtin",
+          "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
+        }
+      ],
+      "steps": [
+        {
+          "step_id": "observe",
+          "surface": "game.orbit-rules",
+          "operation": "ORBIT_VOLUNTEER_NEED",
+          "receiver": null,
+          "arguments": {}
+        }
+      ],
+      "observations": [
+        "observe"
+      ]
+    },
+    {
+      "case_id": "game.orbit-rules.orbitalPlan.representative",
+      "surface": "game.orbit-rules",
+      "operation": "orbitalPlan",
+      "covers": [
+        "game.orbit-rules.orbitalPlan.contract"
+      ],
+      "target_profiles": [
+        "rust-native",
+        "rust-wasm"
+      ],
+      "assets": [
+        {
+          "id": "clock",
+          "kind": "builtin",
+          "name": "runtime.clock:2000-01-01T00:00:00.000Z:monotonic:0"
+        },
+        {
+          "id": "entropy",
+          "kind": "builtin",
+          "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
+        },
+        {
+          "id": "stimulus_48d92503346d",
+          "kind": "ref",
+          "path": "48d92503346d32410cd5c2b27971b079f7558fcdf63b719db0f8321a0eaea241.json",
+          "sha256": "e2dda812c979070da7d0290052dd5c2a5e92ecd6d4744ff71a9c35de16ae4802",
+          "media_type": "application/json"
+        }
+      ],
+      "steps": [
+        {
+          "step_id": "observe",
+          "surface": "game.orbit-rules",
+          "operation": "orbitalPlan",
+          "receiver": null,
+          "arguments": {
+            "w": {
+              "kind": "asset",
+              "asset_id": "stimulus_48d92503346d"
+            }
+          }
         }
       ],
       "observations": [
@@ -26538,10 +26658,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_707d3f6d76d2",
+          "id": "stimulus_ac7975e046c9",
           "kind": "ref",
-          "path": "707d3f6d76d227fba792d5255ae57d1ab9df99c8efbbb622b64603a7691c48cb.json",
-          "sha256": "a2f329d2593bf3c94daab9ded381bfade91633dede96f9693a673ba4fdc61437",
+          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
+          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
           "media_type": "application/json"
         }
       ],
@@ -26554,7 +26674,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_707d3f6d76d2"
+              "asset_id": "stimulus_ac7975e046c9"
             },
             "budget": {
               "kind": "literal",
@@ -26590,10 +26710,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_707d3f6d76d2",
+          "id": "stimulus_ac7975e046c9",
           "kind": "ref",
-          "path": "707d3f6d76d227fba792d5255ae57d1ab9df99c8efbbb622b64603a7691c48cb.json",
-          "sha256": "a2f329d2593bf3c94daab9ded381bfade91633dede96f9693a673ba4fdc61437",
+          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
+          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
           "media_type": "application/json"
         }
       ],
@@ -26606,7 +26726,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_707d3f6d76d2"
+              "asset_id": "stimulus_ac7975e046c9"
             },
             "budget": {
               "kind": "literal",
@@ -26642,10 +26762,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_707d3f6d76d2",
+          "id": "stimulus_ac7975e046c9",
           "kind": "ref",
-          "path": "707d3f6d76d227fba792d5255ae57d1ab9df99c8efbbb622b64603a7691c48cb.json",
-          "sha256": "a2f329d2593bf3c94daab9ded381bfade91633dede96f9693a673ba4fdc61437",
+          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
+          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
           "media_type": "application/json"
         }
       ],
@@ -26658,7 +26778,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_707d3f6d76d2"
+              "asset_id": "stimulus_ac7975e046c9"
             },
             "budget": {
               "kind": "literal",
@@ -26694,10 +26814,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_707d3f6d76d2",
+          "id": "stimulus_ac7975e046c9",
           "kind": "ref",
-          "path": "707d3f6d76d227fba792d5255ae57d1ab9df99c8efbbb622b64603a7691c48cb.json",
-          "sha256": "a2f329d2593bf3c94daab9ded381bfade91633dede96f9693a673ba4fdc61437",
+          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
+          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
           "media_type": "application/json"
         }
       ],
@@ -26710,7 +26830,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_707d3f6d76d2"
+              "asset_id": "stimulus_ac7975e046c9"
             },
             "budget": {
               "kind": "literal",
@@ -26746,10 +26866,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_707d3f6d76d2",
+          "id": "stimulus_ac7975e046c9",
           "kind": "ref",
-          "path": "707d3f6d76d227fba792d5255ae57d1ab9df99c8efbbb622b64603a7691c48cb.json",
-          "sha256": "a2f329d2593bf3c94daab9ded381bfade91633dede96f9693a673ba4fdc61437",
+          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
+          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
           "media_type": "application/json"
         }
       ],
@@ -26762,7 +26882,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_707d3f6d76d2"
+              "asset_id": "stimulus_ac7975e046c9"
             },
             "budget": {
               "kind": "literal",
@@ -26798,10 +26918,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_707d3f6d76d2",
+          "id": "stimulus_ac7975e046c9",
           "kind": "ref",
-          "path": "707d3f6d76d227fba792d5255ae57d1ab9df99c8efbbb622b64603a7691c48cb.json",
-          "sha256": "a2f329d2593bf3c94daab9ded381bfade91633dede96f9693a673ba4fdc61437",
+          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
+          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
           "media_type": "application/json"
         }
       ],
@@ -26814,7 +26934,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_707d3f6d76d2"
+              "asset_id": "stimulus_ac7975e046c9"
             },
             "budget": {
               "kind": "literal",
@@ -26850,10 +26970,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_707d3f6d76d2",
+          "id": "stimulus_ac7975e046c9",
           "kind": "ref",
-          "path": "707d3f6d76d227fba792d5255ae57d1ab9df99c8efbbb622b64603a7691c48cb.json",
-          "sha256": "a2f329d2593bf3c94daab9ded381bfade91633dede96f9693a673ba4fdc61437",
+          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
+          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
           "media_type": "application/json"
         }
       ],
@@ -26866,7 +26986,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_707d3f6d76d2"
+              "asset_id": "stimulus_ac7975e046c9"
             },
             "budget": {
               "kind": "literal",
@@ -26902,10 +27022,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_707d3f6d76d2",
+          "id": "stimulus_ac7975e046c9",
           "kind": "ref",
-          "path": "707d3f6d76d227fba792d5255ae57d1ab9df99c8efbbb622b64603a7691c48cb.json",
-          "sha256": "a2f329d2593bf3c94daab9ded381bfade91633dede96f9693a673ba4fdc61437",
+          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
+          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
           "media_type": "application/json"
         }
       ],
@@ -26918,7 +27038,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_707d3f6d76d2"
+              "asset_id": "stimulus_ac7975e046c9"
             },
             "budget": {
               "kind": "literal",
@@ -26954,10 +27074,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_707d3f6d76d2",
+          "id": "stimulus_ac7975e046c9",
           "kind": "ref",
-          "path": "707d3f6d76d227fba792d5255ae57d1ab9df99c8efbbb622b64603a7691c48cb.json",
-          "sha256": "a2f329d2593bf3c94daab9ded381bfade91633dede96f9693a673ba4fdc61437",
+          "path": "ac7975e046c9800ce983ef46075315d1840173185926e8fc07020776a72aba50.json",
+          "sha256": "10189d3b40b80fa135f92554738cc0513d0131f77e5555b8b96d2c042433f2ba",
           "media_type": "application/json"
         }
       ],
@@ -26970,7 +27090,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_707d3f6d76d2"
+              "asset_id": "stimulus_ac7975e046c9"
             },
             "budget": {
               "kind": "literal",
@@ -30098,10 +30218,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_5101a37a1a9d",
+          "id": "stimulus_26c7dfb39e07",
           "kind": "ref",
-          "path": "5101a37a1a9dcd024e0bf905f5340144d041a8792e1696f3ae75cd14e54818c4.json",
-          "sha256": "0a63ef866b734182720637569a65b181b45e44074d29c8759a880358cb4a8d23",
+          "path": "26c7dfb39e073d60c898549a3cdea6e7edc3b55648ecd1b5811bb64681075ee1.json",
+          "sha256": "fa560eed1538543c5cea5daf3235d243da2dd8006ab21c7df1122c4488b86aa9",
           "media_type": "application/json"
         }
       ],
@@ -30114,7 +30234,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_5101a37a1a9d"
+              "asset_id": "stimulus_26c7dfb39e07"
             },
             "budget": {
               "kind": "literal",
@@ -30150,10 +30270,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_5101a37a1a9d",
+          "id": "stimulus_26c7dfb39e07",
           "kind": "ref",
-          "path": "5101a37a1a9dcd024e0bf905f5340144d041a8792e1696f3ae75cd14e54818c4.json",
-          "sha256": "0a63ef866b734182720637569a65b181b45e44074d29c8759a880358cb4a8d23",
+          "path": "26c7dfb39e073d60c898549a3cdea6e7edc3b55648ecd1b5811bb64681075ee1.json",
+          "sha256": "fa560eed1538543c5cea5daf3235d243da2dd8006ab21c7df1122c4488b86aa9",
           "media_type": "application/json"
         }
       ],
@@ -30166,7 +30286,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_5101a37a1a9d"
+              "asset_id": "stimulus_26c7dfb39e07"
             },
             "budget": {
               "kind": "literal",
@@ -30202,10 +30322,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_5101a37a1a9d",
+          "id": "stimulus_26c7dfb39e07",
           "kind": "ref",
-          "path": "5101a37a1a9dcd024e0bf905f5340144d041a8792e1696f3ae75cd14e54818c4.json",
-          "sha256": "0a63ef866b734182720637569a65b181b45e44074d29c8759a880358cb4a8d23",
+          "path": "26c7dfb39e073d60c898549a3cdea6e7edc3b55648ecd1b5811bb64681075ee1.json",
+          "sha256": "fa560eed1538543c5cea5daf3235d243da2dd8006ab21c7df1122c4488b86aa9",
           "media_type": "application/json"
         }
       ],
@@ -30218,7 +30338,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_5101a37a1a9d"
+              "asset_id": "stimulus_26c7dfb39e07"
             },
             "budget": {
               "kind": "literal",
@@ -30254,10 +30374,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_5101a37a1a9d",
+          "id": "stimulus_26c7dfb39e07",
           "kind": "ref",
-          "path": "5101a37a1a9dcd024e0bf905f5340144d041a8792e1696f3ae75cd14e54818c4.json",
-          "sha256": "0a63ef866b734182720637569a65b181b45e44074d29c8759a880358cb4a8d23",
+          "path": "26c7dfb39e073d60c898549a3cdea6e7edc3b55648ecd1b5811bb64681075ee1.json",
+          "sha256": "fa560eed1538543c5cea5daf3235d243da2dd8006ab21c7df1122c4488b86aa9",
           "media_type": "application/json"
         }
       ],
@@ -30270,7 +30390,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_5101a37a1a9d"
+              "asset_id": "stimulus_26c7dfb39e07"
             },
             "budget": {
               "kind": "literal",
@@ -30306,10 +30426,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_5101a37a1a9d",
+          "id": "stimulus_26c7dfb39e07",
           "kind": "ref",
-          "path": "5101a37a1a9dcd024e0bf905f5340144d041a8792e1696f3ae75cd14e54818c4.json",
-          "sha256": "0a63ef866b734182720637569a65b181b45e44074d29c8759a880358cb4a8d23",
+          "path": "26c7dfb39e073d60c898549a3cdea6e7edc3b55648ecd1b5811bb64681075ee1.json",
+          "sha256": "fa560eed1538543c5cea5daf3235d243da2dd8006ab21c7df1122c4488b86aa9",
           "media_type": "application/json"
         }
       ],
@@ -30322,7 +30442,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_5101a37a1a9d"
+              "asset_id": "stimulus_26c7dfb39e07"
             },
             "budget": {
               "kind": "literal",
@@ -30358,10 +30478,10 @@
           "name": "runtime.entropy:seed:18492:uuid:00000000-0000-4000-8000-000000000001"
         },
         {
-          "id": "stimulus_ae2dd83217ed",
+          "id": "stimulus_e3fa72f22dd9",
           "kind": "ref",
-          "path": "ae2dd83217edcaddb1435f68376550298a598e05818217438f0e85083d193306.json",
-          "sha256": "8b31669af8a9dc284d7503c351e8c42e04c50137caa042ba9ae9777809dfa1ea",
+          "path": "e3fa72f22dd9b0ed9bed8959fba0aa969d0cf86fcce1f99cfdf9441a770d3b67.json",
+          "sha256": "9400f776cae2787349bde0f8d4a817a766f871aba99772e92a310ed99d4d3dd3",
           "media_type": "application/json"
         }
       ],
@@ -30374,7 +30494,7 @@
           "arguments": {
             "full": {
               "kind": "asset",
-              "asset_id": "stimulus_ae2dd83217ed"
+              "asset_id": "stimulus_e3fa72f22dd9"
             },
             "budget": {
               "kind": "literal",

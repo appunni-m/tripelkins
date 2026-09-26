@@ -20,8 +20,8 @@ const aliases={
  'game.memory.normalizeMemory':'memory.normalize','game.goals.normalizeGoals':'goals.normalizeGoals',
  'game.simulation.makePlan':'jobs.makePlan','game.simulation.applyPlan':'jobs.applyPlan','game.simulation.capacity':'jobs.capacity',
 };
-const moduleAliases={'map':'terrain','care-context':'outposts','context-budget':'context_budget','work-projects':'development','work-balance':'development','orbit-rules':'population','save-schema':'save','theme-compat':'save','development-plan':'development'};
-const componentModule={'map':'terrain','bridge-project':'simulation','care-context':'outposts','catalog':'simulation','colony-letters':'community','conversation':'community','decisions':'planning','destruction':'simulation','commands':'commands','context-budget':'context_budget','development-plan':'development','health':'state','name-data':'identity','navigation-grid':'navigation','orbit-rules':'population','projects':'resources','save-schema':'save','story-content':'story','theme-compat':'save','work-balance':'development','work-projects':'development'};
+const moduleAliases={'map':'terrain','care-context':'outposts','context-budget':'context_budget','work-projects':'development','work-balance':'development','orbit-rules':'development','save-schema':'save','theme-compat':'save','development-plan':'development'};
+const componentModule={'map':'terrain','bridge-project':'simulation','care-context':'outposts','catalog':'simulation','colony-letters':'community','conversation':'community','decisions':'planning','destruction':'simulation','commands':'commands','context-budget':'context_budget','development-plan':'development','health':'state','name-data':'identity','navigation-grid':'navigation','orbit-rules':'development','projects':'resources','save-schema':'save','story-content':'story','theme-compat':'save','work-balance':'development','work-projects':'development'};
 const profiles=['rust-native','rust-wasm'];
 const constants=JSON.parse(readFileSync(join(ROOT,'engine/data/public-constants.json'),'utf8'));
 const publicBindings=new Set([...rust.matchAll(/"(game\.[a-zA-Z-]+\.[A-Za-z][A-Za-z0-9]*)"/g)].map(m=>m[1]));

@@ -3,7 +3,7 @@ import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve,basename} from 'node:path';
 import {pathToFileURL} from 'node:url';
-export const SOURCE_REVISION='ae3350fd53414258ce7a9f94a0fe8315c7dafe29';
+export const SOURCE_REVISION='cfa8e8fd62f4a7565e7273ae2975b5e57add3be4';
 export const ROOT=resolve(import.meta.dirname,'../../..');
 // Public simulation/planning/state exports define the denominator. Presentation
 // and disposable test workloads are separate consumers of these production APIs.
