@@ -432,15 +432,14 @@ export function settlementDecisionInput(w, choices) {
   // capacity problem in the small model's bounded context.
   const priority=careFirst
     ? `Urgent care first while current need shortages remain; timber refill is ${reserve.refill ? "below its minimum" : "not below its minimum"}.`
-    : `${milestone} Timber refill is ${reserve.refill ? "below its minimum" : "not below its minimum"}; care urgency appears in the need counts and candidate list.`;
+    : `${milestone} Timber refill is ${reserve.refill ? "below its minimum" : "not currently below its minimum"}; care urgency appears in the need counts and candidate list.`;
   const orbital=orbitalPlan(w);
   const orbitalContext=orbital.phase==="build" && orbital.missionActive
     ? "The active orbital mission needs one sky launcher; keep eight residents on the ground."
     : orbital.phase==="building"
       ? "The sky launcher already has a building crew; do not start another."
       : "";
-  const goalStep=storyGoal?.step || industry?.step || storyObjective(w)[1] || storyObjective(w)[0];
-  const defaultGoal=goalStep.replace(/[. ]+$/,"").replace(/^./,letter=>letter.toLowerCase());
+  const defaultGoal=storyGoal?.step || industry?.step || storyObjective(w)[1] || storyObjective(w)[0];
   const playerGoal=activeGoal(w), goalState=playerGoal && inspectGoal(w,playerGoal);
   const goalLabel=playerGoal
     ? `Player goal ${playerGoal.kind} ${goalState.value}/${playerGoal.target}; next ${goalState.step}. ${goalState.blocker}`
@@ -448,15 +447,15 @@ export function settlementDecisionInput(w, choices) {
       : industry ? `${industry.title}: ${industry.step}` : defaultGoal;
   const bridge=bridgeProject(w);
   const bridgeStatus=bridge
-    ? `${bridge.delivered}/${bridge.required} delivered, ${bridge.staged} staged, ${bridge.carried} carried`
-    : "complete or unavailable";
+    ? `Bridge ${bridge.delivered}/${bridge.required} delivered; ${bridge.staged} staged, ${bridge.carried} carried; ${reserve.stock} wood stored.`
+    : "Bridge complete or unavailable.";
   const currentProjects=workProjects(w).slice(0,3).map(p=>`${projectName(p)}: ${projectStatus(w,p)}`).join("; ") || "none";
-  const requiredContext = `${w.creatures.length} residents; ${workProjects(w).length}/${projectLimit(w)} crews active. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Bridge ${bridgeStatus}; current projects ${currentProjects}. Goal ${goalLabel}. ${accessBrief(w)} ${priority} ${orbitalContext} Higher help, density reward closer to zero, and shorter travel are favorable tradeoffs.`;
+  const requiredContext = `${w.creatures.length} residents; ${workProjects(w).length}/${projectLimit(w)} crews active. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. ${bridgeStatus} Current projects: ${currentProjects}. Goal ${goalLabel}. ${accessBrief(w)} ${priority} ${orbitalContext} Higher help, density reward closer to zero, and shorter travel are favorable tradeoffs.`;
   const contextParts = choices.map(c=>c.description);
   return {options,requiredContext,contextParts,context:[requiredContext,...contextParts].join(" "),
     question:orbital.phase==="build" && orbital.missionActive
-      ? "Which listed project and location best advance the goals? Build the one sky launcher for the active orbital mission while protecting urgent care and keeping eight residents on the ground."
-      : "Which listed project and site best advances the goal? Use the facts provided and return an exact option key, or wait.",maxTokens:320};
+      ? "Which listed project and location best advance the current goals, given care, resource, route, and site facts? The active orbital mission requires one sky launcher and eight residents on the ground. Choose an exact listed key, including wait if appropriate."
+      : "Which listed project and location best advance the current goals, given care, resource, route, and site facts? Choose an exact listed key, including wait if appropriate.",maxTokens:320};
 }
 export function settlementContext(w,choices) {
   return {care:careContext(w), plan:developmentPlan(w), timber:timberReserve(w),
