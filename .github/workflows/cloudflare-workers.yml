@@ -51,6 +51,7 @@ jobs:
         with:
           name: cloudflare-workers
           path: cloudflare-workers
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
 

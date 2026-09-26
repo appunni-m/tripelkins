@@ -29,8 +29,9 @@ on the `production` environment and the deployment job.
    each WASM asset and checks Cloudflare's 25 MiB per-file limit. It also
    includes `_worker.js` for Cloudflare Pages advanced mode; `.assetsignore`
    keeps Wrangler from publishing that handler as a public static asset.
-4. GitHub retains that exact package as a 14-day artifact. The deploy job
-   downloads it and publishes it with Wrangler 4.141.0.
+4. GitHub retains that exact package, including the hidden `.assetsignore`, as
+   a 14-day artifact. The deploy job downloads it and publishes it with
+   Wrangler 4.141.0.
 5. The workflow downloads every published asset and compares its decoded bytes
    with the build manifest. It also checks JavaScript and WASM MIME types and
    confirms each WASM response uses Brotli or gzip encoding.
