@@ -1,0 +1,94 @@
+name: Deploy Cloudflare Workers
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - name: Cache Rust build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin/wasm-pack
+            engine/target
+            engine/pkg
+          key: ${{ runner.os }}-rust-1.98.1-wasm-pack-0.15.0-${{ hashFiles('engine/Cargo.toml', 'engine/Cargo.lock', 'rust-toolchain.toml') }}-${{ hashFiles('engine/src/**', 'engine/data/**', 'scripts/build-engine.mjs') }}
+          restore-keys: |
+            ${{ runner.os }}-rust-1.98.1-wasm-pack-0.15.0-${{ hashFiles('engine/Cargo.toml', 'engine/Cargo.lock', 'rust-toolchain.toml') }}-
+      - name: Install Rust WASM build tools
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal --target wasm32-unknown-unknown
+          if ! command -v wasm-pack >/dev/null || [ "$(wasm-pack --version)" != "wasm-pack 0.15.0" ]; then
+            cargo install wasm-pack --version 0.15.0 --locked
+          fi
+      - run: npm ci
+      - run: npm test
+      - run: npm run verify:engine
+      - run: npm run build
+      - uses: actions/upload-artifact@v4.6.2
+        with:
+          name: cloudflare-workers
+          path: cloudflare-workers
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      deployments: write
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.deployment-url }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/download-artifact@v4.3.0
+        with:
+          name: cloudflare-workers
+          path: cloudflare-workers
+      - name: Deploy Worker static assets
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.141.0"
+          command: deploy
+          gitHubToken: ${{ github.token }}
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 24
+      - name: Verify the deployed assets and Brotli responses
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            echo "Wrangler did not return a deployment URL." >&2
+            exit 1
+          fi
+          npm run verify:cloudflare -- "$DEPLOYMENT_URL"

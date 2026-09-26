@@ -1,13 +1,19 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
-const base = new URL(
-  process.argv[2] || "https://appunni-m.github.io/tripelkins/",
-);
+if (!process.argv[2])
+  throw new Error("Pass the deployed Worker URL as the first argument.");
+const base = new URL(process.argv[2]);
 if (!base.pathname.endsWith("/"))
-  throw new Error("Use a site URL ending in /.");
+  base.pathname += "/";
 const expected = JSON.parse(
-  await readFile("dist/deployment-manifest.json", "utf8"),
+  await readFile("cloudflare-workers/deployment-manifest.json", "utf8"),
+);
+const brotliPaths = new Set(
+  expected.delivery?.brotliAssets?.map((asset) => asset.path) || [],
+);
+const gzipPaths = new Set(
+  expected.delivery?.gzipAssets?.map((asset) => asset.path) || [],
 );
 async function request(path) {
   const url = new URL(path, base);
@@ -20,7 +26,7 @@ async function request(path) {
   return response;
 }
 let published;
-// The Pages deployment API can finish before the public CDN serves the update.
+// Worker deployments can finish before every edge serves the new manifest.
 for (let attempt = 0; attempt < 12; attempt++) {
   try {
     published = await (await request("deployment-manifest.json")).json();
@@ -31,7 +37,7 @@ for (let attempt = 0; attempt < 12; attempt++) {
     break;
   } catch (error) {
     if (attempt === 11) throw error;
-    console.log(`Waiting for Pages: ${error.message}`);
+    console.log(`Waiting for the Worker deployment: ${error.message}`);
     await new Promise((resolve) => setTimeout(resolve, 10000));
   }
 }
@@ -46,6 +52,11 @@ await Promise.all(
         const mime = response.headers.get("content-type") || "";
         if (asset.path.endsWith(".wasm") && !mime.includes("application/wasm"))
           throw new Error(`WASM MIME is ${mime}`);
+        if (brotliPaths.has(asset.path) || gzipPaths.has(asset.path)) {
+          const encoding = response.headers.get("content-encoding");
+          if (encoding !== "br" && encoding !== "gzip")
+            throw new Error(`WASM response has unexpected Content-Encoding: ${encoding}`);
+        }
         if (/\.(?:m?js)$/.test(asset.path) && !/(?:java|ecma)script/.test(mime))
           throw new Error(`JavaScript MIME is ${mime}`);
         const hash = createHash("sha256");
@@ -67,5 +78,5 @@ await Promise.all(
 if (failures)
   throw new Error(`${failures} deployed asset(s) failed verification.`);
 console.log(
-  `Verified ${expected.assets.length} deployed assets for ${published.commit} at ${base.href}`,
+  `Verified ${expected.assets.length} Cloudflare Worker assets for ${published.commit} at ${base.href}`,
 );

@@ -18,7 +18,7 @@ private report. Revoke an exposed provider key through the provider.
 
 ## Version scope
 
-The project deploys `main` through GitHub Pages. It has no published long-term
+The project deploys `main` to Cloudflare Workers through GitHub Actions. It has no published long-term
 support schedule or separately supported historical versions. The deployment
 manifest identifies the published commit. A passing test or asset hash is not a
 security certification.

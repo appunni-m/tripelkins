@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/build-engine.mjs && node scripts/copy-ort.mjs && node scripts/prepare-notices.mjs && vite --host 0.0.0.0",
-    "build": "node scripts/build-engine.mjs && node scripts/copy-ort.mjs && node scripts/prepare-notices.mjs && vite build && node scripts/deployment-manifest.mjs",
-    "verify:pages": "node scripts/verify-pages.mjs",
+    "build": "node scripts/build-engine.mjs && node scripts/copy-ort.mjs && node scripts/prepare-notices.mjs && vite build && node scripts/deployment-manifest.mjs && node scripts/prepare-cloudflare-workers.mjs dist cloudflare-workers",
+    "verify:cloudflare": "node scripts/verify-cloudflare-workers.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test tests/*.test.mjs",
     "verify:experience": "node scripts/playthrough.mjs --require-ending",
@@ -25,6 +25,7 @@
     "three": "^0.186.0"
   },
   "devDependencies": {
-    "vite": "^8.3.1"
+    "vite": "^8.3.1",
+    "wrangler": "4.141.0"
   }
 }

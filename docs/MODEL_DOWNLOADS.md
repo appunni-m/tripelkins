@@ -67,8 +67,8 @@ to be exposed by a cross-origin host.
   Content-Range values, and CORS-exposed validators in small range probes.
   This confirms the hosts' current HTTP behavior, not uninterrupted availability.
 
-Vite's default preview server uses weak ETags, and GitHub Pages compresses WASM
-responses with weak ETags. Those responses intentionally take the complete-file
-fallback. The model-host check works from either site and avoids conflating
-runtime compression with model download behavior. An earlier local check also
-matched all 14,239,897 runtime bytes using a server with strong validators.
+The former GitHub Pages deployment compressed WASM responses with weak ETags,
+so those responses intentionally took the complete-file fallback. The model-host
+check works from either site and avoids conflating runtime compression with
+model download behavior. An earlier local check also matched all 14,239,897
+runtime bytes using a server with strong validators.

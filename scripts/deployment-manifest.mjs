@@ -18,7 +18,7 @@ async function walk(directory) {
     )
       files.push(path);
     else if (entry.isSymbolicLink())
-      throw new Error(`Pages artifacts cannot contain symlinks: ${path}`);
+      throw new Error(`Deployment output cannot contain symlinks: ${path}`);
   }
   return files.sort();
 }
@@ -58,8 +58,6 @@ for (const path of files) {
   });
 }
 const totalBytes = assets.reduce((sum, item) => sum + item.bytes, 0);
-if (totalBytes > 1000000000)
-  throw new Error("Published assets exceed the GitHub Pages site limit.");
 let commit = process.env.GITHUB_SHA;
 if (!commit) {
   try {

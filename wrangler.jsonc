@@ -1,0 +1,16 @@
+{
+  "name": "tripelkins",
+  "main": "./worker.js",
+  "compatibility_date": "2026-09-26",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./cloudflare-workers",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/assets/*.wasm",
+      "/ort/*.wasm",
+      "/ort-whisper/*.wasm"
+    ],
+    "not_found_handling": "none"
+  }
+}

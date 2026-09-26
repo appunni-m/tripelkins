@@ -89,7 +89,7 @@ node scripts/migration/contracts/docs.mjs
 ```
 
 Coverage and benchmarks are separate, more expensive evidence lanes. The normal
-Pages workflow does not run them. Dirty-tree evidence is diagnostic; final
+Cloudflare Workers workflow does not run them. Dirty-tree evidence is diagnostic; final
 migration evidence must identify a clean implementation. See the
 [migration report](docs/RUST_ENGINE_MIGRATION.md) for scope and thresholds.
 

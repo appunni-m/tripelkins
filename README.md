@@ -82,9 +82,9 @@ Vite prints the preview URL. Serve `dist/` over HTTP; opening `index.html` as a 
 - [Architecture](docs/ARCHITECTURE.md): authoritative simulation, planning, inference and saves.
 - [Engine migration report](docs/RUST_ENGINE_MIGRATION.md): parity evidence and measured performance limits.
 - [Generated engine contract](docs/generated/engine-contract.md): the migration's operation inventory; not a stable external SDK.
-- [GitHub Pages deployment](docs/DEPLOYMENT.md): build, publish, asset verification and recovery.
+- [Cloudflare Workers deployment](docs/DEPLOYMENT.md): GitHub Actions build, publish, asset verification and recovery.
 
-Pushes to `main` run tests, engine parity checks, a production build and Pages deployment, followed by verification of published asset hashes. Browser checks at `/tripelkins/engine-verify.html` use disposable colonies; model checks at `/tripelkins/verify.html` require separate download consent.
+Pushes to `main` run the existing checks, package WASM with Brotli and gzip variants, deploy to Cloudflare Workers, then verify published hashes and response headers. The `production` environment in GitHub Actions shows the deployed Worker URL. Browser checks at `/engine-verify.html` use disposable colonies; model checks at `/verify.html` require separate download consent.
 
 ## Help and contribution
 
