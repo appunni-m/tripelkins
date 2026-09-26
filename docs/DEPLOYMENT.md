@@ -36,12 +36,18 @@ on the `production` environment and the deployment job.
    with the build manifest. It also checks JavaScript and WASM MIME types and
    confirms each WASM response uses Brotli or gzip encoding.
 
-The browser continues requesting the original `.wasm` URLs. `worker.js`
-selects a `.wasm.br` or `.wasm.gz` sidecar based on `Accept-Encoding` and
-returns it as `application/wasm`. The Worker marks the body as already encoded,
-so the runtime does not compress it a second time. `Vary: Accept-Encoding`
-keeps cached Brotli and gzip responses separate, while Cloudflare can negotiate
-the response encoding supported by each browser.
+Every build puts a fresh ID in the names of bundled JavaScript, CSS, and other
+assets, including separately bundled workers. Public runtime files, icons, and
+license notices also move under a build-specific path in `assets/`. HTML pages
+revalidate so they pick up the current asset URLs; files under `assets/` can
+then use one-year immutable caching without reusing a stale URL from an earlier
+deployment.
+
+`worker.js` selects a `.wasm.br` or `.wasm.gz` sidecar based on
+`Accept-Encoding` and returns it as `application/wasm`. The Worker marks the
+body as already encoded, so the runtime does not compress it a second time.
+`Vary: Accept-Encoding` keeps cached Brotli and gzip responses separate, while
+Cloudflare can negotiate the response encoding supported by each browser.
 
 The same `npm run build` output is used by GitHub Actions and Cloudflare Workers
 Builds. It can also be used as the Cloudflare Pages Git integration output

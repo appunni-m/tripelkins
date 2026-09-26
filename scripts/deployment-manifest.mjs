@@ -1,9 +1,14 @@
-import { readdir, readFile, writeFile, stat } from "node:fs/promises";
+import { readdir, readFile, writeFile, stat, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 
 const root = "dist";
+const buildId = (await readFile(join(root, ".asset-build-id"), "utf8")).trim();
+if (!/^[a-zA-Z0-9-]+$/.test(buildId))
+  throw new Error("Build asset version is missing or invalid.");
+await unlink(join(root, ".asset-build-id"));
+const versionedPublicRoot = `assets/${buildId}/public`;
 async function walk(directory) {
   const files = [];
   for (const entry of await readdir(join(root, directory), {
@@ -25,7 +30,17 @@ async function walk(directory) {
 const files = await walk("");
 if (!files.some(path=>/^assets\/tripelkins_engine_bg-[^/]+\.wasm$/.test(path)))
   throw new Error("Missing colony simulation WASM binary.");
-const required = ["engine-verify.html", "index.html", "verify.html", "credits.html", "licenses/dependencies.txt", "licenses/rust-dependencies.txt"];
+const required = [
+  "engine-verify.html",
+  "index.html",
+  "verify.html",
+  "credits.html",
+  `${versionedPublicRoot}/apple-touch-icon.png`,
+  `${versionedPublicRoot}/favicon.ico`,
+  `${versionedPublicRoot}/favicon.svg`,
+  `${versionedPublicRoot}/licenses/dependencies.txt`,
+  `${versionedPublicRoot}/licenses/rust-dependencies.txt`,
+];
 for (const [directory, suffixes] of [
   ["ort", ["", ".jsep", ".asyncify"]],
   ["ort-whisper", ["", ".asyncify"]],
@@ -33,7 +48,7 @@ for (const [directory, suffixes] of [
   for (const suffix of suffixes)
     for (const extension of ["wasm", "mjs"])
       required.push(
-        `${directory}/ort-wasm-simd-threaded${suffix}.${extension}`,
+        `${versionedPublicRoot}/${directory}/ort-wasm-simd-threaded${suffix}.${extension}`,
       );
 for (const path of required)
   if (!files.includes(path))
