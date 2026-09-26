@@ -14,6 +14,13 @@ export const DEVELOPMENT_TYPES = [...INDEPENDENT_BUILDINGS, ...Object.keys(RESOU
 // has not spoken an explicit command. Player goals always take precedence.
 export function colonyMilestone(w) {
   if (w.memory.goals.some(g=>g.status==="active") || w.stage>=3 || !w.progress.hatched) return null;
+  if (w.population >= 4 && !w.progress.bridge) {
+    const bridge = w.objects.find(o=>o.type==="bridge");
+    const value = bridge?.stock || 0;
+    return {id:"story-bridge",kind:"bridge",project:"crossing",target:24,value,
+      remaining:Math.max(0,24-value),title:"Build the river bridge",
+      step:"Gather timber and carry 24 logs to open the way to the mountain."};
+  }
   if (w.stage===2 && w.progress.peakBlocks<300) return {
     id:"story-first-blocks", kind:"blocks", project:"refine", target:300,
     value:w.progress.peakBlocks, remaining:Math.max(0,300-w.progress.peakBlocks),
@@ -26,6 +33,18 @@ export function industryMilestone(w) {
   return {id:"story-industry",kind:"energy",project:"industry",target:1500000,
     value:w.progress.energy,remaining:1500000-w.progress.energy,title:"A new kind of world",
     step:"Build stocked mines and stone workshops in local neighborhoods; carry ore and produce energy. Keep care available."};
+}
+export function nextIndustryBuilding(w) {
+  const projects=workProjects(w);
+  const factories=w.objects.filter(o=>o.type==="factory").length+
+    projects.filter(p=>p.type==="factory").length;
+  const mines=w.objects.filter(o=>o.type==="mine" && o.stock>0).length+
+    projects.filter(p=>p.type==="mine").length;
+  const wantedMines=Math.min(Math.ceil(w.creatures.length/32),Math.max(1,Math.ceil(
+    Math.max(1,factories)*(BUILDINGS.factory.capacity*3/2.8)/(BUILDINGS.mine.capacity*3/3))));
+  if (mines<wantedMines) return "mine";
+  if (factories<Math.ceil(w.creatures.length/48)) return "factory";
+  return null;
 }
 export const projectName = (p) => (BUILDINGS[p?.type] || RESOURCE_PROJECTS[p?.type])?.name || "Colony work";
 export const isConstruction = (p) => INDEPENDENT_BUILDINGS.includes(p?.type);

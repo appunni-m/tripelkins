@@ -8,14 +8,15 @@ import { developmentPlan } from "./development-plan.js";
 import { assessOutpost, outpostCamps, outpostContext } from "./outposts.js";
 import { careContext, careDemand, careServices, CARE_TYPES } from "./care-context.js";
 import { isExplored } from "./discovery.js";
-import { BUILDINGS, LIMITS, unlocked, buildingMaterials, buildingCost } from "./catalog.js";
+import { BUILDINGS, LIMITS, unlocked, buildingMaterials, buildingCost, goal as storyObjective } from "./catalog.js";
 import { canPlace, clearPosition, serviceSlots, bridgeGeometry } from "./geometry.js";
 import { nearbyObjects, westBank } from "./map.js";
 import { routeCost, withRouteCosts } from "./navigation.js";
 import { materializeObject, remember } from "./state.js";
 import { activity, postMessage } from "./community.js";
 import { CARE_BUILDINGS, INDEPENDENT_BUILDINGS, RESOURCE_PROJECTS, DEVELOPMENT_TYPES,
-  projectName, isConstruction, projectFunded, projectRequirements, timberReserve, colonyMilestone, industryMilestone, uncommittedBlocks } from "./development.js";
+  projectName, isConstruction, projectFunded, projectRequirements, timberReserve, colonyMilestone, industryMilestone,
+  nextIndustryBuilding, uncommittedBlocks } from "./development.js";
 import { orbitalPlan } from "./orbit-rules.js";
 export { CARE_BUILDINGS } from "./development.js";
 const activeGoal = (w) => w.memory.goals.find((g) => g.status === "active");
@@ -45,7 +46,10 @@ export function projectTask(w, c) {
   if (p.type === "timber") return resourceNeeded(w,p) ? "gather" : null;
   if (p.type === "quarry") return resourceNeeded(w,p) ? "quarry" : null;
   if (p.type === "refine") return resourceNeeded(w,p) ? (w.inventory.ore > 0 ? "refine" : "quarry") : null;
-  return w.inventory.wood < projectRequirements(w,p).wood ? "gather" : projectFunded(w,p) ? "construct" : null;
+  const requirements=projectRequirements(w,p);
+  if(w.inventory.wood<requirements.wood)return "gather";
+  if(w.inventory.blocks<requirements.blocks)return w.inventory.ore>0?"refine":"quarry";
+  return projectFunded(w,p)?"construct":null;
 }
 export function refiningShortage(w,p) {
   const loose=localOre(w,p).reduce((n,o)=>n+o.stock,0);
@@ -245,7 +249,8 @@ function availableSettlementChoices(w) {
   };
   if (goal?.kind === "wood") resource("timber",goal.target,`Cut trees and gather logs until we store ${goal.target} wood, as requested.`);
   else if (goal?.kind === "ore") resource("quarry",goal.target,`Break rocks and collect ore until we store ${goal.target} ore, as requested. Keep the ore.`);
-  else if (goal?.kind === "bridge" && !w.progress.bridge) resource("crossing",24,"Cut timber and carry stored wood to finish the river bridge.");
+  else if ((goal?.kind === "bridge" || milestone?.project === "crossing") && !w.progress.bridge)
+    resource("crossing",24,"Cut timber and carry stored wood to finish the river bridge.");
   const resourceGoal=!!milestone || ["wood","ore","bridge","blocks"].includes(goal?.kind);
   for (const type of INDEPENDENT_BUILDINGS) {
     const spec = BUILDINGS[type];
@@ -288,10 +293,16 @@ function availableSettlementChoices(w) {
     resource("quarry",Math.max(12,Math.ceil(w.creatures.length/8)),"Supply our stone workshops with real ore while we establish stocked mines.",80);
   if ((!resourceGoal && w.stage>=2 && !hasFactory && w.inventory.blocks<300) || goal?.kind==="blocks" || milestone?.project==="refine")
     resource("refine",goal?.kind==="blocks" ? goal.target : 300,"Break rocks, collect ore and work it into blocks by hand. Reach the factory unlock without help from the sky.",goal||milestone?100:industry?90:50);
-  else if(industry && uncommittedBlocks(w)<150 &&
-      w.objects.filter(o=>o.type==="factory").length+workProjects(w).filter(p=>p.type==="factory").length<Math.ceil(w.creatures.length/48))
-    resource("refine",w.inventory.blocks-uncommittedBlocks(w)+300,"Make a building reserve of 300 uncommitted blocks so idle neighborhoods can establish more workplaces.",
-      w.objects.some(o=>o.type==="mine" && o.stock>0) && !hasFactory ? 90 : 75);
+  else if(industry) {
+    const next=nextIndustryBuilding(w), cost=BUILDINGS[next]?.cost||0;
+    if(next && uncommittedBlocks(w)<cost) {
+      const amount=w.inventory.blocks+(cost-uncommittedBlocks(w));
+      resource("refine",amount,`Quarry stone and make enough blocks to build the next ${BUILDINGS[next].name.toLowerCase()}.`,90);
+    } else if(uncommittedBlocks(w)<150 &&
+        w.objects.filter(o=>o.type==="factory").length+workProjects(w).filter(p=>p.type==="factory").length<Math.ceil(w.creatures.length/48))
+      resource("refine",w.inventory.blocks-uncommittedBlocks(w)+300,"Make a building reserve of 300 uncommitted blocks so idle neighborhoods can establish more workplaces.",
+        w.objects.some(o=>o.type==="mine" && o.stock>0) && !hasFactory ? 90 : 75);
+  }
   const reserve = timberReserve(w);
   // Crossing/first-block crews already gather their own inputs. A spare pile
   // must not postpone the milestones that unlock the rest of the economy.
@@ -371,12 +382,14 @@ function prepareProject(w,p) {
   }
   const crew = w.creatures.filter(c=>p.crew.includes(c.id) && projectAllowed(w,c));
   if (!crew.length || !resourceNeeded(w,p)) return;
+  const task=projectTask(w,crew[0]);
   if (!projectTasks(w,crew[0]).some(t=>["gather","quarry"].includes(t))) return;
-  const types = ["quarry","refine"].includes(p.type) ? ["rock","ore"] : ["tree","log"];
+  const types = ["quarry","refine"].includes(p.type) || task==="quarry" ? ["rock","ore"] : ["tree","log"];
   const accessible = (o) => allowedRegion(w,o) && serviceSlots(w,o).some(s=>crew.some(c=>Number.isFinite(routeCost(w,c,s))));
   const saved = w.objects.filter(o=>types.includes(o.type) && Math.hypot(o.x-p.x,o.y-p.y)<=32 && accessible(o));
   const short=p.type==="refine" ? refiningShortage(w,p)
     : p.type==="quarry" ? p.target-w.inventory.ore
+    : task==="quarry" ? Math.max(0,Math.ceil((projectRequirements(w,p).blocks-w.inventory.blocks)/10)-w.inventory.ore)
     : (p.type==="timber"?p.target:p.type==="crossing"?24:projectRequirements(w,p).wood)-w.inventory.wood;
   const sources=Math.min(12,p.crew.length,Math.max(1,Math.ceil(short/(types[0]==="rock"?3:6))));
   if (saved.length>=sources) return;
@@ -424,7 +437,8 @@ export function settlementDecisionInput(w, choices) {
     : orbital.phase==="building"
       ? "The sky launcher already has a building crew; do not start another."
       : "";
-  const requiredContext = `${w.creatures.length} residents; ${workProjects(w).length}/${projectLimit(w)} crews active. Assign free local groups. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind || (storyGoal ? `first ${storyGoal.target} blocks` : industry ? "build mines and stone workshops; produce energy" : "grow")}. ${accessBrief(w)} ${priority} ${orbitalContext} Prefer more help and reward closer to zero.`;
+  const defaultGoal=storyGoal?.title || industry?.title || storyObjective(w)[0].toLowerCase();
+  const requiredContext = `${w.creatures.length} residents; ${workProjects(w).length}/${projectLimit(w)} crews active. Assign free local groups. ${shortage}. Wood ${reserve.stock} (refill below ${reserve.minimum}, target ${reserve.target}), ore ${Math.floor(w.inventory.ore)}, blocks ${Math.floor(w.inventory.blocks)}. Goal ${activeGoal(w)?.kind || defaultGoal}. ${accessBrief(w)} ${priority} ${orbitalContext} Prefer more help and reward closer to zero.`;
   const contextParts = choices.map(c=>c.description);
   return {options,requiredContext,contextParts,context:[requiredContext,...contextParts].join(" "),
     question:orbital.phase==="build" && orbital.missionActive

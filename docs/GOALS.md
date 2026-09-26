@@ -13,6 +13,8 @@ Speak or type an objective such as “Grow to 50 Tripelkins,” “Keep everyone
 5. **Adapt:** urgent needs take priority. Care and growth objectives raise care thresholds; an ore reserve prevents factory jobs from consuming the stockpile. Missing supplies or facilities are shown as requests for the caretaker. Models cannot invent resources, bypass unlocks or mark objectives complete.
 6. **Complete:** simulation measurements determine success. Completed goals release the next queued objective. Care is an ongoing duty until paused or set aside.
 
+With no explicit player goal, **Our next steps** follows the current story objective through growth, the bridge, stone and industry, then the beacon and orbital decisions. It keeps that destination visible alongside urgent care and active work. If a building is waiting for wood or blocks, the list names the missing material before the build step; its crew can gather or make those materials.
+
 Goals survive reloads and are included in export/import and recovery. They do not expire after a minute. Open **Goals** with the flag button or active goal banner to see progress, milestones and blockers; pause, resume, reprioritize or set aside an objective. Pausing one goal allows the next queued goal to become active. Provider identities and reviews are kept in the save and can be inspected through Options → Advanced → Inspect colony context → Saved decision history. Background decisions cannot apply assignments while the world is paused; a fresh decision preview in Advanced does not apply assignments.
 
 ## Supported measurements

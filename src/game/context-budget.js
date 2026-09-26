@@ -13,7 +13,7 @@ export function packHostedContext(full, budget) {
     ]),
   );
   const g = full.longTermGoal;
-  const concisePlan = p => p ? {parent:p.parent,expanding:p.expanding,
+  const concisePlan = p => p ? {parent:p.parent,title:p.title,expanding:p.expanding,
     children:p.children.map(({kind,status,remaining})=>({kind,status,remaining})),
     density:{target:p.density.target,crowded:p.density.crowded,abovePenalty:p.density.abovePenalty,belowPenalty:p.density.belowPenalty}} : undefined;
   const packed = {
@@ -75,6 +75,7 @@ export function packHostedContext(full, budget) {
     if (selected.length) packed[key] = selected;
     if (selected.length < entries.length) omitted.push(key);
   };
+  if (full.currentStoryObjective) add("storyObjective", full.currentStoryObjective);
   add(
     "candidateEffects",
     full.candidates.map((c) => ({ id: c.id, description:c.description, allocation:c.allocation, effects: c.expected, reward:c.reward })),

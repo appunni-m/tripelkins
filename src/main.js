@@ -618,7 +618,7 @@ async function goalsModal() {
   modal(
     "Something to grow toward.",
     "THE COLONY REMEMBERS",
-    `<p class="muted">Tell us what you hope for. We’ll work toward it together, and remember where we left off when you return.</p><article class="goal-card"><b>Our next steps</b><p>${esc(plan.title)}</p><ul class="subgoal-list">${plan.children.map(s=>`<li><span>${s.status === "satisfied" ? "✓" : s.status === "working" ? "↻" : "○"}</span><div>${esc(s.title)}<small>${esc({satisfied:"Ready",urgent:"Care comes first",needed:"Next to work on",working:"Crew at work",blocked:"Waiting for a clear path"}[s.status])}</small></div></li>`).join("")}</ul></article><div class="goal-list">${
+    `<p class="muted">Tell us what you hope for. We’ll work toward it together, and remember where we left off when you return.</p><article class="goal-card"><b>Our next steps</b><p>${esc(plan.title)}</p><ul class="subgoal-list">${plan.children.map(s=>`<li><span>${s.status === "satisfied" ? "✓" : s.status === "working" ? "↻" : "○"}</span><div>${esc(s.title)}<small>${esc({satisfied:"Ready",urgent:"Care comes first",needed:"Next to work on",working:"Crew at work",waiting:"Waiting for materials",blocked:"Waiting for a clear path"}[s.status])}</small></div></li>`).join("")}</ul></article><div class="goal-list">${
       entries.length
         ? entries
             .map((g) => {

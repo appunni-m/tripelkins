@@ -19,6 +19,8 @@ export function buildContext(w, { includePlans = true } = {}) {
   const care = careContext(w);
   const objective = activeGoal(w);
   const objectiveState = objective ? inspectGoal(w, objective) : null;
+  const defaultGoal = goal(w);
+  const currentMilestone = colonyMilestone(w)||industryMilestone(w);
   const buckets = new Map();
   for (const c of w.creatures) {
     const key = `${Math.floor(c.x / CHUNK_SIZE)}:${Math.floor(c.y / CHUNK_SIZE)}`;
@@ -79,7 +81,8 @@ export function buildContext(w, { includePlans = true } = {}) {
   const context = {
     version: 4,
     workload,
-    currentMilestone: colonyMilestone(w)||industryMilestone(w),
+    currentMilestone,
+    currentStoryObjective: (objective || currentMilestone) ? null : {title:defaultGoal[0],step:defaultGoal[1]},
     developmentPlan: developmentPlan(w),
     timber: timberReserve(w),
     blockedWork: accessContext(w),
@@ -112,7 +115,7 @@ export function buildContext(w, { includePlans = true } = {}) {
     represented: w.creatures.length,
     cohort: w.cohort,
     stage: w.stage,
-    goal: goal(w)[1],
+    goal: defaultGoal[1],
     longTermGoal: objective
       ? { ...objective, title: goalTitle(objective), ...objectiveState }
       : null,
@@ -198,7 +201,7 @@ export function buildContext(w, { includePlans = true } = {}) {
       : 0,
   );
   const localParts = [
-    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || (context.currentMilestone?.kind==="blocks" ? `first ${context.currentMilestone.target} blocks` : context.currentMilestone ? "mine ore and produce energy" : "healthy growth")}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
+    `Work ${w.directives.pauseWork ? "paused" : "allowed"}; factories ${w.directives.avoidPollution ? "held" : "allowed"}. Lowest food/clean/play ${minimum.join("/")}. Goal ${objective?.kind || context.currentMilestone?.title || defaultGoal[0].toLowerCase()}. ${workload.available}/${w.creatures.length} healthy residents available. Protect urgent care; otherwise put available residents to useful work or scouting. ${accessBrief(w)}`,
     orbital.phase === "locked" ? "The orbital home is locked until second contact." :
       orbital.phase === "building" ? "Our sky launcher is being built; finish that crew's work before assigning volunteers." :
       orbital.phase === "build" ? orbital.missionActive

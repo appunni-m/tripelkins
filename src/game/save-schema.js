@@ -320,7 +320,7 @@ export function migrateExtensions(w, raw) {
       density:{target:6,abovePenalty:4,belowPenalty:.6,crowded:Math.floor(n(plan.density?.crowded,0,LIMITS.creatures)),
         areas:list(plan.density?.areas,6).map(a=>({...point(a),residents:n(a.residents,0,1e5),buildings:n(a.buildings,0,LIMITS.objects)}))},
       children:list(plan.children,7).map(s=>({id:text(s.id,80),kind:text(s.kind,24),title:text(s.title,120),
-        remaining:n(s.remaining),status:["urgent","needed","satisfied","working","blocked"].includes(s.status)?s.status:"needed"}))};
+        remaining:n(s.remaining),status:["urgent","needed","satisfied","working","waiting","blocked"].includes(s.status)?s.status:"needed"}))};
   }
   w.community.projects=[];
   const claimed=new Set(), projectIds=new Set();

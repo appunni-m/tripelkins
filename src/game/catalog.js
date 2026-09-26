@@ -269,6 +269,8 @@ export function goal(w) {
       ? `${Math.floor(bridge.delivered)}/${bridge.required} delivered. ${bridge.carried ? `${bridge.carried} being carried.` : bridge.staged ? "Materials are ready for carriers." : "Chop trees or send stored wood."} Tap to find the crossing.`
       : "Chop trees. Your creatures will carry wood to the river."];
   }
+  if (w.progress.bridge && !w.progress.monolith)
+    return ["VISIT THE SURVEY BEACON", "Choose what we should do with what we found."];
   if (w.stage === 2 && w.progress.peakBlocks < 300)
     return [
       "BRIGHTNESS IN THE STONE",
