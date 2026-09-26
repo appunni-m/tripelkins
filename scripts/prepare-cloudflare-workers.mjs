@@ -31,6 +31,11 @@ if (!Array.isArray(manifest.assets))
 
 await rm(outputRoot, { recursive: true, force: true });
 await cp(sourceRoot, outputRoot, { recursive: true, errorOnExist: true });
+await writeFile(
+  join(outputRoot, "_worker.js"),
+  await readFile(new URL("../worker.js", import.meta.url), "utf8"),
+);
+await writeFile(join(outputRoot, ".assetsignore"), "_worker.js\n");
 const brotliAssets = [];
 const gzipAssets = [];
 let deployedBytes = 0;

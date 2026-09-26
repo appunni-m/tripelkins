@@ -26,7 +26,9 @@ on the `production` environment and the deployment job.
 2. `npm run build` creates `dist/`, its SHA-256 deployment manifest, and the
    final `cloudflare-workers/` package.
 3. The package includes Brotli (`.wasm.br`) and gzip (`.wasm.gz`) versions of
-   each WASM asset and checks Cloudflare's 25 MiB per-file limit.
+   each WASM asset and checks Cloudflare's 25 MiB per-file limit. It also
+   includes `_worker.js` for Cloudflare Pages advanced mode; `.assetsignore`
+   keeps Wrangler from publishing that handler as a public static asset.
 4. GitHub retains that exact package as a 14-day artifact. The deploy job
    downloads it and publishes it with Wrangler 4.141.0.
 5. The workflow downloads every published asset and compares its decoded bytes
@@ -41,7 +43,9 @@ keeps cached Brotli and gzip responses separate, while Cloudflare can negotiate
 the response encoding supported by each browser.
 
 The same `npm run build` output is used by GitHub Actions and Cloudflare Workers
-Builds. With dependencies installed, the configured `npx wrangler deploy` and
+Builds. It can also be used as the Cloudflare Pages Git integration output
+directory; Pages then runs `_worker.js` before serving the static assets. With
+dependencies installed, the configured `npx wrangler deploy` and
 `npx wrangler preview` commands publish or preview the package from
 `wrangler.jsonc`.
 
