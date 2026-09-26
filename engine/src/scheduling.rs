@@ -2,6 +2,12 @@
 use crate::{Engine, value::*};
 use serde_json::{Value, json};
 
+fn same_number(left: &Value, right: &Value) -> bool {
+    left.as_f64()
+        .zip(right.as_f64())
+        .is_some_and(|(left, right)| left == right)
+}
+
 impl Engine {
     /// Runs on a disposable copy. Applying to that copy lets the development
     /// summary account for the proposed crews without blocking physical motion.
@@ -22,10 +28,10 @@ impl Engine {
         if !schedule.is_object()
             || flag(&self.world["ui"], "paused")
             || !(0. ..=3.).contains(&age)
-            || schedule["commandRevision"] != self.world["commandRevision"]
-            || schedule["navRevision"] != self.world["navRevision"]
-            || schedule["mapRevision"] != self.world["map"]["revision"]
-            || schedule["stage"] != self.world["stage"]
+            || !same_number(&schedule["commandRevision"], &self.world["commandRevision"])
+            || !same_number(&schedule["navRevision"], &self.world["navRevision"])
+            || !same_number(&schedule["mapRevision"], &self.world["map"]["revision"])
+            || !same_number(&schedule["stage"], &self.world["stage"])
             || num(&self.world, "stage") >= 3.
             || !schedule["development"].is_object()
         {

@@ -47,6 +47,27 @@ try {
   assert.equal(await call('settlement.commitDecision', {result: {revision, choice: null, source: 'Laya'}}), true);
   passed++;
 
+  // A goal command increments the Rust revision as a float. The worker sends
+  // its schedule through JavaScript JSON, which spells integral floats as ints.
+  // A fresh proposal must still commit when both revisions have the same value.
+  const schedulingWorld = structuredClone(world);
+  schedulingWorld.stage = 2;
+  schedulingWorld.progress.bridge = true;
+  schedulingWorld.progress.energy = 0;
+  schedulingWorld.ui.paused = false;
+  await call('load', schedulingWorld);
+  await call('community.setIndependence', {accepted: true});
+  await call('goals.add', {
+    spec: {kind: 'wood', target: 1000},
+    command: 'Collect 1000 wood',
+    source: 'Laya',
+  });
+  const schedule = await call('planning.backgroundSchedule');
+  assert.equal(await call('planning.commitSchedule', {schedule}), true,
+    'A worker JSON round trip must not make a fresh schedule appear stale');
+  passed++;
+  await call('load', world);
+
   // Rehydrating a derived plan must not manufacture an extra revision because
   // Rust emitted 1.0 and the browser JSON roundtrip wrote 1.
   await call('development.update');
