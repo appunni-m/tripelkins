@@ -105,32 +105,6 @@ function block(w, c, reason) {
   }
 }
 const paths = new WeakMap();
-const trafficBodies = new WeakMap();
-function bodyCells(w) {
-  const cached = trafficBodies.get(w);
-  if (cached?.time === w.time && cached.count === w.creatures.length)
-    return cached.cells;
-  const cells = new Map();
-  for (let index = 0; index < w.creatures.length; index++) {
-    const c = w.creatures[index], key = `${Math.floor(c.x)}:${Math.floor(c.y)}`;
-    const members = cells.get(key) || [];
-    members.push(index);
-    cells.set(key, members);
-  }
-  trafficBodies.set(w, {time:w.time,count:w.creatures.length,cells});
-  return cells;
-}
-function crowdWaits(w,c,from,cells) {
-  const centerX=Math.floor(from.x),centerY=Math.floor(from.y);
-  for(let x=centerX-2;x<=centerX+2;x++) for(let y=centerY-2;y<=centerY+2;y++) {
-    for(const index of cells.get(`${x}:${y}`)||[]) {
-      const other=w.creatures[index];
-      if(other && other.id!==c.id && distance(other,c)<1.2 &&
-        ["travelling","queued"].includes(other.job?.state)) return true;
-    }
-  }
-  return false;
-}
 function travel(w, c, dt) {
   const job = c.job;
   if (!job?.point) return false;
@@ -178,7 +152,6 @@ function travel(w, c, dt) {
     dy = p.y - c.y,
     d = Math.hypot(dx, dy),
     speed = c.boostUntil > w.time ? 2.1 : 1.65;
-  const from={x:c.x,y:c.y}, cells=bodyCells(w);
   const stride = Math.min(speed * dt, d),
     moved = steerMove(
       w,
@@ -198,11 +171,6 @@ function travel(w, c, dt) {
       path.bestDistance=remaining;
       job.progressAt=w.time;
     }
-  }
-  if(crowdWaits(w,c,from,cells)) {
-    job.lastProgress=w.time;
-    job.progressAt=w.time;
-    job.started+=dt;
   }
   if (
     w.time - job.lastProgress > 8 ||
